@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block page_styles %}
+  <link rel="stylesheet" href="/static/pages/auth.css" />
+{% endblock %}
+
+{% block content %}
+  <section class="auth-shell">
+    <div class="auth-card">
+      <h1>Admin Home</h1>
+      <p class="admin-text">HHAHAHAA</p>
+      <p>Use the separate gallery management page to create genres and upload images.</p>
+      <p><a class="btn admin-home-link" href="/admin/gallary">Open AdminGallary Page</a></p>
+      <p><a class="btn admin-home-link" href="/admin/artist">Open AdminArtist Page</a></p>
+      <p><a class="btn admin-home-link" href="/admin/courses">Open AdminCourses Page</a></p>
+      <p><a class="btn admin-home-link" href="/admin/events">Open AdminEvents Page</a></p>
+      <p><a class="btn admin-home-link" href="/admin/inbox">Open AdminInbox Page</a></p>
+
+      <form method="post" action="/logout">
+        <button type="submit">Logout</button>
+      </form>
+    </div>
+  </section>
+{% endblock %}

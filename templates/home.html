@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+
+{% block page_styles %}
+  <link rel="stylesheet" href="/static/pages/home.css?v=3" />
+{% endblock %}
+
+{% block content %}
+  <div class="page-home">
+  <div class="home-first-screen">
+    <section class="hero-showcase">
+      <div class="hero-main" style="background-image: linear-gradient(90deg, rgba(0, 0, 0, 0.92) 0%, rgba(0, 0, 0, 0.6) 48%, rgba(0, 0, 0, 0.45) 100%), url('/static/mainpage.jpg');">
+        <div class="hero-copy">
+          <h1>
+            <span>SHARE.</span>
+            <span>EDUCATE.</span>
+            <span>BE ENRICHED.</span>
+          </h1>
+          <p>Nurturing talent, empowering youth, and building a thriving creative ecosystem through world-class music and arts education.</p>
+          <div class="cta-row">
+            <a class="btn" href="/course">Explore Courses</a>
+            <a class="btn btn-secondary" href="/about">About MUSIKA</a>
+          </div>
+        </div>
+      </div>
+      <aside class="hero-stats" id="hero-stats">
+        <article class="stat-item">
+          <h3><span class="stat-number" data-target="10">0</span>+</h3>
+          <p>Years of Impact</p>
+          <small>Since 2016</small>
+        </article>
+        <article class="stat-item">
+          <h3><span class="stat-number" data-target="1000">0</span>+</h3>
+          <p>Students Trained</p>
+          <small>Across Nagaland and beyond</small>
+        </article>
+        <article class="stat-item">
+          <h3><span class="stat-number" data-target="350">0</span>+</h3>
+          <p>Livelihoods Created</p>
+          <small>Through music and arts</small>
+        </article>
+        <article class="stat-item">
+          <h3><span class="stat-number" data-target="250">0</span>+</h3>
+          <p>Events Organised</p>
+          <small>Recitals, concerts, and more</small>
+        </article>
+      </aside>
+    </section>
+
+    <section class="hero-location">
+      <p>MUSIKA - School of Music and Arts, Dimapur, Nagaland, India</p>
+    </section>
+
+    <section class="who-we-are">
+      <article class="who-copy">
+        <p class="eyebrow">Who We Are</p>
+        <h2>Nagaland's Leading Institute for Music and Arts</h2>
+        <p>
+          Established as a registered organization, MUSIKA provides structured creative
+          education that blends international standards with regional cultural heritage.
+        </p>
+        <a class="btn btn-secondary" href="/about">Learn More About Us</a>
+      </article>
+      <div class="about-grid">
+        <article class="about-card">
+          <img class="about-icon" src="https://musikazctech.s3.ap-south-1.amazonaws.com/icon/1.png" alt="" aria-hidden="true" />
+          <h3>World-Class Education</h3>
+          <p>Professional music and arts programs grounded in global standards.</p>
+        </article>
+        <article class="about-card">
+          <img class="about-icon" src="https://musikazctech.s3.ap-south-1.amazonaws.com/icon/2.png" alt="" aria-hidden="true" />
+          <h3>Diverse Curriculum</h3>
+          <p>Western, Indian, folk, church, and audio engineering pathways.</p>
+        </article>
+        <article class="about-card">
+          <img class="about-icon" src="https://musikazctech.s3.ap-south-1.amazonaws.com/icon/3.png" alt="" aria-hidden="true" />
+          <h3>Culture and Community</h3>
+          <p>Preserving heritage while building a stronger creative future.</p>
+        </article>
+        <article class="about-card">
+          <img class="about-icon" src="https://musikazctech.s3.ap-south-1.amazonaws.com/icon/4.png" alt="" aria-hidden="true" />
+          <h3>Scholarships and Support</h3>
+          <p>Financial assistance for deserving and talented students.</p>
+        </article>
+      </div>
+    </section>
+  </div>
+
+  <section class="programs">
+    <h2>Our Programs</h2>
+    <div class="program-grid">
+      <article class="program-card program-card-western">
+        <div class="program-image"></div>
+        <div class="program-content">
+          <h3><span class="program-icon">&#9835;</span>Western Classical Music</h3>
+          <p>London College of Music affiliated.</p>
+        </div>
+      </article>
+      <article class="program-card program-card-contemporary">
+        <div class="program-image"></div>
+        <div class="program-content">
+          <h3><span class="program-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="1.05em" height="1.05em"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/></svg></span>Contemporary Music</h3>
+          <p>Rockschool UK affiliated. Modern. Relevant. Global.</p>
+        </div>
+      </article>
+      <article class="program-card program-card-indian">
+        <div class="program-image"></div>
+        <div class="program-content">
+          <h3><span class="program-icon">&#9834;</span>Indian Classical &amp; Bollywood</h3>
+          <p>Rooted in tradition, inspired by today.</p>
+        </div>
+      </article>
+      <article class="program-card program-card-church">
+        <div class="program-image"></div>
+        <div class="program-content">
+          <h3><span class="program-icon">&#10014;</span>Church Music</h3>
+          <p>Training for worship leaders &amp; choirs.</p>
+        </div>
+      </article>
+      <article class="program-card program-card-audio">
+        <div class="program-image"></div>
+        <div class="program-content">
+          <h3><span class="program-icon">&#9838;</span>Audio Engineering</h3>
+          <p>Live Sound &amp; Recording Arts program.</p>
+        </div>
+      </article>
+      <article class="program-card program-card-folk">
+        <div class="program-image"></div>
+        <div class="program-content">
+          <h3><span class="program-icon">&#10023;</span>Naga Folk Music Studies</h3>
+          <p>Preserve. Celebrate. Pass it on.</p>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="admissions-strip">
+    <p><strong>Admissions Open!</strong> For all age groups (3 years and above) - Beginners to Advanced.</p>
+    <a class="btn" href="/course">Apply Now</a>
+  </section>
+  </div>
+
+  <script>
+    (function () {
+      var root = document.getElementById("hero-stats");
+      if (!root) return;
+
+      var numbers = root.querySelectorAll(".stat-number");
+      if (!numbers.length) return;
+
+      function setFinalValues() {
+        numbers.forEach(function (el) {
+          var t = el.getAttribute("data-target");
+          el.textContent = t != null ? t : el.textContent;
+        });
+      }
+
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        setFinalValues();
+        return;
+      }
+
+      function easeOutQuart(t) {
+        return 1 - Math.pow(1 - t, 4);
+      }
+
+      var started = false;
+      var duration = 1700;
+
+      function run() {
+        if (started) return;
+        started = true;
+        var targets = [];
+        numbers.forEach(function (el) {
+          targets.push({
+            el: el,
+            target: parseInt(el.getAttribute("data-target"), 10) || 0,
+          });
+        });
+        var startTime = null;
+
+        function frame(now) {
+          if (startTime == null) startTime = now;
+          var elapsed = now - startTime;
+          var progress = Math.min(1, elapsed / duration);
+          var eased = easeOutQuart(progress);
+          for (var i = 0; i < targets.length; i++) {
+            var item = targets[i];
+            item.el.textContent = String(Math.round(eased * item.target));
+          }
+          if (progress < 1) {
+            requestAnimationFrame(frame);
+          } else {
+            for (var j = 0; j < targets.length; j++) {
+              targets[j].el.textContent = String(targets[j].target);
+            }
+          }
+        }
+        requestAnimationFrame(frame);
+      }
+
+      if ("IntersectionObserver" in window) {
+        var io = new IntersectionObserver(
+          function (entries) {
+            for (var i = 0; i < entries.length; i++) {
+              if (entries[i].isIntersecting) {
+                run();
+                io.disconnect();
+                break;
+              }
+            }
+          },
+          { root: null, rootMargin: "0px 0px -8% 0px", threshold: 0.15 }
+        );
+        io.observe(root);
+      } else {
+        run();
+      }
+    })();
+  </script>
+{% endblock %}

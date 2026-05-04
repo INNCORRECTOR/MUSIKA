@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  {% set brand_logo_url = "https://musikazctech.s3.ap-south-1.amazonaws.com/musikalogo.webp" %}
+  {% set favicon_url = "/static/Untitled design (3).png" %}
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ site_name }}</title>
+  <link rel="icon" type="image/png" sizes="48x48" href="{{ favicon_url }}" />
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ favicon_url }}" />
+  <link rel="apple-touch-icon" sizes="180x180" href="{{ favicon_url }}" />
+  <link rel="stylesheet" href="/static/base.css" />
+  {% block page_styles %}{% endblock %}
+</head>
+<body>
+  <header class="site-header">
+    <div class="topbar">
+      <a class="brand" href="/">
+        <img class="brand-logo" src="{{ brand_logo_url }}" alt="MUSIKA logo" />
+      </a>
+      <button
+        class="nav-toggle"
+        type="button"
+        aria-expanded="false"
+        aria-controls="site-nav"
+        aria-label="Toggle navigation menu"
+      >
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      <nav class="nav">
+        <a class="nav-mobile-brand" href="/" aria-label="MUSIKA Home">
+          <img class="nav-mobile-brand-logo" src="{{ brand_logo_url }}" alt="MUSIKA logo" />
+        </a>
+        {% set current_path = active_path if active_path is defined else request.url.path %}
+        {% for item in nav_items %}
+          {% if item.href == "/artist" and artist_menu is defined and artist_menu %}
+            <div class="nav-dropdown">
+              <a
+                class="nav-link {% if current_path == item.href %}active{% endif %}"
+                href="{{ item.href }}"
+                {% if current_path == item.href %}aria-current="page"{% endif %}
+              >
+                <span class="nav-link-label">{{ item.label }}</span>
+              </a>
+              <div class="nav-dropdown-menu" aria-label="Faculty submenu">
+                {% for nav_artist in artist_menu %}
+                  <a
+                    class="nav-dropdown-link {% if selected_artist_id == nav_artist.id %}active{% endif %}"
+                    href="/artist?artist_id={{ nav_artist.id }}"
+                  >
+                    {{ nav_artist.name }}
+                  </a>
+                {% endfor %}
+              </div>
+            </div>
+          {% else %}
+            <a
+              class="nav-link {% if current_path == item.href %}active{% endif %}"
+              href="{{ item.href }}"
+              {% if current_path == item.href %}aria-current="page"{% endif %}
+            >
+              <span class="nav-link-label">{{ item.label }}</span>
+            </a>
+          {% endif %}
+        {% endfor %}
+        <a class="btn header-btn nav-mobile-enquire" href="/contact#send-us-a-message">Enquire Now</a>
+        <div class="nav-mobile-social" aria-label="Social links">
+          <a href="#" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+            <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" focusable="false">
+              <path fill="currentColor" d="M14 8h3V5h-3c-2.8 0-5 2.2-5 5v2H7v3h2v6h3v-6h3l1-3h-4v-2c0-1.1.9-2 2-2z"/>
+            </svg>
+          </a>
+          <a href="#" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+            <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" focusable="false">
+              <rect x="3.5" y="3.5" width="17" height="17" rx="5" ry="5" fill="none" stroke="currentColor" stroke-width="2"/>
+              <circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="2"/>
+              <circle cx="17.5" cy="6.5" r="1.1" fill="currentColor"/>
+            </svg>
+          </a>
+          <a href="#" target="_blank" rel="noopener noreferrer" aria-label="X">
+            <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" focusable="false">
+              <path fill="currentColor" d="M18.9 3H22l-6.8 7.8L23 21h-6.2l-4.9-6.4L6.3 21H3.2l7.3-8.3L1 3h6.3l4.4 5.8L18.9 3zm-1.1 16h1.7L6.4 4.9H4.6L17.8 19z"/>
+            </svg>
+          </a>
+        </div>
+      </nav>
+      <div class="header-meta">
+        <span class="header-location">
+          <span class="header-location-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+              <path fill="currentColor" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 10.1A3.1 3.1 0 1 1 12 5.9a3.1 3.1 0 0 1 0 6.2z"/>
+            </svg>
+          </span>
+          <span>Dimapur, Nagaland</span>
+        </span>
+        <a class="btn header-btn" href="/contact#send-us-a-message">Enquire Now</a>
+      </div>
+    </div>
+  </header>
+  <div class="nav-backdrop" hidden></div>
+
+  <main class="main-content">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="site-footer">
+    <div class="site-footer-inner">
+      <div class="footer-grid">
+        <section class="footer-col footer-about">
+          <a class="footer-brand" href="/">
+            <img class="footer-brand-logo" src="{{ brand_logo_url }}" alt="{{ site_name }} logo" />
+          </a>
+          <p>
+            Nurturing musical excellence through globally aligned programs, local cultural roots,
+            and a thriving creative learning community.
+          </p>
+        </section>
+
+        <section class="footer-col">
+          <h3>Office</h3>
+          <p>House No. 60, Yan Villa, NEZCC Rd, near Airport Road, 3rd Mile, Chümoukedima, Dimapur, Nagaland 797115</p>
+          
+            
+          <p><strong>Branches</strong></p>
+          <p>Chumu: <a href="tel:+916009867759">6009867759</a></p>
+          <p>Diphupar: <a href="tel:+919856863879">9856863879</a></p>
+        </section>
+
+        <section class="footer-col">
+          <h3>Links</h3>
+          <nav class="footer-links" aria-label="Footer Navigation">
+            <a href="/">Home</a>
+            <a href="/course">Courses</a>
+            <a href="/event">Events</a>
+            <a href="/about">About Us</a>
+            <a href="/contact">Contact</a>
+          </nav>
+        </section>
+
+        <section class="footer-col footer-newsletter">
+          <h3>Newsletter</h3>
+          <form class="footer-newsletter-form" action="/newsletter/subscribe" method="post">
+            <div class="footer-newsletter-line">
+              <label for="footer-email" class="sr-only">Enter your email address</label>
+              <input id="footer-email" name="email" type="email" autocomplete="email" placeholder="Enter your email address" required />
+              <button type="submit" id="footer-newsletter-submit" aria-label="Submit newsletter" disabled>↗</button>
+            </div>
+            <label class="footer-consent">
+              <input
+                type="checkbox"
+                id="footer-newsletter-privacy"
+                name="privacy"
+                value="on"
+                required
+                aria-required="true"
+              />
+              <span>I agree to the <a href="/privacy-policy">Privacy Policy</a>.</span>
+            </label>
+          </form>
+        </section>
+      </div>
+    </div>
+
+    <div class="site-footer-bottom">
+      <div class="site-footer-bottom-left">
+        <p>© {{ site_name }} 2026. All rights reserved.</p>
+        <nav class="site-footer-legal" aria-label="Legal">
+          <a href="/terms">Terms &amp; conditions</a>
+          <span class="site-footer-legal-sep" aria-hidden="true">·</span>
+          <a href="/cookies">Cookies</a>
+        </nav>
+      </div>
+      <div class="footer-social" aria-label="Social links">
+        <a href="#" aria-label="Facebook" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" focusable="false">
+            <path fill="currentColor" d="M14 8h3V5h-3c-2.8 0-5 2.2-5 5v2H7v3h2v6h3v-6h3l1-3h-4v-2c0-1.1.9-2 2-2z"/>
+          </svg>
+        </a>
+        <a href="#" aria-label="Instagram" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" focusable="false">
+            <rect x="3.5" y="3.5" width="17" height="17" rx="5" ry="5" fill="none" stroke="currentColor" stroke-width="2"/>
+            <circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="2"/>
+            <circle cx="17.5" cy="6.5" r="1.1" fill="currentColor"/>
+          </svg>
+        </a>
+        <a href="#" aria-label="YouTube" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" focusable="false">
+            <path fill="currentColor" d="M21.6 7.2a3 3 0 0 0-2.1-2.1C17.7 4.5 12 4.5 12 4.5s-5.7 0-7.5.6A3 3 0 0 0 2.4 7.2 31.8 31.8 0 0 0 1.8 12c0 1.6.2 3.2.6 4.8a3 3 0 0 0 2.1 2.1c1.8.6 7.5.6 7.5.6s5.7 0 7.5-.6a3 3 0 0 0 2.1-2.1c.4-1.6.6-3.2.6-4.8 0-1.6-.2-3.2-.6-4.8zM10 15.5v-7l6 3.5-6 3.5z"/>
+          </svg>
+        </a>
+        <a href="#" aria-label="X (Twitter)" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" focusable="false">
+            <path fill="currentColor" d="M18.9 3H22l-6.8 7.8L23 21h-6.2l-4.9-6.4L6.3 21H3.2l7.3-8.3L1 3h6.3l4.4 5.8L18.9 3zm-1.1 16h1.7L6.4 4.9H4.6L17.8 19z"/>
+          </svg>
+        </a>
+      </div>
+    </div>
+  </footer>
+
+  {% set is_contact_page = (request.url.path.rstrip('/') == '/contact') %}
+  {% if request.query_params.get("newsletter_message") %}
+    <span id="site-flash-newsletter-message" class="site-flash-source" hidden>{{ request.query_params.get("newsletter_message") }}</span>
+  {% endif %}
+  {% if request.query_params.get("newsletter_error") %}
+    <span id="site-flash-newsletter-error" class="site-flash-source" hidden>{{ request.query_params.get("newsletter_error") }}</span>
+  {% endif %}
+  {% if is_contact_page and message is defined and message %}
+    <span id="site-flash-contact-message" class="site-flash-source" hidden>{{ message }}</span>
+  {% endif %}
+  {% if is_contact_page and error is defined and error %}
+    <span id="site-flash-contact-error" class="site-flash-source" hidden>{{ error }}</span>
+  {% endif %}
+
+  <div
+    id="site-modal-overlay"
+    class="site-modal-overlay"
+    aria-hidden="true"
+  >
+    <div class="site-modal-backdrop" data-site-modal-close tabindex="-1" aria-hidden="true"></div>
+    <div
+      class="site-modal-dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="site-modal-heading"
+    >
+      <button type="button" class="site-modal-close" data-site-modal-close aria-label="Close dialog">&times;</button>
+      <h2 id="site-modal-heading" class="site-modal-heading"></h2>
+      <p id="site-modal-body" class="site-modal-body"></p>
+      <button type="button" class="site-modal-ok btn" data-site-modal-close>OK</button>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var toggleButton = document.querySelector(".nav-toggle");
+      var header = document.querySelector(".site-header");
+      var nav = document.querySelector(".nav");
+      var backdrop = document.querySelector(".nav-backdrop");
+
+      if (toggleButton && header && nav && backdrop) {
+        nav.setAttribute("id", "site-nav");
+        function closeMobileNav() {
+          header.classList.remove("nav-open");
+          toggleButton.setAttribute("aria-expanded", "false");
+          backdrop.hidden = true;
+        }
+
+        toggleButton.addEventListener("click", function () {
+          var isOpen = header.classList.toggle("nav-open");
+          toggleButton.setAttribute("aria-expanded", isOpen ? "true" : "false");
+          backdrop.hidden = !isOpen;
+        });
+        backdrop.addEventListener("click", closeMobileNav);
+
+        var artistDropdowns = nav.querySelectorAll(".nav-dropdown");
+        artistDropdowns.forEach(function (dropdown) {
+          var triggerLink = dropdown.querySelector(".nav-link");
+          if (!triggerLink) return;
+          triggerLink.addEventListener("click", function (event) {
+            if (window.innerWidth > 860) return;
+            event.preventDefault();
+            dropdown.classList.toggle("open");
+          });
+        });
+
+        nav.querySelectorAll(".nav-link, .nav-dropdown-link").forEach(function (link) {
+          link.addEventListener("click", function () {
+            if (window.innerWidth > 860) return;
+            if (link.closest(".nav-dropdown") && link.classList.contains("nav-link")) return;
+            closeMobileNav();
+          });
+        });
+
+        var CONTACT_FORM_HREF = "/contact#send-us-a-message";
+        document.addEventListener("click", function (event) {
+          var a = event.target.closest("a");
+          if (!a || a.getAttribute("href") !== CONTACT_FORM_HREF) return;
+          var path = (window.location.pathname || "").replace(/\/+$/, "") || "/";
+          if (path !== "/contact") return;
+
+          event.preventDefault();
+          function scrollToForm() {
+            var target = document.getElementById("send-us-a-message");
+            if (target) {
+              target.scrollIntoView({ block: "start", behavior: "auto" });
+            }
+            if (window.history && window.history.replaceState) {
+              window.history.replaceState(null, "", CONTACT_FORM_HREF);
+            }
+          }
+          var narrow = window.innerWidth <= 860;
+          if (narrow && header.classList.contains("nav-open")) {
+            closeMobileNav();
+            window.setTimeout(scrollToForm, 320);
+          } else {
+            scrollToForm();
+          }
+        });
+      }
+
+      document.querySelectorAll("[data-autohide='true']").forEach(function (el) {
+        window.setTimeout(function () {
+          el.style.opacity = "0";
+          el.style.transform = "translateY(-2px)";
+          window.setTimeout(function () {
+            if (el.parentNode) el.parentNode.removeChild(el);
+          }, 240);
+        }, 3600);
+      });
+
+      var overlay = document.getElementById("site-modal-overlay");
+      var modalHeading = document.getElementById("site-modal-heading");
+      var modalBody = document.getElementById("site-modal-body");
+      var nlErrEl = document.getElementById("site-flash-newsletter-error");
+      var nlMsgEl = document.getElementById("site-flash-newsletter-message");
+      var ctErrEl = document.getElementById("site-flash-contact-error");
+      var ctMsgEl = document.getElementById("site-flash-contact-message");
+
+      function stripUrlParams(keys) {
+        try {
+          var url = new URL(window.location.href);
+          var changed = false;
+          keys.forEach(function (k) {
+            if (url.searchParams.has(k)) {
+              url.searchParams.delete(k);
+              changed = true;
+            }
+          });
+          if (changed && window.history && window.history.replaceState) {
+            window.history.replaceState(null, "", url.pathname + url.search + url.hash);
+          }
+        } catch (e) {}
+      }
+
+      var modalMotionMs = 340;
+      try {
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) modalMotionMs = 40;
+      } catch (e) {}
+
+      function finishModalClose() {
+        document.body.classList.remove("site-modal-open");
+        document.removeEventListener("keydown", onModalKeydown);
+        if (overlay) overlay.setAttribute("aria-hidden", "true");
+      }
+
+      function closeSiteModal() {
+        if (!overlay || !overlay.classList.contains("is-open")) return;
+        overlay.classList.remove("is-open");
+
+        function onOverlayTransitionEnd(ev) {
+          if (ev.target !== overlay || ev.propertyName !== "opacity") return;
+          overlay.removeEventListener("transitionend", onOverlayTransitionEnd);
+          finishModalClose();
+        }
+
+        overlay.addEventListener("transitionend", onOverlayTransitionEnd);
+        window.setTimeout(function () {
+          if (overlay && !overlay.classList.contains("is-open")) {
+            overlay.removeEventListener("transitionend", onOverlayTransitionEnd);
+            finishModalClose();
+          }
+        }, modalMotionMs + 120);
+      }
+
+      function onModalKeydown(ev) {
+        if (ev.key === "Escape") closeSiteModal();
+      }
+
+      function openSiteModal(title, bodyText, isError) {
+        if (!overlay || !modalHeading || !modalBody) return;
+        modalHeading.textContent = title;
+        modalBody.textContent = bodyText;
+        overlay.classList.toggle("site-modal-overlay--error", !!isError);
+        overlay.setAttribute("aria-hidden", "false");
+        document.body.classList.add("site-modal-open");
+        overlay.classList.remove("is-open");
+        window.requestAnimationFrame(function () {
+          window.requestAnimationFrame(function () {
+            overlay.classList.add("is-open");
+          });
+        });
+        document.addEventListener("keydown", onModalKeydown);
+        var okBtn = overlay.querySelector(".site-modal-ok");
+        if (okBtn) window.setTimeout(function () { okBtn.focus(); }, 80);
+      }
+
+      overlay &&
+        overlay.querySelectorAll("[data-site-modal-close]").forEach(function (btn) {
+          btn.addEventListener("click", closeSiteModal);
+        });
+
+      if (overlay && modalHeading && modalBody) {
+        var strip = [];
+        var CONTACT_THANKS =
+          "Thank you! Your message has been sent successfully. Our team will contact you soon.";
+        if (nlErrEl && nlErrEl.textContent.trim()) {
+          openSiteModal("Something went wrong", nlErrEl.textContent.trim(), true);
+          strip.push("newsletter_error");
+        } else if (nlMsgEl && nlMsgEl.textContent.trim()) {
+          openSiteModal("Thank you!", nlMsgEl.textContent.trim(), false);
+          strip.push("newsletter_message");
+        } else if (ctErrEl && ctErrEl.textContent.trim()) {
+          openSiteModal("Unable to send your message", ctErrEl.textContent.trim(), true);
+          strip.push("error");
+        } else if (ctMsgEl && ctMsgEl.textContent.trim()) {
+          openSiteModal("Thank you!", CONTACT_THANKS, false);
+          strip.push("message");
+        }
+        if (strip.length) stripUrlParams(strip);
+      }
+
+      var nlPrivacy = document.getElementById("footer-newsletter-privacy");
+      var nlSubmit = document.getElementById("footer-newsletter-submit");
+      if (nlPrivacy && nlSubmit) {
+        function syncNewsletterSubmit() {
+          nlSubmit.disabled = !nlPrivacy.checked;
+        }
+        nlPrivacy.addEventListener("change", syncNewsletterSubmit);
+        syncNewsletterSubmit();
+      }
+    })();
+  </script>
+</body>
+</html>

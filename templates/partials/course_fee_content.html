@@ -1,0 +1,43 @@
+{% if not course_data %}
+  <section class="course-empty">
+    <h2>No {{ selected_mode|capitalize }} fee structure yet</h2>
+    <p>
+      {% if selected_mode == 'online' %}
+        Add it from the AdminCourses page.
+      {% else %}
+        Offline structure will be added next.
+      {% endif %}
+    </p>
+  </section>
+{% else %}
+  {% for section in course_data.sections %}
+    <section class="course-block" aria-label="{{ section.heading }}">
+      <div class="course-block-title">
+        <span class="course-block-icon" aria-hidden="true">▦</span>
+        <h2>{{ section.heading|replace('₹', 'RS ') }}</h2>
+      </div>
+
+      <article class="course-panel {% if section.layout and (section.layout.columns or 2) == 2 %}course-panel-wide{% endif %}">
+        <div class="course-panel-body">
+          {% if section.layout and section.layout.headers and section.layout.headers|length %}
+            <div class="course-table-head cols-{{ section.layout.columns or 2 }}">
+              {% for h in section.layout.headers %}
+                <div class="course-th">{{ h|replace('₹', 'RS ') }}</div>
+              {% endfor %}
+            </div>
+          {% endif %}
+
+          <div class="course-table cols-{{ section.layout.columns or 2 }}">
+            {% for row in section.rows %}
+              <div class="course-tr">
+                {% for col in row %}
+                  <div class="course-td">{{ col|replace('₹', 'RS ') }}</div>
+                {% endfor %}
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </article>
+    </section>
+  {% endfor %}
+{% endif %}

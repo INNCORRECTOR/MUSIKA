@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+
+{% block page_styles %}
+  <link rel="stylesheet" href="/static/pages/gallery.css?v=5" />
+{% endblock %}
+
+{% block content %}
+  <div class="gallery-page">
+    <section class="gallery-hero" aria-labelledby="gallery-hero-title">
+      <div class="gallery-hero-copy">
+        <h1 id="gallery-hero-title">
+          <span>OUR MOMENTS.</span>
+          <span>OUR MUSIC. OUR STORY.</span>
+        </h1>
+        <p class="gallery-hero-intro">{{ intro }}</p>
+      </div>
+      <aside class="gallery-hero-image" aria-hidden="true"></aside>
+    </section>
+
+    <section class="section-block">
+      <h2>{{ title }}</h2>
+
+      <div class="gallery-filter-row" style="display:flex;gap:10px;flex-wrap:wrap;margin:0 0 1rem;">
+        <a href="/gallery" data-genre="" class="btn btn-secondary {% if not selected_genre %}active-filter{% endif %}">All Categories</a>
+        {% for genre_item in genres %}
+          <a
+            href="/gallery?genre={{ genre_item.slug }}"
+            data-genre="{{ genre_item.slug }}"
+            class="btn btn-secondary {% if selected_genre == genre_item.slug %}active-filter{% endif %}"
+          >
+            {{ genre_item.name }}
+          </a>
+        {% endfor %}
+      </div>
+
+      <div id="gallery-grid" class="card-grid">
+        {% if images %}
+          {% for item in images %}
+            <article class="card">
+              <img class="gallery-image" src="{{ item.image_url }}" alt="{{ item.caption or item.genre }}" />
+            </article>
+          {% endfor %}
+        {% else %}
+          <article class="card empty-gallery-card">
+            <div class="empty-gallery-content">
+              <span class="empty-gallery-icon">♪</span>
+              <h3>No gallery images yet</h3>
+              <p>Upload images from the admin gallery page and they will appear here automatically.</p>
+            </div>
+          </article>
+        {% endif %}
+      </div>
+
+      <div style="display:flex;justify-content:center;margin:1rem 0 0;">
+        <button
+          id="gallery-show-more"
+          type="button"
+          class="btn show-more-btn"
+          {% if not has_more_initial %}style="display:none"{% endif %}
+        >
+          Show More
+        </button>
+      </div>
+    </section>
+  </div>
+
+  <div id="gallery-lightbox" class="gallery-lightbox" aria-hidden="true">
+    <button id="lightbox-close" type="button" class="lightbox-close" aria-label="Close">×</button>
+    <button id="lightbox-prev" type="button" class="lightbox-nav lightbox-prev" aria-label="Previous image">‹</button>
+    <img id="lightbox-image" class="lightbox-image" src="" alt="Gallery full image" />
+    <button id="lightbox-next" type="button" class="lightbox-nav lightbox-next" aria-label="Next image">›</button>
+  </div>
+
+  <script>
+    (function () {
+      const grid = document.getElementById("gallery-grid");
+      const showMoreBtn = document.getElementById("gallery-show-more");
+      const filterLinks = Array.from(document.querySelectorAll(".gallery-filter-row a[data-genre]"));
+      const lightbox = document.getElementById("gallery-lightbox");
+      const lightboxImage = document.getElementById("lightbox-image");
+      const lightboxClose = document.getElementById("lightbox-close");
+      const lightboxPrev = document.getElementById("lightbox-prev");
+      const lightboxNext = document.getElementById("lightbox-next");
+      const pageSize = {{ page_size }};
+      document.body.appendChild(lightbox);
+      let selectedGenre = {{ (selected_genre or "") | tojson }};
+      let offset = {{ images|length }};
+      let currentImageIndex = -1;
+      const emptyStateHtml =
+        '<article class="card empty-gallery-card"><div class="empty-gallery-content"><span class="empty-gallery-icon">♪</span><h3>No gallery images yet</h3><p>Upload images from the admin gallery page and they will appear here automatically.</p></div></article>';
+
+      function renderItems(items, append) {
+        if (!append) {
+          grid.innerHTML = "";
+        }
+
+        if (!items.length && !append) {
+          grid.innerHTML = emptyStateHtml;
+          return;
+        }
+
+        const html = items
+          .map((item) => {
+            const alt = item.caption || item.genre || "Gallery image";
+            return '<article class="card"><img class="gallery-image" src="' + item.image_url + '" alt="' + alt + '" /></article>';
+          })
+          .join("");
+
+        if (append) {
+          grid.insertAdjacentHTML("beforeend", html);
+        } else {
+          grid.innerHTML = html;
+        }
+      }
+
+      function getRenderedImages() {
+        return Array.from(grid.querySelectorAll(".gallery-image"));
+      }
+
+      function openLightbox(index) {
+        const images = getRenderedImages();
+        if (!images.length || index < 0 || index >= images.length) {
+          return;
+        }
+        currentImageIndex = index;
+        const image = images[index];
+        lightboxImage.src = image.src;
+        lightboxImage.alt = image.alt || "Gallery full image";
+        lightbox.classList.add("open");
+        lightbox.setAttribute("aria-hidden", "false");
+        document.body.style.overflow = "hidden";
+      }
+
+      function closeLightbox() {
+        lightbox.classList.remove("open");
+        lightbox.setAttribute("aria-hidden", "true");
+        lightboxImage.src = "";
+        currentImageIndex = -1;
+        document.body.style.overflow = "";
+      }
+
+      function showNextImage(direction) {
+        const images = getRenderedImages();
+        if (!images.length || currentImageIndex === -1) {
+          return;
+        }
+        const nextIndex = (currentImageIndex + direction + images.length) % images.length;
+        openLightbox(nextIndex);
+      }
+
+      async function loadImages(append) {
+        const params = new URLSearchParams();
+        params.set("limit", String(pageSize));
+        params.set("offset", String(append ? offset : 0));
+        if (selectedGenre) {
+          params.set("genre", selectedGenre);
+        }
+
+        const res = await fetch("/gallery/images?" + params.toString(), { headers: { "Accept": "application/json" } });
+        if (!res.ok) {
+          return;
+        }
+        const data = await res.json();
+        renderItems(data.items || [], append);
+
+        offset = append ? offset + (data.items || []).length : (data.items || []).length;
+        showMoreBtn.style.display = data.has_more ? "inline-block" : "none";
+      }
+
+      filterLinks.forEach((link) => {
+        link.addEventListener("click", async (event) => {
+          event.preventDefault();
+          selectedGenre = link.dataset.genre || "";
+          offset = 0;
+
+          filterLinks.forEach((item) => item.classList.remove("active-filter"));
+          link.classList.add("active-filter");
+
+          const url = selectedGenre ? "/gallery?genre=" + encodeURIComponent(selectedGenre) : "/gallery";
+          history.pushState({}, "", url);
+          await loadImages(false);
+        });
+      });
+
+      showMoreBtn.addEventListener("click", async () => {
+        await loadImages(true);
+      });
+
+      grid.addEventListener("click", (event) => {
+        const clickedImage = event.target.closest(".gallery-image");
+        if (!clickedImage) {
+          return;
+        }
+        const images = getRenderedImages();
+        const index = images.indexOf(clickedImage);
+        openLightbox(index);
+      });
+
+      lightboxClose.addEventListener("click", closeLightbox);
+      lightboxPrev.addEventListener("click", () => showNextImage(-1));
+      lightboxNext.addEventListener("click", () => showNextImage(1));
+      lightbox.addEventListener("click", (event) => {
+        if (event.target === lightbox) {
+          closeLightbox();
+        }
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (!lightbox.classList.contains("open")) {
+          return;
+        }
+        if (event.key === "Escape") {
+          closeLightbox();
+        } else if (event.key === "ArrowRight") {
+          showNextImage(1);
+        } else if (event.key === "ArrowLeft") {
+          showNextImage(-1);
+        }
+      });
+    })();
+  </script>
+{% endblock %}

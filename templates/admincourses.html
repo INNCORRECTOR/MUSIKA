@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block page_styles %}
+  <link rel="stylesheet" href="/static/pages/auth.css" />
+  <link rel="stylesheet" href="/static/pages/admin_courses.css" />
+{% endblock %}
+
+{% block content %}
+  <section class="auth-shell">
+    <div class="auth-card admin-card">
+      <h1>Admin Courses</h1>
+      <p>Build the {{ (selected_mode or 'offline')|capitalize }} fee structure using sections, columns, and rows.</p>
+
+      {% if message %}
+        <p class="auth-message">{{ message }}</p>
+      {% endif %}
+      {% if error %}
+        <p class="auth-error">{{ error }}</p>
+      {% endif %}
+
+      <div class="admin-gallery-actions" style="margin-bottom: 1rem;">
+        <a class="btn admin-back-link" href="/admin">Back to Admin Home</a>
+      </div>
+
+      <nav class="builder-mode-tabs" aria-label="Course fee modes">
+        <a class="builder-tab {% if selected_mode == 'offline' %}active{% endif %}" href="/admin/courses?mode=offline">Offline</a>
+        <a class="builder-tab {% if selected_mode == 'online' %}active{% endif %}" href="/admin/courses?mode=online">Online</a>
+      </nav>
+
+      <form method="post" action="/admin/dashboard/courses/{{ selected_mode or 'offline' }}" class="course-builder-form">
+        <div class="builder-top-row">
+          <label for="online-title">Page title</label>
+          <input
+            id="online-title"
+            name="page_title"
+            type="text"
+            value="{{ (loaded_data.pageTitle if loaded_data else ((selected_mode or 'offline')|upper ~ ' FEE STRUCTURES')) }}"
+          />
+        </div>
+
+        <input type="hidden" id="course-builder-json" name="data_json" />
+
+        <div class="builder-sections">
+          <div class="builder-sections-head">
+            <h2>Sections</h2>
+            <button class="btn-secondary" type="button" id="add-section-btn">+ Add section</button>
+          </div>
+
+          <div id="sections-container"></div>
+        </div>
+
+        <div class="builder-actions">
+          <button type="submit" class="btn-primary">Save Online Structure</button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <script>
+    (function () {
+      const sectionsContainer = document.getElementById("sections-container");
+      const addSectionBtn = document.getElementById("add-section-btn");
+      const jsonField = document.getElementById("course-builder-json");
+      const pageTitleInput = document.getElementById("online-title");
+
+      const initialData = {{ (loaded_data or {}) | tojson }};
+      const initialSections = Array.isArray(initialData.sections) ? initialData.sections : [];
+
+      function createEl(tag, attrs = {}, children = []) {
+        const el = document.createElement(tag);
+        Object.entries(attrs).forEach(([k, v]) => {
+          if (k === "class") el.className = v;
+          else if (k === "text") el.textContent = v;
+          else el.setAttribute(k, v);
+        });
+        children.forEach((child) => el.appendChild(child));
+        return el;
+      }
+
+      function addRow(rowsEl, row = []) {
+        const rowEl = createEl("div", { class: "builder-row" });
+        const col1 = createEl("input", { type: "text", placeholder: "Column 1", value: row[0] || "" });
+        const col2 = createEl("input", { type: "text", placeholder: "Column 2", value: row[1] || "" });
+        const col3 = createEl("input", { type: "text", placeholder: "Column 3 (optional)", value: row[2] || "" });
+        const removeBtn = createEl("button", { type: "button", class: "danger", text: "Remove" });
+        removeBtn.addEventListener("click", () => rowEl.remove());
+        rowEl.append(col1, col2, col3, removeBtn);
+        rowsEl.appendChild(rowEl);
+      }
+
+      function addSection(section = {}) {
+        const wrapper = createEl("div", { class: "builder-section" });
+        const head = createEl("div", { class: "builder-section-head" });
+
+        const heading = createEl("input", { type: "text", placeholder: "Section heading (e.g. ADMISSION)", value: section.heading || "" });
+        const columns = createEl("select");
+        columns.innerHTML = `
+          <option value="2">2 columns</option>
+          <option value="3">3 columns</option>
+        `;
+        columns.value = String((section.layout && section.layout.columns) || 2);
+
+        const removeSectionBtn = createEl("button", { type: "button", class: "danger", text: "Delete section" });
+        removeSectionBtn.addEventListener("click", () => wrapper.remove());
+
+        head.append(heading, columns, removeSectionBtn);
+
+        const headersWrap = createEl("div", { class: "builder-headers" });
+        const header1 = createEl("input", { type: "text", placeholder: "Header 1 (optional)", value: (section.layout && section.layout.headers && section.layout.headers[0]) || "" });
+        const header2 = createEl("input", { type: "text", placeholder: "Header 2 (optional)", value: (section.layout && section.layout.headers && section.layout.headers[1]) || "" });
+        const header3 = createEl("input", { type: "text", placeholder: "Header 3 (optional)", value: (section.layout && section.layout.headers && section.layout.headers[2]) || "" });
+        headersWrap.append(header1, header2, header3);
+
+        const rowsEl = createEl("div", { class: "builder-rows" });
+        const rows = Array.isArray(section.rows) ? section.rows : [];
+        if (rows.length) rows.forEach((r) => addRow(rowsEl, r));
+        else addRow(rowsEl, []);
+
+        const addRowBtn = createEl("button", { type: "button", class: "btn-secondary", text: "+ Add row" });
+        addRowBtn.addEventListener("click", () => addRow(rowsEl, []));
+
+        wrapper.append(head, headersWrap, rowsEl, addRowBtn);
+
+        sectionsContainer.appendChild(wrapper);
+      }
+
+      function collectData() {
+        const sectionEls = Array.from(sectionsContainer.querySelectorAll(".builder-section"));
+        const sections = sectionEls.map((sectionEl) => {
+          const [headingInput, columnsSelect] = sectionEl.querySelectorAll(".builder-section-head input, .builder-section-head select");
+          const headerInputs = Array.from(sectionEl.querySelectorAll(".builder-headers input"));
+          const headers = headerInputs.map((i) => i.value.trim()).filter(Boolean);
+          const rows = Array.from(sectionEl.querySelectorAll(".builder-row")).map((rowEl) => {
+            const inputs = Array.from(rowEl.querySelectorAll("input")).map((i) => i.value.trim());
+            const cols = parseInt(columnsSelect.value, 10) || 2;
+            const trimmed = inputs.slice(0, cols).filter((v) => v !== "");
+            const raw = inputs.slice(0, cols);
+            return raw.every((v) => v === "") ? null : raw;
+          }).filter(Boolean);
+
+          return {
+            heading: (headingInput.value || "").trim(),
+            layout: { columns: parseInt(columnsSelect.value, 10) || 2, headers },
+            rows
+          };
+        }).filter((s) => s.heading || (s.rows && s.rows.length));
+
+        return {
+          pageTitle: (pageTitleInput.value || "").trim() || "ONLINE FEE STRUCTURES",
+          sections
+        };
+      }
+
+      addSectionBtn.addEventListener("click", () => addSection({ layout: { columns: 2 }, rows: [["", ""]] }));
+
+      // Bootstrap
+      if (initialSections.length) {
+        initialSections.forEach(addSection);
+      } else {
+        addSection({ heading: "ADMISSION", layout: { columns: 2 }, rows: [["Admission Fee", "RS 5000"], ["Security Deposit", "RS 2000"]] });
+      }
+
+      // Before submit: serialize JSON into hidden field
+      document.querySelector(".course-builder-form").addEventListener("submit", () => {
+        jsonField.value = JSON.stringify(collectData());
+      });
+    })();
+  </script>
+{% endblock %}
+

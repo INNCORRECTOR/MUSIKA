@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block page_styles %}
+  <link rel="stylesheet" href="/static/pages/auth.css" />
+{% endblock %}
+
+{% block content %}
+  <section class="auth-shell">
+    <div class="auth-card" style="max-width: 1100px;">
+      <h1>Admin Inbox</h1>
+      {% if error %}
+        <p class="auth-error">{{ error }}</p>
+      {% endif %}
+
+      <h2 style="margin-top: 18px;">Contact Messages</h2>
+      {% if messages %}
+        <div style="overflow-x:auto;">
+          <table style="width:100%; border-collapse: collapse; margin-top: 10px;">
+            <thead>
+              <tr>
+                <th style="text-align:left; padding:8px; border-bottom:1px solid #2f3542;">Date</th>
+                <th style="text-align:left; padding:8px; border-bottom:1px solid #2f3542;">Name</th>
+                <th style="text-align:left; padding:8px; border-bottom:1px solid #2f3542;">Email</th>
+                <th style="text-align:left; padding:8px; border-bottom:1px solid #2f3542;">Phone</th>
+                <th style="text-align:left; padding:8px; border-bottom:1px solid #2f3542;">Subject</th>
+                <th style="text-align:left; padding:8px; border-bottom:1px solid #2f3542;">Message</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in messages %}
+                <tr>
+                  <td style="padding:8px; border-bottom:1px solid #1f2937;">{{ item.created_at }}</td>
+                  <td style="padding:8px; border-bottom:1px solid #1f2937;">{{ item.name }}</td>
+                  <td style="padding:8px; border-bottom:1px solid #1f2937;">{{ item.email }}</td>
+                  <td style="padding:8px; border-bottom:1px solid #1f2937;">{{ item.phone or "-" }}</td>
+                  <td style="padding:8px; border-bottom:1px solid #1f2937;">{{ item.subject or "-" }}</td>
+                  <td style="padding:8px; border-bottom:1px solid #1f2937; max-width: 360px;">{{ item.message }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <p>No contact messages yet.</p>
+      {% endif %}
+
+      <h2 style="margin-top: 24px;">Newsletter Subscriptions</h2>
+      {% if subscriptions %}
+        <div style="overflow-x:auto;">
+          <table style="width:100%; border-collapse: collapse; margin-top: 10px;">
+            <thead>
+              <tr>
+                <th style="text-align:left; padding:8px; border-bottom:1px solid #2f3542;">Date</th>
+                <th style="text-align:left; padding:8px; border-bottom:1px solid #2f3542;">Email</th>
+                <th style="text-align:left; padding:8px; border-bottom:1px solid #2f3542;">Active</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in subscriptions %}
+                <tr>
+                  <td style="padding:8px; border-bottom:1px solid #1f2937;">{{ item.created_at }}</td>
+                  <td style="padding:8px; border-bottom:1px solid #1f2937;">{{ item.email }}</td>
+                  <td style="padding:8px; border-bottom:1px solid #1f2937;">{{ "Yes" if item.is_active else "No" }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <p>No newsletter subscriptions yet.</p>
+      {% endif %}
+    </div>
+  </section>
+{% endblock %}

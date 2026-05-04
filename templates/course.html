@@ -1,0 +1,217 @@
+{% extends "base.html" %}
+
+{% block page_styles %}
+  <link rel="stylesheet" href="/static/pages/course.css?v=2" />
+{% endblock %}
+
+{% block content %}
+  <div class="course-page">
+    <header class="course-hero" aria-labelledby="course-title">
+      <div class="course-hero-shell">
+        <div class="course-hero-copy">
+          <h1 id="course-title">COURSES</h1>
+          <p class="course-hero-subtitle">Explore structured music programs at <span>MUSIK-A</span></p>
+          <div class="course-hero-accent" aria-hidden="true"></div>
+        </div>
+        <div class="course-hero-art" aria-hidden="true"></div>
+      </div>
+    </header>
+
+    <main class="course-content">
+      <nav class="course-mode-tabs" aria-label="Course fee modes">
+        <a class="course-tab {% if selected_mode == 'offline' %}active{% endif %}" href="/course?mode=offline" data-mode-tab="offline">Offline</a>
+        <a class="course-tab {% if selected_mode == 'online' %}active{% endif %}" href="/course?mode=online" data-mode-tab="online">Online</a>
+      </nav>
+
+      <div class="course-layout">
+        <section class="course-left-pane" id="course-fee-content" data-current-mode="{{ selected_mode }}">
+          {% include "partials/course_fee_content.html" %}
+        </section>
+
+        <aside class="course-right-pane" aria-label="Curriculum and scholarships">
+          <div class="course-sidebar-inner">
+            <section class="course-accordion-item">
+              <button class="course-accordion-toggle" type="button" aria-expanded="false" data-target="education-training-panel">
+                <span>Education &amp; Training</span>
+                <span class="course-accordion-arrow" aria-hidden="true">&lt;</span>
+              </button>
+              <div class="course-accordion-panel" id="education-training-panel" hidden>
+                <article class="course-info-card course-side-article course-side-article-education">
+                  <p class="course-side-tag">Education &amp; Training</p>
+                  <h2 class="course-side-heading">A World-Class Curriculum</h2>
+                  <p>
+                    At the heart of MUSIK-A&rsquo;s mission is a comprehensive, multi-disciplinary curriculum that spans classical
+                    traditions, contemporary genres, cultural heritage, and technical disciplines. Students aged three and above
+                    can access structured, progressive training designed to build genuine mastery &mdash; not just surface-level
+                    familiarity &mdash; with their chosen art form.
+                  </p>
+                  <p>
+                    MUSIK-A&rsquo;s affiliations with internationally recognized bodies such as the London College of Music (for
+                    Western Classical Music) and Rockschool UK (for Contemporary Music) ensure that students in Nagaland have access
+                    to the same rigorous standards as students in any major global city. This is a remarkable achievement for
+                    Northeast India, and one that MUSIK-A wears with pride.
+                  </p>
+
+                  <div class="course-pillar-grid" role="list">
+                    <div class="course-pillar" role="listitem">
+                      <h3 class="course-pillar-title"><span class="course-pillar-icon" aria-hidden="true">&#9835;</span>Western Classical Music</h3>
+                      <p class="course-pillar-desc">London College of Music affiliated &mdash; internationally recognized grading and certification.</p>
+                    </div>
+                    <div class="course-pillar" role="listitem">
+                      <h3 class="course-pillar-title"><span class="course-pillar-icon" aria-hidden="true">&#9834;</span>Contemporary Music</h3>
+                      <p class="course-pillar-desc">Rockschool UK affiliated &mdash; modern genres including rock, pop, and jazz.</p>
+                    </div>
+                    <div class="course-pillar" role="listitem">
+                      <h3 class="course-pillar-title"><span class="course-pillar-icon" aria-hidden="true">&#10010;</span>Church Music</h3>
+                      <p class="course-pillar-desc">Specialized training for worship leaders, choir directors, and church musicians.</p>
+                    </div>
+                    <div class="course-pillar" role="listitem">
+                      <h3 class="course-pillar-title"><span class="course-pillar-icon" aria-hidden="true">&#9737;</span>Indian Classical &amp; Bollywood</h3>
+                      <p class="course-pillar-desc">Rich grounding in India&rsquo;s classical traditions alongside popular contemporary styles.</p>
+                    </div>
+                    <div class="course-pillar" role="listitem">
+                      <h3 class="course-pillar-title"><span class="course-pillar-icon" aria-hidden="true">&#10070;</span>Naga Folk Music Studies</h3>
+                      <p class="course-pillar-desc">Preserving and celebrating indigenous musical heritage as a formal discipline.</p>
+                    </div>
+                    <div class="course-pillar" role="listitem">
+                      <h3 class="course-pillar-title"><span class="course-pillar-icon" aria-hidden="true">&#127911;</span>Audio Engineering</h3>
+                      <p class="course-pillar-desc">Live Sound &amp; Recording Arts &mdash; one of the few such professional programmes in Northeast India.</p>
+                    </div>
+                  </div>
+
+                  <p class="course-side-footnote">
+                    MUSIK-A remains among the very few institutes in Northeast India offering structured, professional Audio
+                    Engineering courses covering both Live Sound and Recording Arts &mdash; a significant contribution to the
+                    region&rsquo;s creative industries.
+                  </p>
+                </article>
+              </div>
+            </section>
+
+            <section class="course-accordion-item">
+              <button class="course-accordion-toggle" type="button" aria-expanded="false" data-target="scholarships-panel">
+                <span>Scholarships</span>
+                <span class="course-accordion-arrow" aria-hidden="true">&lt;</span>
+              </button>
+              <div class="course-accordion-panel" id="scholarships-panel" hidden>
+                <article class="course-info-card course-side-article course-side-article-scholarships">
+                  <p class="course-side-tag">Scholarships</p>
+                  <h2 class="course-side-heading">Scholarships &amp; Social Upliftment</h2>
+                  <p>
+                    One of the most profound expressions of MUSIK-A&rsquo;s NGO identity is its long-standing scholarship
+                    programme. For over a decade, MUSIK-A has ensured that financial barriers do not prevent gifted and dedicated
+                    young people from accessing world-class music education. This is a commitment that goes beyond policy &mdash;
+                    it is embedded in the institution&rsquo;s founding philosophy.
+                  </p>
+
+                  <h3 class="course-subheading">Who Benefits</h3>
+                  <ul class="course-benefit-list">
+                    <li><span class="course-benefit-icon" aria-hidden="true">&#10003;</span><span>Children and youth from underprivileged families</span></li>
+                    <li><span class="course-benefit-icon" aria-hidden="true">&#10003;</span><span>Students displaying exceptional talent and dedication</span></li>
+                    <li><span class="course-benefit-icon" aria-hidden="true">&#10003;</span><span>Young artists needing financial support to pursue professional music</span></li>
+                  </ul>
+
+                  <p>
+                    The scholarship programme has created ripple effects that extend far beyond the individual recipients. When a
+                    child from an underprivileged household receives music training, they gain not only a skill but a new sense of
+                    self-worth, discipline, and possibility. Many scholarship recipients have gone on to become teachers,
+                    performers, and audio engineers &mdash; individuals who now contribute to Nagaland&rsquo;s cultural and
+                    economic life in meaningful ways.
+                  </p>
+
+                  <h3 class="course-subheading">Duration</h3>
+                  <p>
+                    Scholarships have been awarded continuously for over 10 years &mdash; making this one of Nagaland&rsquo;s
+                    longest-running arts scholarship programmes.
+                  </p>
+
+                  <p class="course-side-footnote">
+                    This sustained commitment to social upliftment is what distinguishes MUSIK-A from a conventional arts institution
+                    and establishes it firmly as a community anchor &mdash; a place where opportunity is created, not just
+                    celebrated.
+                  </p>
+                </article>
+              </div>
+            </section>
+          </div>
+        </aside>
+      </div>
+    </main>
+
+    <script>
+      (function () {
+        const accordionToggles = document.querySelectorAll(".course-accordion-toggle");
+        if (!accordionToggles.length) return;
+
+        const closeItem = (btn) => {
+          const panelId = btn.getAttribute("data-target");
+          const panel = panelId ? document.getElementById(panelId) : null;
+          btn.setAttribute("aria-expanded", "false");
+          if (panel) panel.hidden = true;
+        };
+
+        const openItem = (btn) => {
+          const panelId = btn.getAttribute("data-target");
+          const panel = panelId ? document.getElementById(panelId) : null;
+          btn.setAttribute("aria-expanded", "true");
+          if (panel) panel.hidden = false;
+        };
+
+        accordionToggles.forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const isOpen = btn.getAttribute("aria-expanded") === "true";
+            accordionToggles.forEach((otherBtn) => closeItem(otherBtn));
+            if (!isOpen) {
+              openItem(btn);
+            }
+          });
+        });
+
+        const modeTabs = document.querySelectorAll("[data-mode-tab]");
+        const feeContent = document.getElementById("course-fee-content");
+        if (!modeTabs.length || !feeContent) return;
+
+        const setActiveMode = (mode) => {
+          modeTabs.forEach((tab) => {
+            tab.classList.toggle("active", tab.getAttribute("data-mode-tab") === mode);
+          });
+          feeContent.setAttribute("data-current-mode", mode);
+        };
+
+        modeTabs.forEach((tab) => {
+          tab.addEventListener("click", async (event) => {
+            const mode = tab.getAttribute("data-mode-tab");
+            if (!mode) return;
+            event.preventDefault();
+
+            if (feeContent.getAttribute("data-current-mode") === mode) return;
+            if (feeContent.getAttribute("data-loading") === "true") return;
+
+            feeContent.setAttribute("data-loading", "true");
+            tab.classList.add("is-loading");
+
+            try {
+              const response = await fetch(`/course/partial?mode=${encodeURIComponent(mode)}`, {
+                headers: { "X-Requested-With": "XMLHttpRequest" },
+              });
+              if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+              const html = await response.text();
+              feeContent.innerHTML = html;
+              setActiveMode(mode);
+
+              const url = new URL(window.location.href);
+              url.searchParams.set("mode", mode);
+              window.history.replaceState({}, "", url.toString());
+            } catch (error) {
+              window.location.href = tab.href;
+            } finally {
+              feeContent.removeAttribute("data-loading");
+              tab.classList.remove("is-loading");
+            }
+          });
+        });
+      })();
+    </script>
+  </div>
+{% endblock %}

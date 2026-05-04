@@ -1,0 +1,320 @@
+{% extends "base.html" %}
+
+{% block page_styles %}
+  <link rel="stylesheet" href="/static/pages/auth.css" />
+  <link rel="stylesheet" href="/static/pages/admin_gallery.css" />
+  <link rel="stylesheet" href="/static/pages/admin_artist.css" />
+{% endblock %}
+
+{% block content %}
+  <section class="admin-gallery-shell">
+    <div class="admin-gallery-header">
+      <h1>Admin Artist Roster</h1>
+      <p>Create artist profiles and attach image/video media.</p>
+      <div class="admin-gallery-actions">
+        <a class="btn admin-back-link" href="/admin">Back to Admin Home</a>
+      </div>
+    </div>
+
+    {% if message %}
+      <p class="auth-message">{{ message }}</p>
+    {% endif %}
+    {% if error %}
+      <p class="auth-error">{{ error }}</p>
+    {% endif %}
+
+    <div class="admin-gallery-grid">
+      <section class="admin-panel">
+        <h2>Create Artist</h2>
+        <form method="post" action="/admin/dashboard/artists" enctype="multipart/form-data" class="auth-form">
+          <label for="artist-name">Name</label>
+          <input id="artist-name" name="name" type="text" required />
+
+          <label for="artist-title">Title (Optional)</label>
+          <input id="artist-title" name="title" type="text" placeholder="Vocalist, Guitarist, Mentor..." />
+
+          <label for="artist-bio">Bio (Optional)</label>
+          <textarea id="artist-bio" name="bio" rows="5" placeholder="Short profile"></textarea>
+
+          <label for="artist-hero-image">Main Hero Image (Optional)</label>
+          <input id="artist-hero-image" name="hero_image_file" type="file" accept="image/*" />
+
+          <h3>Social Links (Optional)</h3>
+          <label for="artist-facebook">Facebook</label>
+          <input id="artist-facebook" name="facebook_url" type="url" placeholder="https://facebook.com/..." />
+
+          <label for="artist-instagram">Instagram</label>
+          <input id="artist-instagram" name="instagram_url" type="url" placeholder="https://instagram.com/..." />
+
+          <label for="artist-twitter">Twitter / X</label>
+          <input id="artist-twitter" name="twitter_url" type="url" placeholder="https://x.com/..." />
+
+          <label for="artist-whatsapp">WhatsApp</label>
+          <input id="artist-whatsapp" name="whatsapp_url" type="text" placeholder="+91 9876543210" />
+
+          <label for="artist-email">Email</label>
+          <input id="artist-email" name="email" type="email" placeholder="name@example.com" />
+
+          <h3>Music Links (Optional)</h3>
+          <label for="artist-youtube">YouTube</label>
+          <input id="artist-youtube" name="youtube_url" type="url" placeholder="https://youtube.com/..." />
+
+          <label for="artist-spotify">Spotify</label>
+          <input id="artist-spotify" name="spotify_url" type="url" placeholder="https://open.spotify.com/..." />
+
+          <label for="artist-youtube-music">YouTube Music</label>
+          <input id="artist-youtube-music" name="youtube_music_url" type="url" placeholder="https://music.youtube.com/..." />
+
+          <label for="artist-amazon-music">Amazon Music</label>
+          <input id="artist-amazon-music" name="amazon_music_url" type="url" placeholder="https://music.amazon.com/..." />
+
+          <label for="artist-imusic">iMusic / Apple Music</label>
+          <input id="artist-imusic" name="imusic_url" type="url" placeholder="https://music.apple.com/..." />
+
+          <label for="artist-featured-media-type">Top IMG/VIDEO Type (Optional)</label>
+          <select id="artist-featured-media-type" name="featured_media_type">
+            <option value="">None</option>
+            <option value="image">Image</option>
+            <option value="video">Video</option>
+          </select>
+
+          <label for="artist-featured-media-file">Top IMG Upload (Optional)</label>
+          <input id="artist-featured-media-file" name="featured_media_file" type="file" accept="image/*" />
+
+          <label for="artist-featured-media-url">Top IMG/VIDEO URL (Optional)</label>
+          <input id="artist-featured-media-url" name="featured_media_url" type="url" placeholder="https://..." />
+
+          <label for="artist-featured-media-thumb">Top Video Thumbnail URL (Optional)</label>
+          <input id="artist-featured-media-thumb" name="featured_media_thumbnail_url" type="url" placeholder="https://..." />
+          <button type="submit">Create Artist</button>
+        </form>
+      </section>
+
+      <section class="admin-panel">
+        <h2>Add Media</h2>
+        <form method="post" action="/admin/dashboard/artists/media" enctype="multipart/form-data" class="auth-form">
+          <label for="artist-id">Select Artist</label>
+          <select id="artist-id" name="artist_id" required>
+            <option value="">Choose artist</option>
+            {% for artist, media_count in artists %}
+              <option value="{{ artist.id }}">{{ artist.name }} ({{ media_count }} media)</option>
+            {% endfor %}
+          </select>
+
+          <label for="media-type">Media Type</label>
+          <select id="media-type" name="media_type" required>
+            <option value="image">Image</option>
+            <option value="video">Video</option>
+          </select>
+
+          <label for="media-file">Upload Image (Optional)</label>
+          <input id="media-file" name="file" type="file" accept="image/*" />
+
+          <label for="media-url">Media URL</label>
+          <input id="media-url" name="media_url" type="url" placeholder="https://..." />
+
+          <label for="thumb-url">Thumbnail URL (Optional)</label>
+          <input id="thumb-url" name="thumbnail_url" type="url" placeholder="https://..." />
+
+          <button type="submit">Add Media</button>
+        </form>
+      </section>
+    </div>
+
+    <section class="admin-panel">
+      <h2>Manage Artists</h2>
+      {% if artists %}
+        <div class="category-list artist-list">
+          {% for artist, media_count in artists %}
+            <article class="category-item artist-item">
+              <div class="artist-item-main">
+                <p class="category-name">{{ artist.name }}</p>
+                <p class="category-slug">{{ artist.title or "No title" }}</p>
+                {% if artist.bio %}
+                  <p class="artist-bio">{{ artist.bio }}</p>
+                {% endif %}
+                {% if artist.hero_image_url %}
+                  <p class="artist-meta">Hero image set</p>
+                  <a href="{{ artist.hero_image_url }}" target="_blank" rel="noopener noreferrer">Open hero image</a>
+                {% endif %}
+                {% if artist.featured_media_url %}
+                  <p class="artist-meta">Top IMG/VIDEO set ({{ (artist.featured_media_type or 'image')|upper }})</p>
+                  <a href="{{ artist.featured_media_url }}" target="_blank" rel="noopener noreferrer">Open top IMG/VIDEO</a>
+                {% endif %}
+                <p class="artist-meta">{{ media_count }} media attached</p>
+
+                <form method="post" action="/admin/dashboard/artists/{{ artist.id }}/update" enctype="multipart/form-data" class="artist-edit-form">
+                  <label for="edit-artist-name-{{ artist.id }}">Name</label>
+                  <input id="edit-artist-name-{{ artist.id }}" name="name" type="text" value="{{ artist.name }}" required />
+
+                  <label for="edit-artist-title-{{ artist.id }}">Title (Optional)</label>
+                  <input id="edit-artist-title-{{ artist.id }}" name="title" type="text" value="{{ artist.title or '' }}" />
+
+                  <label for="edit-artist-bio-{{ artist.id }}">Bio (Optional)</label>
+                  <textarea id="edit-artist-bio-{{ artist.id }}" name="bio" rows="3">{{ artist.bio or '' }}</textarea>
+
+                  <label for="edit-artist-hero-image-{{ artist.id }}">Replace Main Hero Image (Optional)</label>
+                  <input id="edit-artist-hero-image-{{ artist.id }}" name="hero_image_file" type="file" accept="image/*" />
+
+                  <h3>Social Links (Optional)</h3>
+                  <label for="edit-artist-facebook-{{ artist.id }}">Facebook</label>
+                  <input
+                    id="edit-artist-facebook-{{ artist.id }}"
+                    name="facebook_url"
+                    type="url"
+                    value="{{ artist.facebook_url or '' }}"
+                    placeholder="https://facebook.com/..."
+                  />
+
+                  <label for="edit-artist-instagram-{{ artist.id }}">Instagram</label>
+                  <input
+                    id="edit-artist-instagram-{{ artist.id }}"
+                    name="instagram_url"
+                    type="url"
+                    value="{{ artist.instagram_url or '' }}"
+                    placeholder="https://instagram.com/..."
+                  />
+
+                  <label for="edit-artist-twitter-{{ artist.id }}">Twitter / X</label>
+                  <input
+                    id="edit-artist-twitter-{{ artist.id }}"
+                    name="twitter_url"
+                    type="url"
+                    value="{{ artist.twitter_url or '' }}"
+                    placeholder="https://x.com/..."
+                  />
+
+                  <label for="edit-artist-whatsapp-{{ artist.id }}">WhatsApp</label>
+                  <input
+                    id="edit-artist-whatsapp-{{ artist.id }}"
+                    name="whatsapp_url"
+                    type="text"
+                    value="{{ artist.whatsapp_url or '' }}"
+                    placeholder="+91 9876543210"
+                  />
+
+                  <label for="edit-artist-email-{{ artist.id }}">Email</label>
+                  <input
+                    id="edit-artist-email-{{ artist.id }}"
+                    name="email"
+                    type="email"
+                    value="{{ artist.email or '' }}"
+                    placeholder="name@example.com"
+                  />
+
+                  <h3>Music Links (Optional)</h3>
+                  <label for="edit-artist-youtube-{{ artist.id }}">YouTube</label>
+                  <input
+                    id="edit-artist-youtube-{{ artist.id }}"
+                    name="youtube_url"
+                    type="url"
+                    value="{{ artist.youtube_url or '' }}"
+                    placeholder="https://youtube.com/..."
+                  />
+
+                  <label for="edit-artist-spotify-{{ artist.id }}">Spotify</label>
+                  <input
+                    id="edit-artist-spotify-{{ artist.id }}"
+                    name="spotify_url"
+                    type="url"
+                    value="{{ artist.spotify_url or '' }}"
+                    placeholder="https://open.spotify.com/..."
+                  />
+
+                  <label for="edit-artist-youtube-music-{{ artist.id }}">YouTube Music</label>
+                  <input
+                    id="edit-artist-youtube-music-{{ artist.id }}"
+                    name="youtube_music_url"
+                    type="url"
+                    value="{{ artist.youtube_music_url or '' }}"
+                    placeholder="https://music.youtube.com/..."
+                  />
+
+                  <label for="edit-artist-amazon-music-{{ artist.id }}">Amazon Music</label>
+                  <input
+                    id="edit-artist-amazon-music-{{ artist.id }}"
+                    name="amazon_music_url"
+                    type="url"
+                    value="{{ artist.amazon_music_url or '' }}"
+                    placeholder="https://music.amazon.com/..."
+                  />
+
+                  <label for="edit-artist-imusic-{{ artist.id }}">iMusic / Apple Music</label>
+                  <input
+                    id="edit-artist-imusic-{{ artist.id }}"
+                    name="imusic_url"
+                    type="url"
+                    value="{{ artist.imusic_url or '' }}"
+                    placeholder="https://music.apple.com/..."
+                  />
+
+                  <label for="edit-featured-media-type-{{ artist.id }}">Top IMG/VIDEO Type (Optional)</label>
+                  <select id="edit-featured-media-type-{{ artist.id }}" name="featured_media_type">
+                    <option value="">None</option>
+                    <option value="image" {% if artist.featured_media_type == "image" %}selected{% endif %}>Image</option>
+                    <option value="video" {% if artist.featured_media_type == "video" %}selected{% endif %}>Video</option>
+                  </select>
+
+                  <label for="edit-featured-media-file-{{ artist.id }}">Replace Top IMG Upload (Optional)</label>
+                  <input id="edit-featured-media-file-{{ artist.id }}" name="featured_media_file" type="file" accept="image/*" />
+
+                  <label for="edit-featured-media-url-{{ artist.id }}">Top IMG/VIDEO URL (Optional)</label>
+                  <input
+                    id="edit-featured-media-url-{{ artist.id }}"
+                    name="featured_media_url"
+                    type="url"
+                    value="{{ artist.featured_media_url or '' }}"
+                    placeholder="https://..."
+                  />
+
+                  <label for="edit-featured-media-thumb-{{ artist.id }}">Top Video Thumbnail URL (Optional)</label>
+                  <input
+                    id="edit-featured-media-thumb-{{ artist.id }}"
+                    name="featured_media_thumbnail_url"
+                    type="url"
+                    value="{{ artist.featured_media_thumbnail_url or '' }}"
+                    placeholder="https://..."
+                  />
+
+                  <button type="submit">Update Artist</button>
+                </form>
+              </div>
+              <form method="post" action="/admin/dashboard/artists/{{ artist.id }}/delete" class="artist-delete-form">
+                <button type="submit" class="delete-btn delete-category-btn">Delete Artist</button>
+              </form>
+            </article>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p>No artists found.</p>
+      {% endif %}
+    </section>
+
+    <section class="admin-panel">
+      <h2>Latest Artist Media</h2>
+      {% if latest_media %}
+        <div class="upload-grid artist-media-grid">
+          {% for media, artist_name in latest_media %}
+            <article class="upload-card">
+              {% if media.media_type == "image" %}
+                <img src="{{ media.media_url }}" alt="{{ artist_name }}" />
+              {% elif media.thumbnail_url %}
+                <img src="{{ media.thumbnail_url }}" alt="{{ artist_name }}" />
+              {% else %}
+                <div class="video-placeholder">VIDEO</div>
+              {% endif %}
+              <p><strong>{{ artist_name }}</strong></p>
+              <p>{{ media.media_type|upper }}</p>
+              <a href="{{ media.media_url }}" target="_blank" rel="noopener noreferrer">Open Media URL</a>
+              <form method="post" action="/admin/dashboard/artists/media/{{ media.id }}/delete">
+                <button type="submit" class="delete-btn">Delete Media</button>
+              </form>
+            </article>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p>No media entries yet.</p>
+      {% endif %}
+    </section>
+  </section>
+{% endblock %}

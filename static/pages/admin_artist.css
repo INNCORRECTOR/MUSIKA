@@ -1,0 +1,90 @@
+.artist-list {
+  gap: 0.75rem;
+}
+
+.artist-item {
+  align-items: flex-start;
+  gap: 0.8rem;
+}
+
+.artist-item-main {
+  width: 100%;
+}
+
+.artist-bio {
+  margin: 0.3rem 0;
+  color: #334155;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.artist-meta {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.artist-edit-form {
+  margin-top: 0.7rem;
+  display: grid;
+  gap: 0.4rem;
+  max-width: 560px;
+}
+
+.artist-edit-form label {
+  font-size: 0.78rem;
+  color: #475569;
+  font-weight: 700;
+}
+
+.artist-edit-form input,
+.artist-edit-form textarea {
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 0.5rem 0.65rem;
+  font-size: 0.9rem;
+  font-family: inherit;
+  background: #ffffff;
+}
+
+.artist-edit-form textarea {
+  resize: vertical;
+  min-height: 82px;
+}
+
+.artist-edit-form button {
+  justify-self: start;
+}
+
+.artist-delete-form {
+  align-self: flex-start;
+}
+
+.artist-media-grid .upload-card a {
+  display: inline-block;
+  margin-top: 0.35rem;
+  color: #1d4ed8;
+  font-size: 0.82rem;
+  text-decoration: none;
+}
+
+.artist-media-grid .upload-card a:hover {
+  text-decoration: underline;
+}
+
+.video-placeholder {
+  width: 100%;
+  height: 140px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.35rem;
+  background: linear-gradient(135deg, #0f172a, #1e293b);
+  color: #f8fafc;
+  letter-spacing: 0.08em;
+  font-size: 0.78rem;
+  font-weight: 700;
+}

@@ -1,0 +1,350 @@
+.gallery-page {
+  background: #070b12;
+  color: #f8fafc;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0;        
+}
+
+.main-content {
+  padding-bottom: 0;
+  background: #070b12;
+}
+
+.gallery-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 44%);
+  min-height: 320px;
+  border-top: 1px solid rgba(148, 163, 184, 0.14);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+  background: linear-gradient(180deg, rgba(4, 8, 14, 0.98), rgba(3, 6, 12, 0.98));
+  overflow: hidden;
+}
+
+.gallery-hero-copy {
+  padding: 22px 24px 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.gallery-breadcrumb {
+  margin: 0 0 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.64rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
+}
+
+.gallery-breadcrumb a {
+  color: #e50914;
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.gallery-breadcrumb a:hover {
+  color: #ff2a33;
+}
+
+.gallery-hero h1 {
+  margin: 0 0 10px;
+  font-size: clamp(1.9rem, 4vw, 3.1rem);
+  line-height: 1.04;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+}
+
+.gallery-hero h1 span {
+  display: block;
+}
+
+.gallery-hero h1 span:last-child {
+  color: #e50914;
+}
+
+.gallery-hero-intro {
+  margin: 0;
+  max-width: 640px;
+  color: #d3dcea;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.gallery-hero-image {
+  position: relative;
+  min-height: 260px;
+  background:
+    linear-gradient(90deg, rgba(6, 10, 16, 0.95) 0%, rgba(6, 10, 16, 0.48) 35%, rgba(6, 10, 16, 0.18) 56%, rgba(6, 10, 16, 0.1) 100%),
+    url("https://musikazctech.s3.ap-south-1.amazonaws.com/team/camera.png") right center / cover no-repeat;
+}
+
+.gallery-hero-image::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 12% 50%, rgba(229, 9, 20, 0.2), transparent 45%),
+    linear-gradient(180deg, rgba(3, 6, 12, 0.22), rgba(3, 6, 12, 0.44));
+  pointer-events: none;
+}
+
+.gallery-page .section-block {
+  margin-top: 18px;
+  background: #0b1119;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  padding: 16px;
+}
+
+.gallery-page .section-block h2 {
+  margin: 0 0 10px;
+  color: #f8fafc;
+  font-size: 1.05rem;
+}
+
+.gallery-page .card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  align-items: stretch;
+}
+
+.gallery-page .card {
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: #0a0f16;
+  color: #d6deeb;
+  padding: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+}
+
+.gallery-page .card p {
+  margin: 0;
+}
+
+.gallery-page .empty-gallery-card {
+  grid-column: 1 / -1;
+  min-height: 260px;
+  border: 1px dashed rgba(229, 9, 20, 0.45);
+  background: linear-gradient(180deg, rgba(12, 20, 32, 0.95), rgba(9, 14, 24, 0.95));
+  display: grid;
+  place-items: center;
+  padding: 1.25rem;
+}
+
+.gallery-page .empty-gallery-content {
+  text-align: center;
+  max-width: 560px;
+}
+
+.gallery-page .empty-gallery-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 999px;
+  border: 1px solid rgba(229, 9, 20, 0.45);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #e50914;
+  font-size: 1.3rem;
+  margin-bottom: 0.75rem;
+}
+
+.gallery-page .empty-gallery-content h3 {
+  margin: 0 0 0.4rem;
+  color: #ffffff;
+  font-size: 1.18rem;
+}
+
+.gallery-page .empty-gallery-content p {
+  margin: 0;
+  color: #c7d2e4;
+}
+
+.gallery-filter-row .active-filter {
+  background: #bf1e2e;
+  border-color: #bf1e2e;
+  color: #ffffff;
+}
+
+.gallery-page .show-more-btn {
+  background: transparent;
+  color: #bf1e2e;
+  border: 1px solid #bf1e2e;
+}
+
+.gallery-page .show-more-btn:hover {
+  background: rgba(191, 30, 46, 0.08);
+}
+
+.gallery-page .gallery-image {
+  width: 100%;
+  height: 380px;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  cursor: zoom-in;
+}
+
+.gallery-lightbox {
+  position: fixed !important;
+  inset: 0 !important;
+  background: rgba(2, 6, 12, 0.9);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999 !important;
+  padding: 1rem;
+}
+
+.gallery-lightbox.open {
+  display: flex;
+}
+
+.lightbox-image {
+  max-width: min(94vw, 1200px);
+  max-height: 88vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 10px;
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.35);
+}
+
+.lightbox-close {
+  position: absolute;
+  top: 18px;
+  right: 20px;
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: 999px;
+  background: rgba(10, 16, 26, 0.78);
+  color: #ffffff;
+  font-size: 1.45rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.lightbox-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: 999px;
+  background: rgba(10, 16, 26, 0.78);
+  color: #ffffff;
+  font-size: 1.8rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.lightbox-prev {
+  left: 22px;
+}
+
+.lightbox-next {
+  right: 22px;
+}
+
+.lightbox-close:hover,
+.lightbox-nav:hover {
+  background: rgba(20, 30, 45, 0.92);
+}
+
+@media (max-width: 920px) {
+  .gallery-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .gallery-hero-image {
+    min-height: 230px;
+  }
+
+  .gallery-page .card-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .gallery-page .gallery-image {
+    height: 330px;
+  }
+}
+
+@media (max-width: 640px) {
+  .gallery-page {
+    padding: 0 0 16px;
+  }
+
+  /* Hero: copy stacked on image (event-style overlay); desktop / tablet wide unchanged */
+  .gallery-hero {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(280px, min(72vw, 380px));
+    min-height: 0;
+  }
+
+  .gallery-hero-image {
+    grid-row: 1;
+    grid-column: 1;
+    z-index: 0;
+    min-height: 0;
+    height: 100%;
+    width: 100%;
+    background:
+      linear-gradient(90deg, rgba(3, 6, 12, 0.86) 0%, rgba(3, 6, 12, 0.62) 44%, rgba(3, 6, 12, 0.72) 100%),
+      radial-gradient(circle at 20% 20%, rgba(229, 9, 20, 0.18), transparent 46%),
+      url("https://musikazctech.s3.ap-south-1.amazonaws.com/team/camera.png") center 38% / cover no-repeat;
+  }
+
+  .gallery-hero-image::before {
+    background:
+      radial-gradient(circle at 12% 35%, rgba(229, 9, 20, 0.12), transparent 45%),
+      linear-gradient(180deg, rgba(3, 6, 12, 0.22), rgba(3, 6, 12, 0.44));
+  }
+
+  .gallery-hero-copy {
+    grid-row: 1;
+    grid-column: 1;
+    z-index: 1;
+    justify-content: flex-end;
+    align-items: flex-start;
+    text-align: left;
+    padding: clamp(18px, 5vw, 28px) max(14px, env(safe-area-inset-left))
+      clamp(20px, 6vw, 32px) max(14px, env(safe-area-inset-right));
+  }
+
+  .gallery-hero h1 {
+    font-size: clamp(1.35rem, 6.5vw, 2rem);
+    text-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+    color: #f8fafc;
+  }
+
+  .gallery-hero h1 span:last-child {
+    text-shadow:
+      0 12px 28px rgba(0, 0, 0, 0.45),
+      0 0 18px rgba(229, 9, 20, 0.35);
+  }
+
+  .gallery-hero-intro {
+    font-size: 0.86rem;
+    max-width: 36ch;
+    margin-top: 10px;
+    margin-left: 0;
+    margin-right: 0;
+    text-shadow: 0 2px 14px rgba(0, 0, 0, 0.55);
+  }
+
+  .gallery-page .card-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .gallery-page .gallery-image {
+    height: 300px;
+  }
+}

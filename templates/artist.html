@@ -1,0 +1,249 @@
+{% extends "base.html" %}
+
+{% block page_styles %}
+  <link rel="stylesheet" href="/static/pages/artist.css" />
+{% endblock %}
+
+{% block content %}
+  <div class="artist-page">
+    {% if featured_artist %}
+      {% set media_items = featured_artist.media_items or [] %}
+      <section
+        class="artist-hero"
+        aria-labelledby="artist-page-title"
+        style="--artist-hero-image: url('{{ featured_artist.hero_image_url or 'https://musikazctech.s3.ap-south-1.amazonaws.com/artistart.png' }}');"
+      >
+        <div class="artist-hero-inner">
+          <h1 id="artist-page-title">{{ featured_artist.name }}</h1>
+          <p class="artist-title-line">{{ (featured_artist.title or "Director • Singer • Songwriter")|replace(",", " • ")|upper }}</p>
+        </div>
+      </section>
+
+      <section class="artist-content">
+        <aside class="artist-social" aria-label="Artist social links">
+          <p class="artist-links-heading">SOCIAL LINKS</p>
+          {% if featured_artist.facebook_url %}
+            <a class="artist-social-link" data-label="Facebook" href="{{ featured_artist.facebook_url }}" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M22 12.07C22 6.477 17.523 2 11.93 2 6.477 2 2 6.477 2 12.07c0 5.016 3.657 9.176 8.438 9.93v-7.03H7.898v-2.9h2.54V9.86c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.196 2.238.196v2.46h-1.26c-1.242 0-1.63.77-1.63 1.562v1.875h2.773l-.443 2.9h-2.33V22c4.78-.754 8.437-4.914 8.437-9.93z"/>
+              </svg>
+            </a>
+          {% endif %}
+          {% if featured_artist.instagram_url %}
+            <a class="artist-social-link" data-label="Instagram" href="{{ featured_artist.instagram_url }}" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M7.5 2h9A5.5 5.5 0 0 1 22 7.5v9A5.5 5.5 0 0 1 16.5 22h-9A5.5 5.5 0 0 1 2 16.5v-9A5.5 5.5 0 0 1 7.5 2zm9 2h-9A3.5 3.5 0 0 0 4 7.5v9A3.5 3.5 0 0 0 7.5 20h9a3.5 3.5 0 0 0 3.5-3.5v-9A3.5 3.5 0 0 0 16.5 4zm-4.5 3.2A4.8 4.8 0 1 1 7.2 12 4.81 4.81 0 0 1 12 7.2zm0 2A2.8 2.8 0 1 0 14.8 12 2.803 2.803 0 0 0 12 9.2zM17.6 6.4a1 1 0 1 1-1 1 1 1 0 0 1 1-1z"/>
+              </svg>
+            </a>
+          {% endif %}
+          {% if featured_artist.twitter_url %}
+            <a class="artist-social-link" data-label="Twitter / X" href="{{ featured_artist.twitter_url }}" target="_blank" rel="noopener noreferrer" aria-label="Twitter / X">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M18.9 2H22l-6.8 7.77L23 22h-6.2l-4.86-6.5L6.2 22H2.99l7.3-8.35L1 2h6.36l4.39 5.76L18.9 2zm-1.09 18h1.72L6.42 3.9H4.58L17.8 20z"/>
+              </svg>
+            </a>
+          {% endif %}
+          {% if featured_artist.whatsapp_url %}
+            <a class="artist-social-link" data-label="WhatsApp" href="{{ featured_artist.whatsapp_url }}" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M20.52 3.48A11.84 11.84 0 0 0 12.06 0C5.5 0 .17 5.33.17 11.89c0 2.1.55 4.16 1.6 5.98L0 24l6.3-1.66a11.8 11.8 0 0 0 5.76 1.46h.01c6.56 0 11.9-5.33 11.9-11.89 0-3.18-1.24-6.17-3.45-8.43zM12.07 21.8h-.01a9.86 9.86 0 0 1-5.02-1.37l-.36-.21-3.74.98 1-3.65-.24-.38a9.86 9.86 0 0 1-1.52-5.28c0-5.44 4.43-9.87 9.88-9.87 2.64 0 5.13 1.03 6.99 2.9a9.83 9.83 0 0 1 2.89 6.98c0 5.44-4.43 9.87-9.87 9.87zm5.78-7.93c-.32-.16-1.9-.94-2.2-1.05-.3-.11-.52-.16-.74.16-.22.32-.85 1.05-1.04 1.27-.19.22-.38.24-.7.08-.32-.16-1.35-.5-2.57-1.6-.95-.85-1.6-1.9-1.79-2.22-.19-.32-.02-.49.14-.65.14-.14.32-.38.48-.57.16-.19.22-.32.33-.54.11-.22.05-.41-.03-.57-.08-.16-.74-1.78-1.01-2.44-.26-.62-.53-.54-.74-.55h-.63c-.22 0-.57.08-.87.41-.3.32-1.14 1.11-1.14 2.71 0 1.6 1.17 3.15 1.33 3.36.16.22 2.3 3.52 5.58 4.94.78.34 1.39.54 1.86.69.78.25 1.49.21 2.05.13.63-.09 1.9-.78 2.17-1.53.27-.75.27-1.39.19-1.53-.08-.14-.3-.22-.62-.38z"/>
+              </svg>
+            </a>
+          {% endif %}
+          {% if featured_artist.email %}
+            <a
+              class="artist-social-link"
+              data-label="Email"
+              href="{% if featured_artist.email.startswith('mailto:') %}{{ featured_artist.email }}{% else %}mailto:{{ featured_artist.email }}{% endif %}"
+              aria-label="Email"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 4-8 5-8-5V6l8 5 8-5v2z"/>
+              </svg>
+            </a>
+          {% endif %}
+        </aside>
+
+        <aside class="artist-music" aria-label="Artist music links">
+          <p class="artist-links-heading">LISTEN ON</p>
+          {% if featured_artist.youtube_url %}
+            <a class="artist-music-link" data-label="YouTube" href="{{ featured_artist.youtube_url }}" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M21.6 7.2a3 3 0 0 0-2.1-2.12C17.6 4.6 12 4.6 12 4.6s-5.6 0-7.5.48A3 3 0 0 0 2.4 7.2 31.2 31.2 0 0 0 2 12a31.2 31.2 0 0 0 .4 4.8 3 3 0 0 0 2.1 2.12c1.9.48 7.5.48 7.5.48s5.6 0 7.5-.48a3 3 0 0 0 2.1-2.12A31.2 31.2 0 0 0 22 12a31.2 31.2 0 0 0-.4-4.8zM10 15.5v-7l6 3.5-6 3.5z"/>
+              </svg>
+            </a>
+          {% endif %}
+          {% if featured_artist.spotify_url %}
+            <a class="artist-music-link" data-label="Spotify" href="{{ featured_artist.spotify_url }}" target="_blank" rel="noopener noreferrer" aria-label="Spotify">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm4.58 14.53a.75.75 0 0 1-1.03.25c-2.83-1.73-6.4-2.12-10.63-1.18a.75.75 0 1 1-.33-1.46c4.63-1.05 8.6-.6 11.74 1.32.35.22.46.68.25 1.07zM17.8 13.6a.9.9 0 0 1-1.24.3c-3.24-1.99-8.18-2.57-12-.41a.9.9 0 0 1-.9-1.56c4.28-2.47 9.74-1.82 13.4.45.42.25.56.8.3 1.22zM18 10.5c-3.74-2.22-9.92-2.43-13.5-.97a1 1 0 0 1-.75-1.85c4.13-1.67 10.83-1.39 15.13 1.16a1 1 0 0 1-1.03 1.66c-.03-.02-.06-.03-.1-.05z"/>
+              </svg>
+            </a>
+          {% endif %}
+          {% if featured_artist.youtube_music_url %}
+            <a class="artist-music-link" data-label="YouTube Music" href="{{ featured_artist.youtube_music_url }}" target="_blank" rel="noopener noreferrer" aria-label="YouTube Music">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 2a8 8 0 1 1 0 16 8 8 0 0 1 0-16zm-1 4.5v7l6-3.5-6-3.5z"/>
+              </svg>
+            </a>
+          {% endif %}
+          {% if featured_artist.amazon_music_url %}
+            <a class="artist-music-link" data-label="Amazon Music" href="{{ featured_artist.amazon_music_url }}" target="_blank" rel="noopener noreferrer" aria-label="Amazon Music">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm-1 5.8a1 1 0 0 1 2 0v8.2a1 1 0 1 1-2 0V7.8zm-3.5 2.3a1 1 0 0 1 1.4.1 4 4 0 0 0 6.2 0 1 1 0 1 1 1.5 1.3 6 6 0 0 1-9.2 0 1 1 0 0 1 .1-1.4z"/>
+              </svg>
+            </a>
+          {% endif %}
+          {% if featured_artist.imusic_url %}
+            <a class="artist-music-link" data-label="iMusic / Apple Music" href="{{ featured_artist.imusic_url }}" target="_blank" rel="noopener noreferrer" aria-label="iMusic / Apple Music">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M17 3v10.2a3.8 3.8 0 1 1-2-3.35V6.3l-7 1.4V15a3.8 3.8 0 1 1-2-3.35V5l11-2z"/>
+              </svg>
+            </a>
+          {% endif %}
+        </aside>
+
+        <article class="artist-main-media">
+          {% if featured_artist.featured_media_url %}
+            {% if featured_artist.featured_media_type == "video" %}
+              <video class="artist-media" controls playsinline {% if featured_artist.featured_media_thumbnail_url %}poster="{{ featured_artist.featured_media_thumbnail_url }}"{% endif %}>
+                <source src="{{ featured_artist.featured_media_url }}" />
+                Your browser does not support the video tag.
+              </video>
+              <span class="artist-play-indicator" aria-hidden="true">▶</span>
+            {% else %}
+              <img
+                class="artist-media"
+                src="{{ featured_artist.featured_media_url }}"
+                alt="{{ featured_artist.name }} featured media"
+                loading="lazy"
+              />
+            {% endif %}
+          {% else %}
+            <div class="artist-media-placeholder">img / video</div>
+          {% endif %}
+        </article>
+
+        <section class="artist-bio-section">
+          <h2 class="artist-bio-heading">About</h2>
+          <p class="artist-intro">{{ featured_artist.bio or intro }}</p>
+        </section>
+
+        {% if media_items %}
+          <div class="artist-media-bottom-grid">
+            {% for media in media_items %}
+              <article class="artist-media-frame artist-media-frame-bottom">
+                {% if media.media_type == "video" %}
+                  <video class="artist-media" controls playsinline {% if media.thumbnail_url %}poster="{{ media.thumbnail_url }}"{% endif %}>
+                    <source src="{{ media.media_url }}" />
+                    Your browser does not support the video tag.
+                  </video>
+                {% else %}
+                  <img
+                    class="artist-media"
+                    src="{{ media.media_url }}"
+                    alt="{{ featured_artist.name }} media {{ loop.index + 1 }}"
+                    loading="lazy"
+                  />
+                {% endif %}
+              </article>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </section>
+    {% else %}
+      <section class="artist-roster" aria-label="Artist roster">
+        <div class="artist-empty">
+          <p>No artists added yet. Please add artist entries from the AdminArtist page.</p>
+        </div>
+      </section>
+    {% endif %}
+  </div>
+
+  <div id="artist-lightbox" class="artist-lightbox" aria-hidden="true">
+    <button id="artist-lightbox-close" type="button" class="lightbox-close" aria-label="Close">×</button>
+    <button id="artist-lightbox-prev" type="button" class="lightbox-nav lightbox-prev" aria-label="Previous image">‹</button>
+    <img id="artist-lightbox-image" class="lightbox-image" src="" alt="Artist full image" />
+    <button id="artist-lightbox-next" type="button" class="lightbox-nav lightbox-next" aria-label="Next image">›</button>
+  </div>
+
+  <script>
+    (function () {
+      const lightbox = document.getElementById("artist-lightbox");
+      const lightboxImage = document.getElementById("artist-lightbox-image");
+      const lightboxClose = document.getElementById("artist-lightbox-close");
+      const lightboxPrev = document.getElementById("artist-lightbox-prev");
+      const lightboxNext = document.getElementById("artist-lightbox-next");
+      document.body.appendChild(lightbox);
+
+      let currentImageIndex = -1;
+
+      function getRenderedImages() {
+        return Array.from(document.querySelectorAll(".artist-media-bottom-grid img.artist-media"));
+      }
+
+      function openLightbox(index) {
+        const images = getRenderedImages();
+        if (!images.length || index < 0 || index >= images.length) {
+          return;
+        }
+        currentImageIndex = index;
+        const image = images[index];
+        lightboxImage.src = image.src;
+        lightboxImage.alt = image.alt || "Artist full image";
+        lightbox.classList.add("open");
+        lightbox.setAttribute("aria-hidden", "false");
+        document.body.style.overflow = "hidden";
+      }
+
+      function closeLightbox() {
+        lightbox.classList.remove("open");
+        lightbox.setAttribute("aria-hidden", "true");
+        lightboxImage.src = "";
+        currentImageIndex = -1;
+        document.body.style.overflow = "";
+      }
+
+      function showNextImage(direction) {
+        const images = getRenderedImages();
+        if (!images.length || currentImageIndex === -1) {
+          return;
+        }
+        const nextIndex = (currentImageIndex + direction + images.length) % images.length;
+        openLightbox(nextIndex);
+      }
+
+      document.addEventListener("click", (event) => {
+        const clickedImage = event.target.closest(".artist-media-bottom-grid img.artist-media");
+        if (!clickedImage) {
+          return;
+        }
+        const images = getRenderedImages();
+        const index = images.indexOf(clickedImage);
+        openLightbox(index);
+      });
+
+      lightboxClose.addEventListener("click", closeLightbox);
+      lightboxPrev.addEventListener("click", () => showNextImage(-1));
+      lightboxNext.addEventListener("click", () => showNextImage(1));
+      lightbox.addEventListener("click", (event) => {
+        if (event.target === lightbox) {
+          closeLightbox();
+        }
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (!lightbox.classList.contains("open")) {
+          return;
+        }
+        if (event.key === "Escape") {
+          closeLightbox();
+        } else if (event.key === "ArrowRight") {
+          showNextImage(1);
+        } else if (event.key === "ArrowLeft") {
+          showNextImage(-1);
+        }
+      });
+    })();
+  </script>
+{% endblock %}

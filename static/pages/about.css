@@ -40,27 +40,33 @@
 
 .about-hero::before {
   content: "";
-  position: absolute;
-  left: -220px;
-  top: -80px;
-  width: 820px;
-  height: 880px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(0, 2, 6, 0.99) 0%, rgba(1, 4, 8, 0.92) 54%, rgba(1, 4, 8, 0) 100%);
-  z-index: 2;
-  pointer-events: none;
+  display: none;
 }
 
 .about-hero-copy {
   position: relative;
   z-index: 3;
-  width: min(66%, 960px);
+  box-sizing: border-box;
+  width: 100%;
+  max-width: none;
   min-height: clamp(580px, 62vw, 780px);
-  padding: 24px 26px 18px;
+  padding: 24px min(36%, 480px) 18px 26px;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  background: linear-gradient(90deg, rgba(2, 5, 10, 0.995) 0%, rgba(2, 5, 10, 0.97) 58%, rgba(2, 5, 10, 0.45) 100%);
+  background: linear-gradient(
+    90deg,
+    rgba(3, 6, 12, 0.97) 0%,
+    rgba(3, 6, 12, 0.78) 32%,
+    rgba(3, 6, 12, 0.42) 56%,
+    rgba(3, 6, 12, 0.14) 78%,
+    rgba(3, 6, 12, 0) 100%
+  );
+}
+
+.about-hero-intro,
+.about-hero-body {
+  max-width: min(52rem, 100%);
 }
 
 .about-hero h1 {
@@ -108,12 +114,11 @@
   content: "";
   position: absolute;
   inset: 0;
-  background:
-    radial-gradient(circle at 90% 24%, rgba(229, 9, 20, 0.14), transparent 36%),
-    radial-gradient(circle at 94% 58%, rgba(229, 9, 20, 0.08), transparent 32%),
-    linear-gradient(90deg, rgba(1, 3, 7, 1) 0%, rgba(1, 3, 7, 0.98) 38%, rgba(3, 6, 11, 0.72) 62%, rgba(6, 9, 15, 0.54) 100%);
   z-index: 2;
   pointer-events: none;
+  background:
+    radial-gradient(ellipse 85% 70% at 92% 28%, rgba(229, 9, 20, 0.12), transparent 42%),
+    radial-gradient(ellipse 70% 55% at 96% 62%, rgba(229, 9, 20, 0.06), transparent 48%);
 }
 
 .about-hero-image img {
@@ -123,7 +128,7 @@
   object-fit: cover;
   object-position: 78% center;
   display: block;
-  filter: contrast(1.11) saturate(0.84) brightness(0.57);
+  filter: contrast(1.08) saturate(0.88) brightness(0.64);
 }
 
 .community-section {
@@ -504,7 +509,22 @@
   max-width: none;
   margin: 0 auto;
   box-sizing: border-box;
-  padding: 24px 32px 28px;
+  padding:
+    clamp(80px, 12vh, 160px)
+    clamp(36px, 4vw, 48px)
+    clamp(40px, 4vw, 56px);
+}
+
+.about-team-rule {
+  margin: clamp(8px, 1.25vw, 14px) 0;
+  border: 0;
+  height: 7px;
+  box-sizing: border-box;
+  background:
+    linear-gradient(90deg, transparent 2%, rgba(148, 163, 184, 0.32) 12%, rgba(148, 163, 184, 0.32) 88%, transparent 98%)
+      center 0 / 100% 1px no-repeat,
+    linear-gradient(90deg, transparent 10%, rgba(229, 9, 20, 0.45) 50%, transparent 90%) center 100% / min(560px, 85%) 2px no-repeat;
+  opacity: 0.92;
 }
 
 .about-team-copy {
@@ -512,7 +532,6 @@
   flex-direction: column;
   min-width: 0;
   min-height: 0;
-  height: 100%;
   gap: 0;
 }
 
@@ -569,16 +588,14 @@
 .about-team-stats {
   list-style: none;
   margin: 0;
-  padding: 8px 0 0;
+  padding: 4px 0 0;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0;
+  gap: 8px 10px;
   max-width: none;
   width: 100%;
-  flex: 0 0 auto;
-  align-self: stretch;
-  margin-top: auto;
-  gap: 8px 10px;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .about-team-stats li {
@@ -748,6 +765,9 @@
 
   .about-team-inner {
     grid-template-columns: 1fr;
+    gap: clamp(22px, 3vw, 36px);
+    padding-top: clamp(64px, 10vh, 120px);
+    padding-inline: clamp(28px, 4vw, 40px);
   }
 
   .about-team-grid {
@@ -792,7 +812,8 @@
     height: 100%;
     min-height: 0;
     object-fit: cover;
-    object-position: center;
+    /* Narrow screens: anchor on the right side of the photo (performers) */
+    object-position: right center;
   }
 
   /* No image tint — readability from text shadows only */
@@ -1063,9 +1084,16 @@
   .community-copy,
   .journey-intro,
   .timeline,
-  .about-team-inner,
   .about-cta {
     padding: 16px 14px;
+  }
+
+  .about-team-inner {
+    padding:
+      clamp(52px, 14vw, 88px)
+      max(14px, env(safe-area-inset-right))
+      clamp(28px, 6vw, 40px)
+      max(14px, env(safe-area-inset-left));
   }
 
   .about-team-stats {
@@ -1109,5 +1137,409 @@
     max-width: 100%;
     min-height: 48px;
     font-size: 0.68rem;
+  }
+}
+
+/* --- Faculty vertical carousel (scoped; does not affect other about sections) --- */
+.about-team-inner > .about-team-carousel {
+  min-width: 0;
+  min-height: 0;
+  width: 100%;
+  margin-top: 0;
+}
+
+.about-team-carousel {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  box-sizing: border-box;
+}
+
+.about-team-carousel-shell {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+}
+
+.about-team-carousel-viewport-clip {
+  min-width: 0;
+  width: 100%;
+}
+
+.about-team-carousel-arrow {
+  position: relative;
+  z-index: 2;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 54px;
+  height: 54px;
+  padding: 0;
+  font-size: 1.45rem;
+  line-height: 1;
+  font-weight: 700;
+  color: #f8fafc;
+  background: rgba(4, 7, 11, 0.75);
+  border: 1px solid rgba(229, 9, 20, 0.55);
+  border-radius: 50%;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, opacity 0.15s ease;
+}
+
+.about-team-carousel-arrow:hover:not(:disabled) {
+  background: rgba(229, 9, 20, 0.2);
+  border-color: rgba(229, 9, 20, 0.9);
+  color: #ffffff;
+}
+
+.about-team-carousel-arrow:focus-visible {
+  outline: 2px solid #e50914;
+  outline-offset: 2px;
+}
+
+.about-team-carousel-arrow:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.about-team-carousel-dots {
+  display: none;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 8px 10px;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  box-sizing: border-box;
+}
+
+.about-team-carousel-dot {
+  width: 7px;
+  height: 7px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(148, 163, 184, 0.35);
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.about-team-carousel-dot:hover {
+  background: rgba(148, 163, 184, 0.55);
+}
+
+.about-team-carousel-dot:focus-visible {
+  outline: 2px solid #e50914;
+  outline-offset: 2px;
+}
+
+.about-team-carousel-dot.is-active {
+  background: #e50914;
+  box-shadow: 0 0 0 2px rgba(229, 9, 20, 0.35);
+  transform: scale(1.15);
+}
+
+.about-team-carousel-viewport {
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: auto;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: y mandatory;
+  scroll-behavior: smooth;
+  scroll-padding-block: 6px;
+  max-height: min(78vh, 860px);
+  padding: 8px 6px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(229, 9, 20, 0.28);
+  background: linear-gradient(
+    165deg,
+    rgba(22, 32, 52, 0.92) 0%,
+    rgba(12, 18, 34, 0.88) 50%,
+    rgba(14, 20, 30, 0.9) 100%
+  );
+  box-sizing: border-box;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(229, 9, 20, 0.75) rgba(15, 23, 42, 0.55);
+}
+
+.about-team-carousel-viewport::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+
+.about-team-carousel-viewport::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.72);
+  border-radius: 5px;
+  margin: 2px;
+}
+
+.about-team-carousel-viewport::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #e52630 0%, #b80610 100%);
+  border-radius: 5px;
+  border: 2px solid rgba(12, 18, 30, 0.9);
+}
+
+.about-team-carousel-viewport::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #ff3b45 0%, #e50914 100%);
+}
+
+/* Faculty carousel: square photos, cover + center (scoped to slider only) */
+.about-team-carousel-viewport .about-team-card-photo {
+  height: auto;
+  aspect-ratio: 1 / 1;
+}
+
+.about-team-carousel-viewport .about-team-card-photo img {
+  object-fit: cover;
+  object-position: center;
+}
+
+.about-team-carousel-viewport:focus-visible {
+  outline: 2px solid rgba(229, 9, 20, 0.85);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .about-team-carousel-viewport {
+    scroll-behavior: auto;
+  }
+}
+
+.about-team-carousel-viewport .about-team-grid.about-team-carousel-track {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  grid-template-columns: unset;
+  align-content: unset;
+  justify-content: unset;
+}
+
+.about-team-carousel-viewport .about-team-card {
+  flex-shrink: 0;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+@media (min-width: 768px) {
+  .about-team-carousel {
+    gap: 22px;
+    align-items: center;
+  }
+
+  .about-team-carousel-shell {
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 22px;
+    width: 100%;
+    max-width: 1000px;
+    margin-inline: auto;
+  }
+
+  .about-team-carousel-arrow {
+    display: inline-flex;
+    font-size: 1.65rem;
+  }
+
+  .about-team-carousel-viewport-clip {
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: 840px;
+  }
+
+  .about-team-carousel-dots {
+    display: flex;
+    max-width: min(900px, 100%);
+    padding: 0 16px;
+  }
+
+  .about-team-carousel-viewport {
+    max-height: none;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    overscroll-behavior-y: auto;
+    scroll-snap-type: x mandatory;
+    scroll-padding-block: 0;
+    scroll-padding-inline: max(16px, calc(50% - 130px));
+    padding-inline: 6px;
+    padding-block: 10px;
+  }
+
+  .about-team-carousel-viewport .about-team-grid.about-team-carousel-track {
+    flex-direction: row;
+    align-items: stretch;
+    gap: 16px;
+    width: max-content;
+    min-height: 0;
+  }
+
+  .about-team-carousel-viewport .about-team-card {
+    flex: 0 0 auto;
+    width: 260px;
+    scroll-snap-align: center;
+    scroll-snap-stop: normal;
+  }
+
+  .about-team-carousel-viewport .about-team-card-photo {
+    width: 100%;
+    flex: 0 0 auto;
+  }
+
+  .about-team-carousel-viewport .about-team-card-body {
+    padding: 10px 12px 12px;
+  }
+
+  .about-team-carousel-viewport .about-team-card-name {
+    font-size: 0.9rem;
+  }
+
+  .about-team-carousel-viewport .about-team-card-role {
+    font-size: 0.72rem;
+  }
+}
+
+@media (min-width: 981px) {
+  .about-team-rule {
+    display: none;
+  }
+
+  .about-team-copy {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: start;
+  }
+
+  .about-team-stats {
+    grid-column: 1;
+    grid-row: 2;
+    align-self: start;
+    padding-top: 4px;
+    margin-top: 4px;
+  }
+
+  .about-team-inner > .about-team-carousel {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-self: start;
+    justify-self: center;
+    width: 100%;
+    max-width: min(1080px, 100%);
+    margin-inline: auto;
+    margin-top: 0;
+  }
+}
+
+@media (max-width: 980px) {
+  .about-team-carousel-viewport {
+    max-height: min(68vh, 740px);
+  }
+}
+
+@media (max-width: 520px) {
+  .about-team-carousel-viewport {
+    max-height: min(62vh, 640px);
+  }
+}
+
+/* --- Tablet portrait / narrow landscape (e.g. iPad Pro): hero only; faculty keeps desktop 2-col + carousel from ≥768px --- */
+@media (min-width: 981px) and (max-width: 1199px) {
+  .about-hero {
+    min-height: clamp(500px, 56vw, 700px);
+  }
+
+  .about-hero-copy {
+    min-height: clamp(500px, 56vw, 700px);
+    padding-right: min(44%, 420px);
+  }
+
+  .about-hero-intro,
+  .about-hero-body {
+    max-width: min(44rem, 100%);
+  }
+
+  .about-hero-image img {
+    min-height: clamp(500px, 56vw, 700px);
+    object-position: 72% center;
+  }
+}
+
+/* Tablet (768–980): single-column faculty flow + ~two cards visible in horizontal strip */
+@media (min-width: 768px) and (max-width: 980px) {
+  .about-team-inner {
+    padding:
+      clamp(72px, 9vw, 112px)
+      clamp(24px, 4vw, 40px)
+      clamp(36px, 4vw, 44px);
+  }
+
+  .about-team-copy {
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .about-team-copy > .section-tag,
+  .about-team-heading {
+    width: 100%;
+    max-width: none;
+    text-align: left;
+  }
+
+  .about-team-body {
+    width: 100%;
+    max-width: none;
+  }
+
+  .about-team-stats {
+    width: 100%;
+    max-width: none;
+    margin-inline: 0;
+    padding-top: 0;
+  }
+
+  .about-team-inner > .about-team-carousel {
+    justify-self: stretch;
+    width: 100%;
+    max-width: none;
+    margin-inline: 0;
+    margin-top: 0;
+  }
+
+  .about-team-carousel-shell {
+    max-width: 100%;
+    gap: clamp(12px, 2vw, 18px);
+  }
+
+  .about-team-carousel-viewport-clip {
+    max-width: none;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .about-team-carousel-dots {
+    max-width: 100%;
+  }
+
+  .about-team-carousel-viewport {
+    max-height: none;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  .about-team-carousel-viewport .about-team-card {
+    width: min(200px, 42vw);
+    scroll-snap-align: center;
+  }
+
+  .about-team-carousel-viewport {
+    scroll-padding-inline: max(12px, calc(50% - min(100px, 21vw)));
   }
 }

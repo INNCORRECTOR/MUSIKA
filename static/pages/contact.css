@@ -432,7 +432,7 @@
   overflow: hidden;
   background:
     linear-gradient(90deg, rgba(5, 8, 13, 0.94) 0%, rgba(5, 8, 13, 0.82) 42%, rgba(5, 8, 13, 0.93) 100%),
-    url("https://images.unsplash.com/photo-1511379938547-c1f69419868d?auto=format&fit=crop&w=1200&q=80");
+    url("/static/connet.jpg");
   background-size: cover;
   background-position: center;
 }

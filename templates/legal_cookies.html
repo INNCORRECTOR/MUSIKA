@@ -1,13 +1,75 @@
 {% extends "base.html" %}
 
+{% block page_styles %}
+  <link rel="stylesheet" href="/static/pages/legal-pages.css" />
+{% endblock %}
+
 {% block content %}
   <section class="legal-static" aria-labelledby="legal-cookies-heading">
-    <div class="legal-static-inner">
-      <h1 id="legal-cookies-heading">Cookies</h1>
-      <p>
-        This site may use cookies that are necessary for sign-in (for example admin access). Details will be listed
-        here. See also our <a href="/privacy-policy">Privacy Policy</a> where applicable.
-      </p>
+    <div class="legal-static-inner legal-doc">
+      <h1 id="legal-cookies-heading" class="legal-doc-title">Cookies Policy</h1>
+
+      <div class="legal-doc-meta">
+        <p><strong>Last updated:</strong> MAY 4</p>
+      </div>
+
+      <article>
+        <h2>1. What Are Cookies?</h2>
+        <p class="legal-intro">
+          Cookies are small text files stored on your device when you visit a website. They help improve functionality,
+          user experience, and performance.
+        </p>
+
+        <h2>2. Our Use of Cookies</h2>
+        <p>Our website does not use cookies for:</p>
+        <ul>
+          <li>Advertising</li>
+          <li>Retargeting</li>
+          <li>Marketing campaigns</li>
+          <li>User behaviour tracking</li>
+        </ul>
+        <p>
+          However, embedded media platforms (such as YouTube, Spotify, etc.) may place cookies when you interact with
+          their content.
+        </p>
+        <p>These cookies may be used for:</p>
+        <ul>
+          <li>Playback functionality</li>
+          <li>Performance monitoring</li>
+          <li>Basic analytics by their platform</li>
+        </ul>
+        <p>We do not control or access these cookies.</p>
+
+        <h2>3. Types of Cookies That May Appear</h2>
+        <ul>
+          <li>Session cookies (via embedded players)</li>
+          <li>Performance cookies (set by third-party services)</li>
+        </ul>
+
+        <h2>4. Managing Cookies</h2>
+        <p>
+          You can manage or disable cookies through your browser settings. Disabling cookies may affect media playback
+          functionality.
+        </p>
+
+        <h2>5. Consent for Cookies</h2>
+        <p>
+          By using this website and interacting with third-party embedded content, you consent to the use of cookies
+          according to their policies.
+        </p>
+
+        <h2>6. Updates to Cookies Policy</h2>
+        <p>
+          We may update this Cookies Policy from time to time. Updated versions will be posted on this page. Related
+          information may also appear in our <a href="/privacy-policy">Privacy Policy</a>.
+        </p>
+
+        <h2>Contact</h2>
+        <p>For any concerns related to cookies, please contact:</p>
+        <p><strong>Email:</strong> <a href="mailto:musikaschool06@gmail.com">musikaschool06@gmail.com</a></p>
+
+        <p class="legal-footer-note">© 2026 {{ site_name }} | All Rights Reserved</p>
+      </article>
     </div>
   </section>
 {% endblock %}

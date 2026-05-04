@@ -1,0 +1,126 @@
+/**
+ * Faculty / artist profile — iPad Pro bucket only (does not load on other widths).
+ * Fixes overlapping side toolbars vs media grid at ~1024–1366px.
+ */
+@media (min-width: 1024px) and (max-width: 1366px) {
+  .artist-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "media media"
+      "listen social"
+      "bio bio"
+      "more more";
+    column-gap: clamp(16px, 2.5vw, 28px);
+    row-gap: 0;
+    margin-top: -18px;
+    padding: 0 clamp(22px, 3.2vw, 40px) clamp(32px, 4vw, 48px);
+    position: relative;
+  }
+
+  .artist-main-media {
+    grid-area: media;
+    position: relative;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    min-height: clamp(240px, 34vw, 400px);
+    isolation: isolate;
+    background: #0a111a;
+  }
+
+  .artist-music {
+    grid-area: listen;
+    position: static;
+    left: auto;
+    right: auto;
+    top: auto;
+    z-index: auto;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+    padding: 18px 12px 20px 0;
+    margin-top: 10px;
+    border-top: 1px solid rgba(148, 163, 184, 0.2);
+  }
+
+  .artist-social {
+    grid-area: social;
+    position: static;
+    left: auto;
+    right: auto;
+    top: auto;
+    z-index: auto;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 18px 0 20px 12px;
+    margin-top: 10px;
+    border-top: 1px solid rgba(148, 163, 184, 0.2);
+  }
+
+  .artist-music > .artist-links-heading {
+    flex-basis: 100%;
+    text-align: left;
+    margin-bottom: 4px;
+  }
+
+  .artist-social > .artist-links-heading {
+    flex-basis: 100%;
+    text-align: right;
+    margin-bottom: 4px;
+  }
+
+  .artist-social-link,
+  .artist-music-link {
+    width: 52px;
+    height: 52px;
+    border-radius: 11px;
+  }
+
+  .artist-social-link svg,
+  .artist-music-link svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .artist-bio-section {
+    grid-area: bio;
+    margin-top: 12px;
+    max-width: none;
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+    padding: clamp(18px, 2.8vw, 26px);
+    border-radius: 14px;
+  }
+
+  .artist-intro {
+    max-width: none;
+  }
+
+  .artist-media-bottom-grid {
+    grid-area: more;
+    margin-top: 20px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: clamp(12px, 1.8vw, 18px);
+  }
+
+  .artist-media-frame-bottom {
+    min-height: clamp(220px, 26vw, 320px);
+  }
+
+  .artist-play-indicator {
+    width: 66px;
+    height: 66px;
+    font-size: 1.75rem;
+  }
+}

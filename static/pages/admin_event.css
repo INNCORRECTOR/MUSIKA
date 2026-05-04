@@ -139,3 +139,45 @@
 .delete-event-btn {
   margin-top: 0.3rem;
 }
+
+.event-edit-block {
+  margin: 0.35rem 0 0.5rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0.55rem 0.65rem;
+  background: #f8fafc;
+}
+
+.event-edit-block summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.92rem;
+  color: #182233;
+  list-style-position: outside;
+}
+
+.event-edit-block summary::-webkit-details-marker {
+  color: #64748b;
+}
+
+.event-edit-form {
+  margin-top: 0.85rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.event-update-btn {
+  margin-top: 0.35rem;
+  background: #182233;
+  color: #ffffff;
+  border: 1px solid #182233;
+  border-radius: 8px;
+  padding: 0.65rem 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.event-update-btn:hover {
+  background: #24344d;
+  border-color: #24344d;
+}

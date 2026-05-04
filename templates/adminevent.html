@@ -9,7 +9,7 @@
   <section class="admin-event-shell">
     <div class="admin-event-header">
       <h1>Admin Events</h1>
-      <p>Create and manage events with multiple image uploads.</p>
+      <p>Create, update, and manage events with multiple image uploads.</p>
       <div class="admin-event-actions">
         <a class="btn admin-back-link" href="/admin">Back to Admin Home</a>
       </div>
@@ -74,6 +74,46 @@
               {% if event.description %}
                 <p class="event-admin-description">{{ event.description }}</p>
               {% endif %}
+
+              <details class="event-edit-block">
+                <summary>Edit event</summary>
+                <form
+                  method="post"
+                  action="/admin/dashboard/events/{{ event.id }}/update"
+                  enctype="multipart/form-data"
+                  class="auth-form event-edit-form"
+                >
+                  <label for="edit-title-{{ event.id }}">Title</label>
+                  <input id="edit-title-{{ event.id }}" name="title" type="text" required value="{{ event.title }}" />
+
+                  <label for="edit-description-{{ event.id }}">Description</label>
+                  <textarea id="edit-description-{{ event.id }}" name="description" rows="4" placeholder="Optional details">{{ event.description or "" }}</textarea>
+
+                  <div class="event-form-grid">
+                    <div>
+                      <label for="edit-location-{{ event.id }}">Location</label>
+                      <input id="edit-location-{{ event.id }}" name="location" type="text" value="{{ event.location or '' }}" placeholder="Venue / area" />
+                    </div>
+                    <div>
+                      <label for="edit-state-{{ event.id }}">State</label>
+                      <input id="edit-state-{{ event.id }}" name="state" type="text" value="{{ event.state or '' }}" placeholder="Nagaland" />
+                    </div>
+                    <div>
+                      <label for="edit-date-{{ event.id }}">Event date</label>
+                      <input id="edit-date-{{ event.id }}" name="event_date" type="date" required value="{{ event.event_date.isoformat() }}" />
+                    </div>
+                    <div>
+                      <label for="edit-time-{{ event.id }}">Event time</label>
+                      <input id="edit-time-{{ event.id }}" name="event_time" type="time" required value="{{ event.event_time.strftime('%H:%M') }}" />
+                    </div>
+                  </div>
+
+                  <label for="edit-images-{{ event.id }}">Add more images (optional)</label>
+                  <input id="edit-images-{{ event.id }}" name="image_files" type="file" accept="image/*" multiple />
+
+                  <button type="submit" class="event-update-btn">Save changes</button>
+                </form>
+              </details>
 
               {% if event.images %}
                 <div class="event-image-grid">

@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  {% set brand_logo_url = "https://musikazctech.s3.ap-south-1.amazonaws.com/musikalogo.webp" %}
   {% set favicon_url = "/static/Untitled design (3).png" %}
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>{{ site_name }}</title>
   <link rel="icon" type="image/png" sizes="48x48" href="{{ favicon_url }}" />
   <link rel="icon" type="image/png" sizes="32x32" href="{{ favicon_url }}" />
@@ -67,21 +66,21 @@
         {% endfor %}
         <a class="btn header-btn nav-mobile-enquire" href="/contact#send-us-a-message">Enquire Now</a>
         <div class="nav-mobile-social" aria-label="Social links">
-          <a href="#" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+          <a href="{{ footer_facebook_url }}" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
             <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" focusable="false">
               <path fill="currentColor" d="M14 8h3V5h-3c-2.8 0-5 2.2-5 5v2H7v3h2v6h3v-6h3l1-3h-4v-2c0-1.1.9-2 2-2z"/>
             </svg>
           </a>
-          <a href="#" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+          <a href="{{ footer_instagram_url }}" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
             <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" focusable="false">
               <rect x="3.5" y="3.5" width="17" height="17" rx="5" ry="5" fill="none" stroke="currentColor" stroke-width="2"/>
               <circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="2"/>
               <circle cx="17.5" cy="6.5" r="1.1" fill="currentColor"/>
             </svg>
           </a>
-          <a href="#" target="_blank" rel="noopener noreferrer" aria-label="X">
-            <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" focusable="false">
-              <path fill="currentColor" d="M18.9 3H22l-6.8 7.8L23 21h-6.2l-4.9-6.4L6.3 21H3.2l7.3-8.3L1 3h6.3l4.4 5.8L18.9 3zm-1.1 16h1.7L6.4 4.9H4.6L17.8 19z"/>
+          <a href="{{ footer_youtube_url }}" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
+            <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" focusable="false">
+              <path fill="currentColor" d="M21.6 7.2a3 3 0 0 0-2.1-2.1C17.7 4.5 12 4.5 12 4.5s-5.7 0-7.5.6A3 3 0 0 0 2.4 7.2 31.8 31.8 0 0 0 1.8 12c0 1.6.2 3.2.6 4.8a3 3 0 0 0 2.1 2.1c1.8.6 7.5.6 7.5.6s5.7 0 7.5-.6a3 3 0 0 0 2.1-2.1c.4-1.6.6-3.2.6-4.8 0-1.6-.2-3.2-.6-4.8zM10 15.5v-7l6 3.5-6 3.5z"/>
             </svg>
           </a>
         </div>
@@ -120,12 +119,12 @@
 
         <section class="footer-col">
           <h3>Office</h3>
-          <p>House No. 60, Yan Villa, NEZCC Rd, near Airport Road, 3rd Mile, Chümoukedima, Dimapur, Nagaland 797115</p>
+          <p>House No. 60, Yan Villa, NEZCC Rd, near Airport Road, 4th Mile, Chumoükedima, Dimapur, Nagaland 797115</p>
           
             
           <p><strong>Branches</strong></p>
-          <p>Chumu: <a href="tel:+916009867759">6009867759</a></p>
-          <p>Diphupar: <a href="tel:+919856863879">9856863879</a></p>
+          <p>Chumoükedima: <a href="tel:+916009867759">+91 6009867759</a></p>
+          <p>Diphupar: <a href="tel:+919856863879">+91 9856863879</a></p>
         </section>
 
         <section class="footer-col">
@@ -163,36 +162,53 @@
       </div>
     </div>
 
+    <div class="site-footer-credit" role="complementary" aria-label="Site credit">
+      <a
+        class="site-footer-credit-link"
+        href="{{ footer_credit_url }}"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Zeliang Codetech — opens in a new tab"
+      >
+        <img
+          class="site-footer-credit-img"
+          src="{{ footer_credit_logo_url }}"
+          alt=""
+          width="160"
+          height="40"
+          decoding="async"
+        />
+        <span class="site-footer-credit-text">Built by Zeliang Codetech</span>
+      </a>
+    </div>
+
     <div class="site-footer-bottom">
       <div class="site-footer-bottom-left">
         <p>© {{ site_name }} 2026. All rights reserved.</p>
         <nav class="site-footer-legal" aria-label="Legal">
+          <a href="/privacy-policy">Privacy policy</a>
+          <span class="site-footer-legal-sep" aria-hidden="true">·</span>
           <a href="/terms">Terms &amp; conditions</a>
           <span class="site-footer-legal-sep" aria-hidden="true">·</span>
           <a href="/cookies">Cookies</a>
         </nav>
       </div>
       <div class="footer-social" aria-label="Social links">
-        <a href="#" aria-label="Facebook" target="_blank" rel="noopener noreferrer">
+        <a href="{{ footer_facebook_url }}" aria-label="Facebook" target="_blank" rel="noopener noreferrer">
           <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" focusable="false">
             <path fill="currentColor" d="M14 8h3V5h-3c-2.8 0-5 2.2-5 5v2H7v3h2v6h3v-6h3l1-3h-4v-2c0-1.1.9-2 2-2z"/>
           </svg>
         </a>
-        <a href="#" aria-label="Instagram" target="_blank" rel="noopener noreferrer">
+        <a href="{{ footer_instagram_url }}" aria-label="Instagram" target="_blank" rel="noopener noreferrer">
           <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" focusable="false">
             <rect x="3.5" y="3.5" width="17" height="17" rx="5" ry="5" fill="none" stroke="currentColor" stroke-width="2"/>
             <circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="2"/>
             <circle cx="17.5" cy="6.5" r="1.1" fill="currentColor"/>
           </svg>
         </a>
-        <a href="#" aria-label="YouTube" target="_blank" rel="noopener noreferrer">
+        <a href="{{ footer_youtube_url }}" aria-label="YouTube" target="_blank" rel="noopener noreferrer">
           <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" focusable="false">
             <path fill="currentColor" d="M21.6 7.2a3 3 0 0 0-2.1-2.1C17.7 4.5 12 4.5 12 4.5s-5.7 0-7.5.6A3 3 0 0 0 2.4 7.2 31.8 31.8 0 0 0 1.8 12c0 1.6.2 3.2.6 4.8a3 3 0 0 0 2.1 2.1c1.8.6 7.5.6 7.5.6s5.7 0 7.5-.6a3 3 0 0 0 2.1-2.1c.4-1.6.6-3.2.6-4.8 0-1.6-.2-3.2-.6-4.8zM10 15.5v-7l6 3.5-6 3.5z"/>
-          </svg>
-        </a>
-        <a href="#" aria-label="X (Twitter)" target="_blank" rel="noopener noreferrer">
-          <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" focusable="false">
-            <path fill="currentColor" d="M18.9 3H22l-6.8 7.8L23 21h-6.2l-4.9-6.4L6.3 21H3.2l7.3-8.3L1 3h6.3l4.4 5.8L18.9 3zm-1.1 16h1.7L6.4 4.9H4.6L17.8 19z"/>
           </svg>
         </a>
       </div>
@@ -259,7 +275,7 @@
           var triggerLink = dropdown.querySelector(".nav-link");
           if (!triggerLink) return;
           triggerLink.addEventListener("click", function (event) {
-            if (window.innerWidth > 860) return;
+            if (window.innerWidth > 1100) return;
             event.preventDefault();
             dropdown.classList.toggle("open");
           });
@@ -267,7 +283,7 @@
 
         nav.querySelectorAll(".nav-link, .nav-dropdown-link").forEach(function (link) {
           link.addEventListener("click", function () {
-            if (window.innerWidth > 860) return;
+            if (window.innerWidth > 1100) return;
             if (link.closest(".nav-dropdown") && link.classList.contains("nav-link")) return;
             closeMobileNav();
           });
@@ -290,7 +306,7 @@
               window.history.replaceState(null, "", CONTACT_FORM_HREF);
             }
           }
-          var narrow = window.innerWidth <= 860;
+          var narrow = window.innerWidth <= 1100;
           if (narrow && header.classList.contains("nav-open")) {
             closeMobileNav();
             window.setTimeout(scrollToForm, 320);

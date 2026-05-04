@@ -1,14 +1,104 @@
 {% extends "base.html" %}
 
+{% block page_styles %}
+  <link rel="stylesheet" href="/static/pages/legal-pages.css" />
+{% endblock %}
+
 {% block content %}
   <section class="legal-static" aria-labelledby="legal-terms-heading">
-    <div class="legal-static-inner">
-      <h1 id="legal-terms-heading">Terms &amp; conditions</h1>
-      <p>
-        These terms will be published here. For questions about enrolment, services, or policies, please
-        <a href="/contact">contact us</a>
-        directly.
+    <div class="legal-static-inner legal-doc">
+      <h1 id="legal-terms-heading" class="legal-doc-title">Terms of Use / Terms &amp; Conditions</h1>
+      <p class="legal-doc-subtitle">
+        
       </p>
+
+      <div class="legal-doc-meta">
+        <p><strong>Effective Date:</strong> MAY 4</p>
+        <p><strong>Last Updated:</strong> MAY 4</p>
+      </div>
+
+      <article>
+        <h2>1. Acceptance of Terms</h2>
+        <p class="legal-intro">
+          By accessing or using the {{ site_name }} platform, you agree to be bound by these Terms.
+        </p>
+
+        <h2>2. Services Offered</h2>
+        <p>{{ site_name }} provides:</p>
+        <ul>
+          <li>Music courses &amp; training</li>
+          <li>Event hosting &amp; ticketing</li>
+          <li>Artist management services</li>
+          <li>Merchandise sales</li>
+        </ul>
+
+        <h2>3. User Accounts</h2>
+        <ul>
+          <li>Users must provide accurate information</li>
+          <li>You are responsible for maintaining account confidentiality</li>
+          <li>We reserve the right to suspend accounts for misuse</li>
+        </ul>
+
+        <h2>4. Payments &amp; Fees</h2>
+        <ul>
+          <li>All fees must be paid in full before access to services</li>
+          <li>Payments are processed via secure third-party gateways</li>
+          <li>Prices are subject to change without prior notice</li>
+        </ul>
+
+        <h2>5. Cancellation &amp; Refund Policy</h2>
+        <ul>
+          <li>Refunds (if applicable) will follow our refund guidelines</li>
+          <li>Event tickets may be non-refundable unless stated otherwise</li>
+        </ul>
+
+        <h2>6. Intellectual Property</h2>
+        <p>
+          All content (logos, course materials, media) belongs to {{ site_name }} and cannot be used without
+          permission.
+        </p>
+
+        <h2>7. User Conduct</h2>
+        <p>Users agree NOT to:</p>
+        <ul>
+          <li>Violate any laws</li>
+          <li>Upload harmful or illegal content</li>
+          <li>Misuse the platform</li>
+        </ul>
+
+        <h2>8. Limitation of Liability</h2>
+        <p>{{ site_name }} is not liable for:</p>
+        <ul>
+          <li>Service interruptions</li>
+          <li>Loss of data</li>
+          <li>Third-party service failures</li>
+        </ul>
+
+        <h2>9. Termination</h2>
+        <p>We may terminate access if users violate these Terms.</p>
+
+        <h2>10. Governing Law</h2>
+        <p>These Terms shall be governed by the laws of India.</p>
+
+        <h2>11. Dispute Resolution</h2>
+        <p>Disputes shall be subject to jurisdiction of Dimapur, Nagaland.</p>
+
+        <h2>12. Contact Information</h2>
+        <p>
+          <strong>Email:</strong> <a href="mailto:musikaschool06@gmail.com">musikaschool06@gmail.com</a>
+        </p>
+        <p>
+          For enrolment or general queries, you may also
+          <a href="/contact">contact us</a>
+          directly.
+        </p>
+
+        <div class="legal-grievance" role="region" aria-label="Grievance officer details">
+          <h3>Grievance Officer</h3>
+          <p><strong>Name:</strong> LANU KUGHAVI</p>
+          <p><strong>Email:</strong> <a href="mailto:lanulongchar@gmail.com">lanulongchar@gmail.com</a></p>
+          <p><strong>Phone:</strong>+91 7005651798</p>
+      </article>
     </div>
   </section>
 {% endblock %}

@@ -514,6 +514,84 @@ def admin_create_event(
     )
 
 
+@router.post("/admin/dashboard/events/{event_id}/update")
+def admin_update_event(
+    event_id: int,
+    request: Request,
+    title: str = Form(...),
+    description: str = Form(default=""),
+    location: str = Form(default=""),
+    state: str = Form(default=""),
+    event_date: str = Form(...),
+    event_time: str = Form(...),
+    image_files: list[UploadFile] = File(default=[]),
+    db: Session = Depends(get_db),
+):
+    admin_redirect = require_admin(request)
+    if admin_redirect:
+        return admin_redirect
+
+    event = db.query(Event).filter(Event.id == event_id).first()
+    if not event:
+        return RedirectResponse(
+            url="/admin/events?error=Event+not+found", status_code=status.HTTP_303_SEE_OTHER
+        )
+
+    normalized_title = (title or "").strip()
+    if not normalized_title:
+        return RedirectResponse(
+            url="/admin/events?error=Event+title+is+required", status_code=status.HTTP_303_SEE_OTHER
+        )
+    try:
+        parsed_date = dt_date.fromisoformat((event_date or "").strip())
+    except ValueError:
+        return RedirectResponse(
+            url="/admin/events?error=Invalid+event+date", status_code=status.HTTP_303_SEE_OTHER
+        )
+    try:
+        parsed_time = dt_time.fromisoformat((event_time or "").strip())
+    except ValueError:
+        return RedirectResponse(
+            url="/admin/events?error=Invalid+event+time", status_code=status.HTTP_303_SEE_OTHER
+        )
+
+    event.title = normalized_title
+    event.description = (description or "").strip() or None
+    event.location = (location or "").strip() or None
+    event.state = (state or "").strip() or None
+    event.event_date = parsed_date
+    event.event_time = parsed_time
+
+    s3_config = get_s3_config()
+    uploaded_images: list[EventImage] = []
+    for image_file in image_files:
+        if not image_file or not image_file.filename:
+            continue
+        try:
+            _, _, public_image_url = upload_image_and_get_url(image_file, s3_config)
+        except UploadValidationError as exc:
+            db.rollback()
+            return RedirectResponse(
+                url=f"/admin/events?error={str(exc).replace(' ', '+')}",
+                status_code=status.HTTP_303_SEE_OTHER,
+            )
+        except UploadServiceError as exc:
+            db.rollback()
+            return RedirectResponse(
+                url=f"/admin/events?error={str(exc).replace(' ', '+')}",
+                status_code=status.HTTP_303_SEE_OTHER,
+            )
+        uploaded_images.append(EventImage(event_id=event.id, image_url=public_image_url))
+
+    if uploaded_images:
+        db.add_all(uploaded_images)
+
+    db.commit()
+    return RedirectResponse(
+        url="/admin/events?message=Event+updated+successfully", status_code=status.HTTP_303_SEE_OTHER
+    )
+
+
 @router.post("/admin/dashboard/events/{event_id}/images/{image_id}/delete")
 def admin_delete_event_image(
     event_id: int,

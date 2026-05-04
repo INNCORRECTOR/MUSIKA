@@ -147,6 +147,7 @@ class Event(Base):
     images: Mapped[list["EventImage"]] = relationship(
         "EventImage",
         back_populates="event",
+        order_by="EventImage.created_at",
         cascade="all, delete-orphan",
         passive_deletes=True,
     )

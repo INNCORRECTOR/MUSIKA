@@ -1,8 +1,62 @@
 {% extends "base.html" %}
 
 {% block page_styles %}
-  <link rel="stylesheet" href="/static/pages/event.css?v=2" />
+  <link rel="stylesheet" href="/static/pages/event.css?v=5" />
 {% endblock %}
+
+{% macro event_image_column(event) %}
+  <div class="event-image-col">
+    {% if event.images | length > 1 %}
+      <div
+        class="event-slider"
+        data-event-slider
+        role="region"
+        aria-roledescription="carousel"
+        aria-label="{{ event.title }} — photos"
+      >
+        <div class="event-slider-viewport">
+          <div class="event-slider-track">
+            {% for img in event.images %}
+              <div class="event-slider-slide" aria-hidden="{{ 'false' if loop.first else 'true' }}">
+                <img
+                  src="{{ img.image_url }}"
+                  alt="{{ event.title }} — photo {{ loop.index }} of {{ event.images | length }}"
+                  {% if not loop.first %}loading="lazy"{% endif %}
+                />
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+        <button type="button" class="event-slider-btn event-slider-prev" aria-label="Previous photo">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
+        </button>
+        <button type="button" class="event-slider-btn event-slider-next" aria-label="Next photo">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M9 18l6-6-6-6" />
+          </svg>
+        </button>
+        <div class="event-slider-dots" role="tablist" aria-label="Choose photo">
+          {% for img in event.images %}
+            <button
+              type="button"
+              class="event-slider-dot{% if loop.first %} is-active{% endif %}"
+              role="tab"
+              aria-selected="{{ 'true' if loop.first else 'false' }}"
+              aria-label="Photo {{ loop.index }} of {{ event.images | length }}"
+              data-slide-index="{{ loop.index0 }}"
+            ></button>
+          {% endfor %}
+        </div>
+      </div>
+    {% elif event.images %}
+      <img src="{{ event.images[0].image_url }}" alt="{{ event.title }}" />
+    {% else %}
+      <div class="event-image-empty" aria-hidden="true">♪</div>
+    {% endif %}
+  </div>
+{% endmacro %}
 
 {% block content %}
   <div class="event-page">
@@ -58,13 +112,7 @@
                   <p class="event-description">{{ event.description }}</p>
                 {% endif %}
               </div>
-              <div class="event-image-col">
-                {% if event.images %}
-                  <img src="{{ event.images[0].image_url }}" alt="{{ event.title }}" />
-                {% else %}
-                  <div class="event-image-empty" aria-hidden="true">♪</div>
-                {% endif %}
-              </div>
+              {{ event_image_column(event) }}
             </article>
           {% endfor %}
         </div>
@@ -110,13 +158,7 @@
                   <p class="event-description">{{ event.description }}</p>
                 {% endif %}
               </div>
-              <div class="event-image-col">
-                {% if event.images %}
-                  <img src="{{ event.images[0].image_url }}" alt="{{ event.title }}" />
-                {% else %}
-                  <div class="event-image-empty" aria-hidden="true">♪</div>
-                {% endif %}
-              </div>
+              {{ event_image_column(event) }}
             </article>
           {% endfor %}
         </div>
@@ -151,6 +193,68 @@
             panel.classList.toggle("is-visible", panel.getAttribute("data-event-panel") === selected);
           });
         });
+      });
+    })();
+  </script>
+  <script>
+    (function () {
+      document.querySelectorAll("[data-event-slider]").forEach((root) => {
+        const track = root.querySelector(".event-slider-track");
+        const slides = root.querySelectorAll(".event-slider-slide");
+        const prevBtn = root.querySelector(".event-slider-prev");
+        const nextBtn = root.querySelector(".event-slider-next");
+        const dots = root.querySelectorAll(".event-slider-dot");
+        const viewport = root.querySelector(".event-slider-viewport");
+        if (!track || !slides.length || !prevBtn || !nextBtn) return;
+
+        const total = slides.length;
+        let index = 0;
+        let touchStartX = null;
+
+        function setSlide(i) {
+          index = (i + total) % total;
+          track.style.transform = "translateX(-" + index * 100 + "%)";
+          slides.forEach((slide, n) => {
+            slide.setAttribute("aria-hidden", n === index ? "false" : "true");
+          });
+          dots.forEach((dot, n) => {
+            dot.classList.toggle("is-active", n === index);
+            dot.setAttribute("aria-selected", n === index ? "true" : "false");
+          });
+        }
+
+        prevBtn.addEventListener("click", () => setSlide(index - 1));
+        nextBtn.addEventListener("click", () => setSlide(index + 1));
+        dots.forEach((dot) => {
+          dot.addEventListener("click", () => {
+            const raw = dot.getAttribute("data-slide-index");
+            const n = raw === null ? 0 : parseInt(raw, 10);
+            if (!Number.isNaN(n)) setSlide(n);
+          });
+        });
+
+        if (viewport) {
+          viewport.addEventListener(
+            "touchstart",
+            (e) => {
+              if (e.changedTouches && e.changedTouches[0]) {
+                touchStartX = e.changedTouches[0].screenX;
+              }
+            },
+            { passive: true }
+          );
+          viewport.addEventListener(
+            "touchend",
+            (e) => {
+              if (touchStartX === null || !e.changedTouches || !e.changedTouches[0]) return;
+              const dx = e.changedTouches[0].screenX - touchStartX;
+              touchStartX = null;
+              if (dx < -48) setSlide(index + 1);
+              else if (dx > 48) setSlide(index - 1);
+            },
+            { passive: true }
+          );
+        }
       });
     })();
   </script>

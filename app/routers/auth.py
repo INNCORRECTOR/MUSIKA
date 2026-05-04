@@ -6,6 +6,14 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
+from app.content import (
+    BRAND_LOGO_URL,
+    FOOTER_CREDIT_LOGO_URL,
+    FOOTER_CREDIT_URL,
+    FOOTER_FACEBOOK_URL,
+    FOOTER_INSTAGRAM_URL,
+    FOOTER_YOUTUBE_URL,
+)
 from app.db import get_db
 from app.models import User
 from app.security import create_access_token, verify_password
@@ -20,6 +28,12 @@ def shared_auth_context(request: Request, title: str):
     return {
         "request": request,
         "site_name": "MUSIKA",
+        "brand_logo_url": BRAND_LOGO_URL,
+        "footer_credit_logo_url": FOOTER_CREDIT_LOGO_URL,
+        "footer_credit_url": FOOTER_CREDIT_URL,
+        "footer_facebook_url": FOOTER_FACEBOOK_URL,
+        "footer_instagram_url": FOOTER_INSTAGRAM_URL,
+        "footer_youtube_url": FOOTER_YOUTUBE_URL,
         "nav_items": [],
         "active_path": request.url.path,
         "title": title,

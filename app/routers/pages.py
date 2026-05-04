@@ -7,7 +7,17 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session, selectinload
 
-from app.content import NAV_ITEMS, PAGE_CONTENTS, SITE_NAME
+from app.content import (
+    BRAND_LOGO_URL,
+    FOOTER_CREDIT_LOGO_URL,
+    FOOTER_CREDIT_URL,
+    FOOTER_FACEBOOK_URL,
+    FOOTER_INSTAGRAM_URL,
+    FOOTER_YOUTUBE_URL,
+    NAV_ITEMS,
+    PAGE_CONTENTS,
+    SITE_NAME,
+)
 from app.db import get_db
 from app.mailer import send_newsletter_welcome_email
 import json
@@ -30,6 +40,12 @@ templates = Jinja2Templates(directory="templates")
 def shared_context(active_path: str):
     return {
         "site_name": SITE_NAME,
+        "brand_logo_url": BRAND_LOGO_URL,
+        "footer_credit_logo_url": FOOTER_CREDIT_LOGO_URL,
+        "footer_credit_url": FOOTER_CREDIT_URL,
+        "footer_facebook_url": FOOTER_FACEBOOK_URL,
+        "footer_instagram_url": FOOTER_INSTAGRAM_URL,
+        "footer_youtube_url": FOOTER_YOUTUBE_URL,
         "nav_items": NAV_ITEMS,
         "active_path": active_path,
     }
@@ -432,6 +448,13 @@ def newsletter_subscribe(
         url=_with_query(redirect_to, newsletter_message="Thanks for subscribing to our newsletter!"),
         status_code=status.HTTP_303_SEE_OTHER,
     )
+
+
+@router.get("/privacy-policy", response_class=HTMLResponse)
+def privacy_policy(request: Request, db: Session = Depends(get_db)):
+    context = shared_context("/privacy-policy")
+    context["artist_menu"] = load_artist_menu(db)
+    return templates.TemplateResponse(request, "legal_privacy.html", context)
 
 
 @router.get("/terms", response_class=HTMLResponse)

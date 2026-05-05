@@ -41,14 +41,14 @@ def _newsletter_welcome_html(site_name: str, logo_url: str) -> str:
           <tr>
             <td align="center" style="padding:36px 28px 28px;background:linear-gradient(165deg,#07090f 0%,#121826 55%,#0d1118 100%);">
               <img src="{safe_logo}" alt="{safe_name}" width="168" style="display:block;max-width:168px;height:auto;border:0;margin:0 auto;" />
-              <p style="margin:18px 0 0;font-family:Segoe UI,Helvetica,Arial,sans-serif;font-size:13px;letter-spacing:0.22em;text-transform:uppercase;color:#9ca3af;">School of Music &amp; Arts</p>
+            
             </td>
           </tr>
           <tr>
             <td style="padding:36px 32px 32px;font-family:Segoe UI,Helvetica,Arial,sans-serif;font-size:16px;line-height:1.65;color:#1d1d1d;">
-              <p style="margin:0 0 16px;font-size:20px;font-weight:600;color:#111827;">You&rsquo;re on the list</p>
+              <p style="margin:0 0 16px;font-size:20px;font-weight:600;color:#111827;">You have joined our list</p>
               <p style="margin:0 0 16px;">Hi there,</p>
-              <p style="margin:0 0 16px;">We&rsquo;re really glad you&rsquo;re here. You&rsquo;re officially subscribed as a <strong>newsletter subscriber</strong> &mdash; welcome to the <strong>{safe_name}</strong> community.</p>
+              <p style="margin:0 0 16px;">We&rsquo;re really glad you&rsquo;re here. You have officially subscribed as a new <strong>newsletter subscriber</strong> &mdash; welcome to the <strong>{safe_name}</strong> community.</p>
               <p style="margin:0 0 16px;">From time to time we&rsquo;ll send you updates about programs, events, admissions, scholarships, and what&rsquo;s happening at the school. No spam &mdash; just the good stuff.</p>
               <p style="margin:0;">If you ever have a question, reply to this email or reach out through our <strong>Contact</strong> page on the website.</p>
               {cta_block}
@@ -128,10 +128,10 @@ def send_newsletter_welcome_email(to_address: str) -> None:
 
     reply_to = (os.getenv("SMTP_REPLY_TO") or "").strip()
 
-    subject = f"Welcome — you're on the {SITE_NAME} list!"
+    subject = f"Welcome — you have joined the {SITE_NAME} list!"
     body_text = (
         f"Hi there,\n\n"
-        f"We're really glad you're here. You're officially subscribed as a new newsletter subscriber — "
+        f"We're really glad you're here. You have officially subscribed as a new newsletter subscriber — "
         f"welcome to the {SITE_NAME} community.\n\n"
         "From time to time we'll drop you an email with news about programs, events, admissions, "
         "scholarships, and what's happening at the school. No spam — just the good stuff.\n\n"

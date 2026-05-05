@@ -4,7 +4,7 @@ SITE_NAME = "MUSIKA"
 BRAND_LOGO_URL = "https://musikazctech.s3.ap-south-1.amazonaws.com/musikalogo.webp"
 
 # Footer “Built by” — logo file in /static (replace with your PNG/WebP if you prefer).
-FOOTER_CREDIT_LOGO_URL = "/static/ZC-Insignia.png"
+FOOTER_CREDIT_LOGO_URL = "/static/ZC-Insignia.webp"
 FOOTER_CREDIT_URL = "https://zeliangcodetech.com/"
 
 FOOTER_FACEBOOK_URL = "https://www.facebook.com/Musikaschool?mibextid=wwXIfr&mibextid=wwXIfr"

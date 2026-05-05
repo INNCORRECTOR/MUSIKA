@@ -432,7 +432,7 @@
   overflow: hidden;
   background:
     linear-gradient(90deg, rgba(5, 8, 13, 0.94) 0%, rgba(5, 8, 13, 0.82) 42%, rgba(5, 8, 13, 0.93) 100%),
-    url("/static/connet.jpg");
+    url("/static/connet.webp");
   background-size: cover;
   background-position: center;
 }

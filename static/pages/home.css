@@ -335,32 +335,32 @@
 }
 
 .program-card-western .program-image {
-  background-image: linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.3)), url("/static/westen classic.jpg");
+  background-image: linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.3)), url("/static/westen classic.webp");
   background-position: center 42%;
 }
 
 .program-card-contemporary .program-image {
-  background-image: linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.3)), url("/static/contep.JPG");
+  background-image: linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.3)), url("/static/contep.webp");
   background-position: center 36%;
 }
 
 .program-card-indian .program-image {
-  background-image: linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.3)), url("/static/k_sir.jpg");
+  background-image: linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.3)), url("/static/k_sir.webp");
   background-position: center 40%;
 }
 
 .program-card-church .program-image {
-  background-image: linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.28)), url("/static/chruch.jpeg");
+  background-image: linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.28)), url("/static/chruch.webp");
   background-position: center 34%;
 }
 
 .program-card-audio .program-image {
-  background-image: linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.3)), url("/static/live_sound.jpg");
+  background-image: linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.3)), url("/static/live_sound.webp");
   background-position: center 50%;
 }
 
 .program-card-folk .program-image {
-  background-image: linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.3)), url("/static/naga_folk.JPG");
+  background-image: linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.3)), url("/static/naga_folk.webp");
   background-position: center 28%;
 }
 

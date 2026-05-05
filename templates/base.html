@@ -43,7 +43,7 @@
               >
                 <span class="nav-link-label">{{ item.label }}</span>
               </a>
-              <div class="nav-dropdown-menu" aria-label="Faculty submenu">
+              <div class="nav-dropdown-menu{% if artist_menu|length > 5 %} nav-dropdown-menu--scroll{% endif %}" aria-label="Faculty submenu">
                 {% for nav_artist in artist_menu %}
                   <a
                     class="nav-dropdown-link {% if selected_artist_id == nav_artist.id %}active{% endif %}"

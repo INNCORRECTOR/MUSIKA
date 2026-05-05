@@ -7,8 +7,22 @@ import boto3
 from botocore.exceptions import BotoCoreError, ClientError
 from PIL import Image, UnidentifiedImageError
 
-WEBP_QUALITY = int(os.getenv("UPLOAD_WEBP_QUALITY", "85"))
+WEBP_QUALITY = int(os.getenv("UPLOAD_WEBP_QUALITY", "80"))
 WEBP_CONTENT_TYPE = "image/webp"
+
+# Longest side in pixels before WebP encode (reduces CPU + S3 bytes). 0 = no resize.
+_MAX_EDGE_STR = (os.getenv("UPLOAD_MAX_IMAGE_EDGE") or "2560").strip()
+try:
+    UPLOAD_MAX_IMAGE_EDGE = int(_MAX_EDGE_STR)
+except ValueError:
+    UPLOAD_MAX_IMAGE_EDGE = 2560
+
+# WebP encoder effort 0–6; lower is faster (default 4 was tuned from 6).
+try:
+    UPLOAD_WEBP_METHOD = int(os.getenv("UPLOAD_WEBP_METHOD", "4"))
+except ValueError:
+    UPLOAD_WEBP_METHOD = 4
+UPLOAD_WEBP_METHOD = max(0, min(6, UPLOAD_WEBP_METHOD))
 
 
 class UploadValidationError(Exception):
@@ -35,6 +49,18 @@ def _prepare_image_for_webp(im: Image.Image) -> Image.Image:
     return im.convert("RGB")
 
 
+def _downscale_if_needed(im: Image.Image, max_edge: int) -> Image.Image:
+    """Shrink so width and height stay under max_edge (keeps aspect ratio)."""
+    if max_edge <= 0:
+        return im
+    w, h = im.size
+    if w <= max_edge and h <= max_edge:
+        return im
+    out = im.copy()
+    out.thumbnail((max_edge, max_edge), Image.Resampling.LANCZOS)
+    return out
+
+
 def _is_svg_upload(content_type: str | None, filename: str | None, raw: bytes) -> bool:
     ct = (content_type or "").lower()
     if "svg" in ct:
@@ -47,14 +73,21 @@ def _is_svg_upload(content_type: str | None, filename: str | None, raw: bytes) -
     return False
 
 
-def _raster_bytes_to_webp(raw: bytes, quality: int) -> bytes:
+def _raster_bytes_to_webp(
+    raw: bytes,
+    *,
+    quality: int,
+    method: int,
+    max_edge: int,
+) -> bytes:
     with Image.open(io.BytesIO(raw)) as im:
         im.load()
         if getattr(im, "is_animated", False):
             im.seek(0)
         prepared = _prepare_image_for_webp(im)
+        prepared = _downscale_if_needed(prepared, max_edge)
         out = io.BytesIO()
-        prepared.save(out, "WEBP", quality=quality, method=6)
+        prepared.save(out, "WEBP", quality=quality, method=method)
         return out.getvalue()
 
 
@@ -96,7 +129,12 @@ def upload_image_and_get_url(file, s3_config):
     else:
         q = max(1, min(100, WEBP_QUALITY))
         try:
-            webp_bytes = _raster_bytes_to_webp(raw, q)
+            webp_bytes = _raster_bytes_to_webp(
+                raw,
+                quality=q,
+                method=UPLOAD_WEBP_METHOD,
+                max_edge=UPLOAD_MAX_IMAGE_EDGE,
+            )
         except UnidentifiedImageError as exc:
             raise UploadValidationError(
                 "Could not read image. Upload JPEG, PNG, GIF, WebP, BMP, or SVG."

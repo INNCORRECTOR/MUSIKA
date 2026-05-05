@@ -15,8 +15,8 @@ NAV_ITEMS = [
     {"label": "Home", "href": "/"},
     {"label": "About", "href": "/about"},
     {"label": "Faculty", "href": "/artist"},
-    {"label": "Course", "href": "/course"},
-    {"label": "Event", "href": "/event"},
+    {"label": "Courses", "href": "/course"},
+    {"label": "Events", "href": "/event"},
     {"label": "Gallery", "href": "/gallery"},
     {"label": "Contact", "href": "/contact"},
 ]

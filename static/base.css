@@ -212,7 +212,7 @@ body {
   color: #d1d5db;
   text-decoration: none;
   text-transform: uppercase;
-  font-size: 0.64rem;
+  font-size: 0.66rem;
   font-weight: 700;
   letter-spacing: 0.06em;
   padding: 6px 8px;
@@ -934,6 +934,14 @@ body.site-modal-open {
     cursor: pointer;
   }
 
+  /* Mobile drawer: keep nav text centered */
+  .nav-link-label {
+    margin-left: 0;
+    margin-right: auto;
+    margin-left: auto;
+    text-align: center;
+  }
+
   .nav-link:hover,
   .nav-link.active,
   .nav-link[aria-current="page"] {
@@ -961,8 +969,15 @@ body.site-modal-open {
   .nav-dropdown > .nav-link {
     display: flex;
     align-items: center;
-    justify-content: flex-start;
+    justify-content: center;
     gap: 10px;
+  }
+
+  /* Keep "Faculty" and its arrow together in the center */
+  .nav-dropdown > .nav-link .nav-link-label {
+    margin-left: 0;
+    margin-right: 0;
+    text-align: center;
   }
 
   .nav-dropdown > .nav-link::after {
@@ -1015,11 +1030,12 @@ body.site-modal-open {
     background: transparent;
     margin-top: 0;
     border: 0;
-    font-size: 0.72rem;
+    font-size: 0.84rem;
     color: #9ca3af;
     letter-spacing: 0.02em;
     text-transform: none;
     min-height: 38px;
+    text-align: center;
   }
 
   .nav-dropdown-link:hover,
@@ -1048,7 +1064,7 @@ body.site-modal-open {
 
   .nav-mobile-enquire {
     display: inline-flex;
-    align-self: flex-start;
+    align-self: center;
     margin-top: 12px;
     border-radius: 999px;
     padding: 10px 16px;
@@ -1059,6 +1075,7 @@ body.site-modal-open {
     display: inline-flex;
     align-items: center;
     gap: 14px;
+    align-self: center;
     margin-top: 14px;
     padding-top: 12px;
     border-top: 1px solid rgba(148, 163, 184, 0.2);

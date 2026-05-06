@@ -37,7 +37,56 @@ router = APIRouter()
 templates = Jinja2Templates(directory="templates")
 
 
+SEO_META = {
+    "/": {
+        "title": "MUSIKA - Music School in Dimapur, Nagaland",
+        "description": "MUSIKA is a music school in Dimapur, Nagaland offering practical training, performances, and artist development programs.",
+    },
+    "/about": {
+        "title": "About MUSIKA | Music Education in Dimapur",
+        "description": "Learn about MUSIKA's mission, teaching approach, and creative music learning community in Dimapur, Nagaland.",
+    },
+    "/artist": {
+        "title": "Faculty & Artists | MUSIKA",
+        "description": "Meet MUSIKA faculty and artists shaping music education, live performance, and creative mentorship.",
+    },
+    "/course": {
+        "title": "Music Courses | MUSIKA Dimapur",
+        "description": "Explore MUSIKA music courses designed for beginners and advancing artists in production, vocals, and performance. Financial assistance for deserving and talented students." ,
+    },
+    "/event": {
+        "title": "Music Events & Workshops | MUSIKA",
+        "description": "Stay updated on MUSIKA live events, workshops, and community showcases in Dimapur, Nagaland.",
+    },
+    "/gallery": {
+        "title": "Gallery | MUSIKA Performances & Moments",
+        "description": "Browse MUSIKA gallery highlights from performances, studio sessions, workshops, and student milestones.",
+    },
+    "/contact": {
+        "title": "Contact MUSIKA | Enquiry & Admissions",
+        "description": "Contact MUSIKA for admissions, classes, artist opportunities, and partnership enquiries in Dimapur, Nagaland.",
+    },
+    "/privacy-policy": {
+        "title": "Privacy Policy | MUSIKA",
+        "description": "Read MUSIKA's privacy policy on how data is collected, used, and protected.",
+    },
+    "/terms": {
+        "title": "Terms and Conditions | MUSIKA",
+        "description": "Review MUSIKA terms and conditions for website access, programs, and services.",
+    },
+    "/cookies": {
+        "title": "Cookie Policy | MUSIKA",
+        "description": "Read MUSIKA's cookie policy explaining what cookies are used and why.",
+    },
+}
+
+
+def _seo_meta_for_path(active_path: str) -> dict[str, str]:
+    return SEO_META.get(active_path, {"title": SITE_NAME, "description": ""})
+
+
 def shared_context(active_path: str):
+    seo = _seo_meta_for_path(active_path)
     return {
         "site_name": SITE_NAME,
         "brand_logo_url": BRAND_LOGO_URL,
@@ -48,6 +97,8 @@ def shared_context(active_path: str):
         "footer_youtube_url": FOOTER_YOUTUBE_URL,
         "nav_items": NAV_ITEMS,
         "active_path": active_path,
+        "seo_title": seo["title"],
+        "seo_description": seo["description"],
     }
 
 

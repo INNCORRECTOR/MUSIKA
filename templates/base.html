@@ -4,7 +4,11 @@
   {% set favicon_url = "/static/Untitled design (3).webp" %}
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>{{ site_name }}</title>
+  <title>{{ seo_title if seo_title is defined and seo_title else site_name }}</title>
+  <meta
+    name="description"
+    content="{{ seo_description if seo_description is defined and seo_description else 'MUSIKA is a music school in Dimapur, Nagaland focused on practical music learning and artist development.' }}"
+  />
   <link rel="icon" type="image/webp" sizes="48x48" href="{{ favicon_url }}" />
   <link rel="icon" type="image/webp" sizes="32x32" href="{{ favicon_url }}" />
   <link rel="apple-touch-icon" sizes="180x180" href="{{ favicon_url }}" />

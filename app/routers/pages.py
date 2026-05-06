@@ -2,7 +2,7 @@ from datetime import datetime
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from fastapi import APIRouter, BackgroundTasks, Depends, Form, Query, Request, status
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session, selectinload
@@ -108,11 +108,69 @@ def _with_query(url: str, **params: str) -> str:
     return urlunsplit((split.scheme, split.netloc, split.path, urlencode(query), split.fragment))
 
 
+def _build_site_base_url(request: Request) -> str:
+    """Prefer forwarded host/proto when deployed behind reverse proxies."""
+    forwarded_proto = request.headers.get("x-forwarded-proto", "").strip()
+    forwarded_host = request.headers.get("x-forwarded-host", "").strip()
+    if forwarded_proto and forwarded_host:
+        return f"{forwarded_proto}://{forwarded_host}".rstrip("/")
+    return str(request.base_url).rstrip("/")
+
+
 @router.get("/about", response_class=HTMLResponse)
 def about(request: Request, db: Session = Depends(get_db)):
     context = shared_context("/about")
     context["artist_menu"] = load_artist_menu(db)
     return templates.TemplateResponse(request, "about.html", context)
+
+
+@router.get("/sitemap.xml")
+def sitemap_xml(request: Request):
+    base_url = _build_site_base_url(request)
+    public_paths = [
+        "/",
+        "/about",
+        "/artist",
+        "/course",
+        "/event",
+        "/gallery",
+        "/contact",
+        "/privacy-policy",
+        "/terms",
+        "/cookies",
+    ]
+    today = datetime.utcnow().date().isoformat()
+    xml_lines = [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+    ]
+    for path in public_paths:
+        xml_lines.extend(
+            [
+                "  <url>",
+                f"    <loc>{base_url}{path}</loc>",
+                f"    <lastmod>{today}</lastmod>",
+                "  </url>",
+            ]
+        )
+    xml_lines.append("</urlset>")
+    return Response("\n".join(xml_lines), media_type="application/xml")
+
+
+@router.get("/robots.txt")
+def robots_txt(request: Request):
+    base_url = _build_site_base_url(request)
+    body = "\n".join(
+        [
+            "User-agent: *",
+            "Allow: /",
+            "Disallow: /admin",
+            "Disallow: /admin/",
+            "",
+            f"Sitemap: {base_url}/sitemap.xml",
+        ]
+    )
+    return Response(body, media_type="text/plain")
 
 
 @router.get("/artist", response_class=HTMLResponse)

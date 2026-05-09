@@ -2,14 +2,20 @@
 
 {% block page_styles %}
   <link rel="stylesheet" href="/static/pages/auth.css" />
+  <link rel="stylesheet" href="/static/pages/admin_sidebar.css" />
   <link rel="stylesheet" href="/static/pages/admin_gallery.css" />
   <link rel="stylesheet" href="/static/pages/admin_artist.css?v=2" />
+  <link rel="stylesheet" href="/static/pages/admin_pages_mobile.css" />
 {% endblock %}
 
 {% block content %}
-  <section class="admin-gallery-shell admin-artist-page">
+  <section class="auth-shell admin-page-mobile-shell admin-gallery-shell admin-artist-page">
+    <div class="admin-with-sidebar">
+      {% set admin_active_page = 'artist' %}
+      {% include "partials/admin_second_nav.html" %}
+      <div class="admin-main-card admin-main-content">
     <div class="admin-gallery-header">
-      <h1>Artist roster</h1>
+      <h1>Faculty roster</h1>
       <p class="admin-artist-lead">
         Create faculty profiles, add social &amp; streaming links, then attach gallery images or videos.
       </p>
@@ -25,26 +31,51 @@
       <p class="auth-error admin-flash admin-flash--err">{{ error }}</p>
     {% endif %}
 
+    <div class="admin-artist-switch" role="tablist" aria-label="Admin artist sections">
+      <button
+        type="button"
+        class="admin-artist-switch-btn active"
+        data-target="create-faculty-section"
+        role="tab"
+        aria-selected="true"
+      >
+        Create Faculty
+      </button>
+      <button
+        type="button"
+        class="admin-artist-switch-btn"
+        data-target="add-media-section"
+        role="tab"
+        aria-selected="false"
+      >
+        Add Media
+      </button>
+    </div>
+
     <div class="admin-gallery-grid admin-artist-top-grid">
-      <section class="admin-panel admin-panel--accent">
-        <h2 class="admin-panel-title">Create new artist</h2>
-        <p class="admin-panel-desc">Basic info and links. Hero &amp; “featured” images upload to S3 as WebP.</p>
+      <section id="create-faculty-section" class="admin-panel admin-panel--accent admin-toggle-panel">
+        <h2 class="admin-panel-title">Create new faculty</h2>
+        <p class="admin-panel-desc">Basic info and links.</p>
         <form method="post" action="/admin/dashboard/artists" enctype="multipart/form-data" class="auth-form admin-artist-form">
           <fieldset class="admin-fieldset">
             <legend class="admin-fieldset-legend">Profile</legend>
             <p class="admin-fieldset-hint">Shown on the public Faculty page.</p>
-            <label for="artist-name">Name <span class="req">*</span></label>
-            <input id="artist-name" name="name" type="text" required autocomplete="off" />
+            <div class="profile-layout-grid">
+              <div class="profile-main-fields">
+                <label for="artist-name">Name : <span class="req">*</span></label>
+                <input id="artist-name" name="name" type="text" required autocomplete="off" />
+                <label for="artist-title">Role / title :</label>
+                <input id="artist-title" name="title" type="text" placeholder="e.g. Vocalist, Guitarist, Mentor" />
+                <label for="artist-bio">Bio :</label>
+                <textarea id="artist-bio" name="bio" rows="8" placeholder="Short paragraph for the profile card"></textarea>
 
-            <label for="artist-title">Role / title</label>
-            <input id="artist-title" name="title" type="text" placeholder="e.g. Vocalist, Guitarist, Mentor" />
+                <label for="artist-hero-image">Background image img :</label>
+                <input id="artist-hero-image" name="hero_image_file" type="file" accept="image/*" />
 
-            <label for="artist-bio">Bio</label>
-            <textarea id="artist-bio" name="bio" rows="4" placeholder="Short paragraph for the profile card"></textarea>
-
-            <label for="artist-hero-image">Hero image (optional)</label>
-            <p class="admin-field-hint">Large banner behind the name on the artist page.</p>
-            <input id="artist-hero-image" name="hero_image_file" type="file" accept="image/*" />
+                <label for="artist-featured-media-file">Hero image :</label>
+                <input id="artist-featured-media-file" name="featured_media_file" type="file" accept="image/*" />
+              </div>
+            </div>
           </fieldset>
 
           <fieldset class="admin-fieldset">
@@ -99,34 +130,13 @@
             </div>
           </fieldset>
 
-          <fieldset class="admin-fieldset">
-            <legend class="admin-fieldset-legend">Featured block</legend>
-            <p class="admin-fieldset-hint">Optional “top” image or video in the artist profile sidebar.</p>
-            <label for="artist-featured-media-type">Type</label>
-            <select id="artist-featured-media-type" name="featured_media_type">
-              <option value="">None</option>
-              <option value="image">Image</option>
-              <option value="video">Video</option>
-            </select>
-
-            <label for="artist-featured-media-file">Upload featured image</label>
-            <input id="artist-featured-media-file" name="featured_media_file" type="file" accept="image/*" />
-
-            <label for="artist-featured-media-url">Or paste media URL</label>
-            <input id="artist-featured-media-url" name="featured_media_url" type="url" placeholder="https://…" />
-
-            <label for="artist-featured-media-thumb">Video thumbnail URL</label>
-            <p class="admin-field-hint">If type is video, optional poster image.</p>
-            <input id="artist-featured-media-thumb" name="featured_media_thumbnail_url" type="url" placeholder="https://…" />
-          </fieldset>
-
           <div class="admin-form-actions">
             <button type="submit" class="btn-admin-primary">Create artist</button>
           </div>
         </form>
       </section>
 
-      <section class="admin-panel">
+      <section id="add-media-section" class="admin-panel admin-toggle-panel section-hidden">
         <h2 class="admin-panel-title">Add media to an artist</h2>
         <p class="admin-panel-desc">Extra images or video links in the artist’s gallery strip (separate from featured).</p>
         <form method="post" action="/admin/dashboard/artists/media" enctype="multipart/form-data" class="auth-form admin-artist-form">
@@ -140,20 +150,8 @@
               {% endfor %}
             </select>
 
-            <label for="media-type">Type <span class="req">*</span></label>
-            <select id="media-type" name="media_type" required>
-              <option value="image">Image</option>
-              <option value="video">Video</option>
-            </select>
-
             <label for="media-file">Upload image</label>
             <input id="media-file" name="file" type="file" accept="image/*" />
-
-            <label for="media-url">Media URL</label>
-            <input id="media-url" name="media_url" type="url" placeholder="Direct file or embed URL" />
-
-            <label for="thumb-url">Video thumbnail URL</label>
-            <input id="thumb-url" name="thumbnail_url" type="url" placeholder="Optional poster for video" />
           </fieldset>
           <div class="admin-form-actions">
             <button type="submit" class="btn-admin-primary">Add media</button>
@@ -194,11 +192,12 @@
                 {% endif %}
 
                 <div class="artist-roster-links">
+                  <a class="artist-roster-link artist-roster-link-view-media" href="/admin/artist/{{ artist.id }}/media">View media</a>
                   {% if artist.hero_image_url %}
                     <a class="artist-roster-link" href="{{ artist.hero_image_url }}" target="_blank" rel="noopener noreferrer">View hero image</a>
                   {% endif %}
                   {% if artist.featured_media_url %}
-                    <a class="artist-roster-link" href="{{ artist.featured_media_url }}" target="_blank" rel="noopener noreferrer">View featured ({{ (artist.featured_media_type or 'image') }})</a>
+                    <a class="artist-roster-link" href="{{ artist.featured_media_url }}" target="_blank" rel="noopener noreferrer">View featured image</a>
                   {% endif %}
                 </div>
 
@@ -218,7 +217,7 @@
                       <input id="edit-artist-title-{{ artist.id }}" name="title" type="text" value="{{ artist.title or '' }}" />
 
                       <label for="edit-artist-bio-{{ artist.id }}">Bio</label>
-                      <textarea id="edit-artist-bio-{{ artist.id }}" name="bio" rows="4">{{ artist.bio or '' }}</textarea>
+                      <textarea id="edit-artist-bio-{{ artist.id }}" name="bio" rows="8">{{ artist.bio or '' }}</textarea>
 
                       <label for="edit-artist-hero-image-{{ artist.id }}">Replace hero image</label>
                       <p class="admin-field-hint">Leave empty to keep current file.</p>
@@ -332,31 +331,10 @@
 
                     <fieldset class="admin-fieldset">
                       <legend class="admin-fieldset-legend">Featured block</legend>
-                      <label for="edit-featured-media-type-{{ artist.id }}">Type</label>
-                      <select id="edit-featured-media-type-{{ artist.id }}" name="featured_media_type">
-                        <option value="">None</option>
-                        <option value="image" {% if artist.featured_media_type == "image" %}selected{% endif %}>Image</option>
-                        <option value="video" {% if artist.featured_media_type == "video" %}selected{% endif %}>Video</option>
-                      </select>
+                      <p class="admin-field-hint">Optional “top” featured image in the faculty profile.</p>
 
                       <label for="edit-featured-media-file-{{ artist.id }}">Replace featured image upload</label>
                       <input id="edit-featured-media-file-{{ artist.id }}" name="featured_media_file" type="file" accept="image/*" />
-
-                      <label for="edit-featured-media-url-{{ artist.id }}">Media URL</label>
-                      <input
-                        id="edit-featured-media-url-{{ artist.id }}"
-                        name="featured_media_url"
-                        type="url"
-                        value="{{ artist.featured_media_url or '' }}"
-                      />
-
-                      <label for="edit-featured-media-thumb-{{ artist.id }}">Video thumbnail URL</label>
-                      <input
-                        id="edit-featured-media-thumb-{{ artist.id }}"
-                        name="featured_media_thumbnail_url"
-                        type="url"
-                        value="{{ artist.featured_media_thumbnail_url or '' }}"
-                      />
                     </fieldset>
 
                     <div class="admin-form-actions">
@@ -366,8 +344,42 @@
                 </details>
 
                 <footer class="artist-roster-footer">
-                  <form method="post" action="/admin/dashboard/artists/{{ artist.id }}/delete" class="artist-delete-form" onsubmit="return confirm('Delete this artist? This cannot be undone.');">
-                    <button type="submit" class="delete-btn delete-category-btn btn-delete-artist">Delete artist</button>
+                  <form method="post" action="/admin/dashboard/artists/{{ artist.id }}/delete?confirm_mode=typed" class="artist-delete-form">
+                    <button
+                      type="button"
+                      class="delete-btn delete-category-btn btn-delete-artist js-open-media-delete"
+                      data-target="artist-delete-wrap-{{ artist.id }}"
+                      data-input="artist-delete-input-{{ artist.id }}"
+                      data-trigger="artist-delete-trigger-{{ artist.id }}"
+                      id="artist-delete-trigger-{{ artist.id }}"
+                    >
+                      Delete artist
+                    </button>
+                    <div id="artist-delete-wrap-{{ artist.id }}" class="media-delete-wrap section-hidden">
+                      <label class="delete-confirm-label" for="artist-delete-input-{{ artist.id }}">
+                        Type <strong>delete {{ artist.name }}</strong> to confirm
+                      </label>
+                      <input
+                        id="artist-delete-input-{{ artist.id }}"
+                        name="delete_confirmation"
+                        type="text"
+                        class="delete-confirm-input"
+                        placeholder="delete {{ artist.name }}"
+                        required
+                      />
+                      <div class="media-delete-actions">
+                        <button type="submit" class="delete-btn delete-category-btn btn-delete-artist">Confirm Delete</button>
+                        <button
+                          type="button"
+                          class="delete-confirm-close js-close-media-delete"
+                          data-target="artist-delete-wrap-{{ artist.id }}"
+                          data-trigger="artist-delete-trigger-{{ artist.id }}"
+                          aria-label="Close delete confirmation"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    </div>
                   </form>
                 </footer>
               </div>
@@ -378,33 +390,70 @@
         <p class="admin-empty">No artists yet — use the form above to create one.</p>
       {% endif %}
     </section>
-
-    <section class="admin-panel">
-      <h2 class="admin-panel-title">Recent gallery media</h2>
-      <p class="admin-panel-desc">Latest uploads across all artists. Delete removes only this media item.</p>
-      {% if latest_media %}
-        <div class="upload-grid artist-media-grid">
-          {% for media, artist_name in latest_media %}
-            <article class="upload-card">
-              {% if media.media_type == "image" %}
-                <img src="{{ media.media_url }}" alt="{{ artist_name }}" loading="lazy" />
-              {% elif media.thumbnail_url %}
-                <img src="{{ media.thumbnail_url }}" alt="{{ artist_name }}" loading="lazy" />
-              {% else %}
-                <div class="video-placeholder">VIDEO</div>
-              {% endif %}
-              <p><strong>{{ artist_name }}</strong></p>
-              <p class="upload-card-meta">{{ media.media_type|upper }}</p>
-              <a href="{{ media.media_url }}" target="_blank" rel="noopener noreferrer">Open URL</a>
-              <form method="post" action="/admin/dashboard/artists/media/{{ media.id }}/delete">
-                <button type="submit" class="delete-btn">Delete</button>
-              </form>
-            </article>
-          {% endfor %}
-        </div>
-      {% else %}
-        <p class="admin-empty">No media entries yet.</p>
-      {% endif %}
-    </section>
+      </div>
+    </div>
   </section>
+  <script>
+    (function () {
+      const switchButtons = Array.from(document.querySelectorAll(".admin-artist-switch-btn"));
+      const panels = Array.from(document.querySelectorAll(".admin-toggle-panel"));
+      const storageKey = "admin-artist-active-panel";
+      const openButtons = document.querySelectorAll(".js-open-media-delete");
+      const closeButtons = document.querySelectorAll(".js-close-media-delete");
+
+      function showPanel(panelId) {
+        panels.forEach((panel) => {
+          panel.classList.toggle("section-hidden", panel.id !== panelId);
+        });
+        switchButtons.forEach((btn) => {
+          const isActive = btn.dataset.target === panelId;
+          btn.classList.toggle("active", isActive);
+          btn.setAttribute("aria-selected", isActive ? "true" : "false");
+        });
+      }
+
+      const savedPanel = window.sessionStorage.getItem(storageKey);
+      const initialPanel =
+        savedPanel && panels.some((panel) => panel.id === savedPanel)
+          ? savedPanel
+          : "create-faculty-section";
+      showPanel(initialPanel);
+
+      switchButtons.forEach((btn) => {
+        btn.addEventListener("click", function () {
+          const panelId = this.dataset.target;
+          if (!panelId) return;
+          showPanel(panelId);
+          window.sessionStorage.setItem(storageKey, panelId);
+        });
+      });
+
+      openButtons.forEach((button) => {
+        button.addEventListener("click", function () {
+          const targetId = this.dataset.target;
+          const inputId = this.dataset.input;
+          const wrapper = targetId ? document.getElementById(targetId) : null;
+          if (!wrapper) return;
+          wrapper.classList.remove("section-hidden");
+          this.style.display = "none";
+          const input = inputId ? document.getElementById(inputId) : null;
+          if (input) input.focus();
+        });
+      });
+
+      closeButtons.forEach((button) => {
+        button.addEventListener("click", function () {
+          const targetId = this.dataset.target;
+          const triggerId = this.dataset.trigger;
+          const wrapper = targetId ? document.getElementById(targetId) : null;
+          if (!wrapper) return;
+          wrapper.classList.add("section-hidden");
+          const input = wrapper.querySelector("input[name='delete_confirmation']");
+          if (input) input.value = "";
+          const trigger = triggerId ? document.getElementById(triggerId) : null;
+          if (trigger) trigger.style.display = "";
+        });
+      });
+    })();
+  </script>
 {% endblock %}

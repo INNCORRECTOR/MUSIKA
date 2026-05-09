@@ -1,7 +1,7 @@
 from datetime import date as dt_date, time as dt_time
 from fastapi import APIRouter, Depends, File, Form, Request, UploadFile, status
 from fastapi.responses import HTMLResponse, RedirectResponse
-from sqlalchemy import func
+from sqlalchemy import func, inspect, text
 from sqlalchemy.exc import SQLAlchemyError
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session, selectinload
@@ -34,6 +34,60 @@ from app.services.s3_upload import (
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
+
+
+def _ensure_inbox_seen_columns(db: Session) -> None:
+    try:
+        inspector = inspect(db.bind)
+        contact_columns = {column["name"] for column in inspector.get_columns("contact_messages")}
+        subscription_columns = {column["name"] for column in inspector.get_columns("newsletter_subscriptions")}
+    except Exception:
+        return
+
+    has_changes = False
+    if "is_seen" not in contact_columns:
+        try:
+            db.execute(text("ALTER TABLE contact_messages ADD COLUMN is_seen BOOLEAN NOT NULL DEFAULT 0"))
+            has_changes = True
+        except SQLAlchemyError:
+            db.rollback()
+    if "is_seen" not in subscription_columns:
+        try:
+            db.execute(text("ALTER TABLE newsletter_subscriptions ADD COLUMN is_seen BOOLEAN NOT NULL DEFAULT 0"))
+            has_changes = True
+        except SQLAlchemyError:
+            db.rollback()
+
+    if has_changes:
+        try:
+            db.commit()
+        except SQLAlchemyError:
+            db.rollback()
+
+
+def _inject_admin_inbox_counts(context: dict, db: Session) -> None:
+    _ensure_inbox_seen_columns(db)
+    try:
+        unread_contact_count = (
+            db.query(func.count(ContactMessage.id)).filter(ContactMessage.is_seen.is_(False)).scalar() or 0
+        )
+        unread_subscription_count = (
+            db.query(func.count(NewsletterSubscription.id))
+            .filter(NewsletterSubscription.is_seen.is_(False))
+            .scalar()
+            or 0
+        )
+    except SQLAlchemyError:
+        unread_contact_count = 0
+        unread_subscription_count = 0
+
+    context.update(
+        {
+            "unread_contact_count": unread_contact_count,
+            "unread_subscription_count": unread_subscription_count,
+            "unread_total_count": unread_contact_count + unread_subscription_count,
+        }
+    )
 
 
 @router.get("/admin/login", response_class=HTMLResponse)
@@ -70,12 +124,13 @@ def admin_login(
 
 
 @router.get("/admin", response_class=HTMLResponse)
-def admin_page(request: Request):
+def admin_page(request: Request, db: Session = Depends(get_db)):
     context = shared_auth_context(request, "Admin")
     admin_redirect = require_admin(request)
     if admin_redirect:
         return admin_redirect
 
+    _inject_admin_inbox_counts(context, db)
     return templates.TemplateResponse(request, "admin_page.html", context)
 
 
@@ -158,19 +213,31 @@ def admin_upload_image(
 
 @router.get("/admin/gallary", response_class=HTMLResponse)
 @router.get("/admin/gallery", response_class=HTMLResponse)
-def admin_gallary_page(request: Request, db: Session = Depends(get_db)):
+def admin_gallary_page(
+    request: Request,
+    page: int = 1,
+    page_size: int = 5,
+    db: Session = Depends(get_db),
+):
     context = shared_auth_context(request, "Admin Gallary")
     admin_redirect = require_admin(request)
     if admin_redirect:
         return admin_redirect
 
     genres = db.query(GalleryGenre).order_by(GalleryGenre.name.asc()).all()
-    latest_images = (
+    safe_page_size = max(1, min(page_size, 100))
+    total_uploads = db.query(func.count(GalleryImage.id)).filter(GalleryImage.is_active.is_(True)).scalar() or 0
+    total_pages = max(1, (total_uploads + safe_page_size - 1) // safe_page_size)
+    current_page = max(1, min(page, total_pages))
+    offset = (current_page - 1) * safe_page_size
+
+    paginated_images = (
         db.query(GalleryImage, GalleryGenre.slug)
         .join(GalleryGenre, GalleryGenre.id == GalleryImage.genre_id)
         .filter(GalleryImage.is_active.is_(True))
         .order_by(GalleryImage.created_at.desc())
-        .limit(10)
+        .offset(offset)
+        .limit(safe_page_size)
         .all()
     )
     context.update(
@@ -178,10 +245,80 @@ def admin_gallary_page(request: Request, db: Session = Depends(get_db)):
             "message": request.query_params.get("message"),
             "error": request.query_params.get("error"),
             "genres": genres,
-            "latest_images": latest_images,
+            "latest_images": paginated_images,
+            "current_page": current_page,
+            "total_pages": total_pages,
+            "page_size": safe_page_size,
+            "total_uploads": total_uploads,
+            "has_prev": current_page > 1,
+            "has_next": current_page < total_pages,
+            "prev_page": current_page - 1,
+            "next_page": current_page + 1,
         }
     )
+    _inject_admin_inbox_counts(context, db)
     return templates.TemplateResponse(request, "admingallary.html", context)
+
+
+@router.get("/admin/gallary/categories/{genre_slug}", response_class=HTMLResponse)
+@router.get("/admin/gallery/categories/{genre_slug}", response_class=HTMLResponse)
+def admin_gallary_category_page(
+    genre_slug: str,
+    request: Request,
+    page: int = 1,
+    page_size: int = 8,
+    db: Session = Depends(get_db),
+):
+    context = shared_auth_context(request, "Category Uploads")
+    admin_redirect = require_admin(request)
+    if admin_redirect:
+        return admin_redirect
+
+    slug = slugify(genre_slug)
+    genre = db.query(GalleryGenre).filter(GalleryGenre.slug == slug).first()
+    if not genre:
+        return RedirectResponse(
+            url="/admin/gallary?error=Category+not+found",
+            status_code=status.HTTP_303_SEE_OTHER,
+        )
+
+    safe_page_size = max(1, min(page_size, 50))
+    total_uploads = (
+        db.query(func.count(GalleryImage.id))
+        .filter(GalleryImage.genre_id == genre.id, GalleryImage.is_active.is_(True))
+        .scalar()
+        or 0
+    )
+    total_pages = max(1, (total_uploads + safe_page_size - 1) // safe_page_size)
+    current_page = max(1, min(page, total_pages))
+    offset = (current_page - 1) * safe_page_size
+
+    category_images = (
+        db.query(GalleryImage)
+        .filter(GalleryImage.genre_id == genre.id, GalleryImage.is_active.is_(True))
+        .order_by(GalleryImage.created_at.desc())
+        .offset(offset)
+        .limit(safe_page_size)
+        .all()
+    )
+    context.update(
+        {
+            "message": request.query_params.get("message"),
+            "error": request.query_params.get("error"),
+            "genre": genre,
+            "category_images": category_images,
+            "current_page": current_page,
+            "total_pages": total_pages,
+            "page_size": safe_page_size,
+            "total_uploads": total_uploads,
+            "has_prev": current_page > 1,
+            "has_next": current_page < total_pages,
+            "prev_page": current_page - 1,
+            "next_page": current_page + 1,
+        }
+    )
+    _inject_admin_inbox_counts(context, db)
+    return templates.TemplateResponse(request, "admingallary_category.html", context)
 
 
 @router.post("/admin/dashboard/images/{image_id}/delete")
@@ -194,27 +331,41 @@ def admin_delete_image(
     if admin_redirect:
         return admin_redirect
 
+    return_to = request.query_params.get("return_to")
+
     image = db.query(GalleryImage).filter(GalleryImage.id == image_id).first()
     if not image:
-        return RedirectResponse(url="/admin/gallary?error=Image+not+found", status_code=status.HTTP_303_SEE_OTHER)
+        target_url = return_to or "/admin/gallary"
+        separator = "&" if "?" in target_url else "?"
+        return RedirectResponse(
+            url=f"{target_url}{separator}error=Image+not+found",
+            status_code=status.HTTP_303_SEE_OTHER,
+        )
 
     try:
         delete_image_by_key(image.s3_key, get_s3_config())
     except UploadValidationError as exc:
+        target_url = return_to or "/admin/gallary"
+        separator = "&" if "?" in target_url else "?"
         return RedirectResponse(
-            url=f"/admin/gallary?error={str(exc).replace(' ', '+')}",
+            url=f"{target_url}{separator}error={str(exc).replace(' ', '+')}",
             status_code=status.HTTP_303_SEE_OTHER,
         )
     except UploadServiceError as exc:
+        target_url = return_to or "/admin/gallary"
+        separator = "&" if "?" in target_url else "?"
         return RedirectResponse(
-            url=f"/admin/gallary?error={str(exc).replace(' ', '+')}",
+            url=f"{target_url}{separator}error={str(exc).replace(' ', '+')}",
             status_code=status.HTTP_303_SEE_OTHER,
         )
 
     db.delete(image)
     db.commit()
+    target_url = return_to or "/admin/gallary"
+    separator = "&" if "?" in target_url else "?"
     return RedirectResponse(
-        url="/admin/gallary?message=Image+deleted+successfully", status_code=status.HTTP_303_SEE_OTHER
+        url=f"{target_url}{separator}message=Image+deleted+successfully",
+        status_code=status.HTTP_303_SEE_OTHER,
     )
 
 
@@ -222,6 +373,7 @@ def admin_delete_image(
 def admin_delete_category(
     genre_id: int,
     request: Request,
+    delete_confirmation: str = Form(default=""),
     db: Session = Depends(get_db),
 ):
     admin_redirect = require_admin(request)
@@ -232,6 +384,14 @@ def admin_delete_category(
     if not genre:
         return RedirectResponse(
             url="/admin/gallary?error=Category+not+found", status_code=status.HTTP_303_SEE_OTHER
+        )
+
+    expected_confirmation = f"delete {genre.name}".strip().lower()
+    provided_confirmation = (delete_confirmation or "").strip().lower()
+    if provided_confirmation != expected_confirmation:
+        return RedirectResponse(
+            url="/admin/gallary?error=Delete+confirmation+did+not+match.+Use+delete+" + genre.name.replace(" ", "+"),
+            status_code=status.HTTP_303_SEE_OTHER,
         )
 
     linked_images = db.query(GalleryImage).filter(GalleryImage.genre_id == genre.id).all()
@@ -271,22 +431,71 @@ def admin_artist_page(request: Request, db: Session = Depends(get_db)):
         .order_by(Artist.created_at.desc())
         .all()
     )
-    latest_media = (
-        db.query(Media, Artist.name.label("artist_name"))
-        .join(Artist, Artist.id == Media.artist_id)
-        .order_by(Media.created_at.desc())
-        .limit(20)
-        .all()
-    )
     context.update(
         {
             "message": request.query_params.get("message"),
             "error": request.query_params.get("error"),
             "artists": artists,
-            "latest_media": latest_media,
         }
     )
+    _inject_admin_inbox_counts(context, db)
     return templates.TemplateResponse(request, "adminartist.html", context)
+
+
+@router.get("/admin/artist/{artist_id}/media", response_class=HTMLResponse)
+@router.get("/admin/artists/{artist_id}/media", response_class=HTMLResponse)
+def admin_artist_media_page(
+    artist_id: int,
+    request: Request,
+    page: int = 1,
+    page_size: int = 12,
+    db: Session = Depends(get_db),
+):
+    context = shared_auth_context(request, "Artist Media")
+    admin_redirect = require_admin(request)
+    if admin_redirect:
+        return admin_redirect
+
+    artist = db.query(Artist).filter(Artist.id == artist_id).first()
+    if not artist:
+        return RedirectResponse(
+            url="/admin/artist?error=Artist+not+found",
+            status_code=status.HTTP_303_SEE_OTHER,
+        )
+
+    safe_page_size = max(1, min(page_size, 50))
+    total_media = db.query(func.count(Media.id)).filter(Media.artist_id == artist.id).scalar() or 0
+    total_pages = max(1, (total_media + safe_page_size - 1) // safe_page_size)
+    current_page = max(1, min(page, total_pages))
+    offset = (current_page - 1) * safe_page_size
+
+    media_items = (
+        db.query(Media)
+        .filter(Media.artist_id == artist.id)
+        .order_by(Media.created_at.desc())
+        .offset(offset)
+        .limit(safe_page_size)
+        .all()
+    )
+
+    context.update(
+        {
+            "message": request.query_params.get("message"),
+            "error": request.query_params.get("error"),
+            "artist": artist,
+            "media_items": media_items,
+            "current_page": current_page,
+            "total_pages": total_pages,
+            "page_size": safe_page_size,
+            "total_media": total_media,
+            "has_prev": current_page > 1,
+            "has_next": current_page < total_pages,
+            "prev_page": current_page - 1,
+            "next_page": current_page + 1,
+        }
+    )
+    _inject_admin_inbox_counts(context, db)
+    return templates.TemplateResponse(request, "adminartist_media.html", context)
 
 
 @router.get("/admin/courses", response_class=HTMLResponse)
@@ -321,6 +530,7 @@ def admin_courses_page(request: Request, mode: str = "offline", db: Session = De
             "loaded_data": loaded_data,
         }
     )
+    _inject_admin_inbox_counts(context, db)
     return templates.TemplateResponse(request, "admincourses.html", context)
 
 
@@ -406,6 +616,7 @@ def admin_events_page(request: Request, db: Session = Depends(get_db)):
             "events": events,
         }
     )
+    _inject_admin_inbox_counts(context, db)
     return templates.TemplateResponse(request, "adminevent.html", context)
 
 
@@ -416,27 +627,63 @@ def admin_inbox_page(request: Request, db: Session = Depends(get_db)):
     if admin_redirect:
         return admin_redirect
 
+    _ensure_inbox_seen_columns(db)
     try:
         messages = db.query(ContactMessage).order_by(ContactMessage.created_at.desc()).limit(200).all()
+        db.query(ContactMessage).filter(ContactMessage.is_seen.is_(False)).update(
+            {ContactMessage.is_seen: True},
+            synchronize_session=False,
+        )
+        db.commit()
+        inbox_error = None
+    except SQLAlchemyError:
+        db.rollback()
+        messages = []
+        inbox_error = "Database tables missing. Run contact_newsletter_tables.sql first."
+    context.update(
+        {
+            "messages": messages,
+            "error": inbox_error,
+        }
+    )
+    _inject_admin_inbox_counts(context, db)
+    return templates.TemplateResponse(request, "admin_inbox.html", context)
+
+
+@router.get("/admin/subscribers", response_class=HTMLResponse)
+def admin_subscribers_page(request: Request, db: Session = Depends(get_db)):
+    context = shared_auth_context(request, "Admin Subscribers")
+    admin_redirect = require_admin(request)
+    if admin_redirect:
+        return admin_redirect
+
+    _ensure_inbox_seen_columns(db)
+    try:
         subscriptions = (
             db.query(NewsletterSubscription)
             .order_by(NewsletterSubscription.created_at.desc())
             .limit(200)
             .all()
         )
-        inbox_error = None
+        db.query(NewsletterSubscription).filter(NewsletterSubscription.is_seen.is_(False)).update(
+            {NewsletterSubscription.is_seen: True},
+            synchronize_session=False,
+        )
+        db.commit()
+        subscribers_error = None
     except SQLAlchemyError:
-        messages = []
+        db.rollback()
         subscriptions = []
-        inbox_error = "Database tables missing. Run contact_newsletter_tables.sql first."
+        subscribers_error = "Database tables missing. Run contact_newsletter_tables.sql first."
+
     context.update(
         {
-            "messages": messages,
             "subscriptions": subscriptions,
-            "error": inbox_error,
+            "error": subscribers_error,
         }
     )
-    return templates.TemplateResponse(request, "admin_inbox.html", context)
+    _inject_admin_inbox_counts(context, db)
+    return templates.TemplateResponse(request, "admin_subscribers.html", context)
 
 
 @router.post("/admin/dashboard/events")
@@ -597,6 +844,7 @@ def admin_delete_event_image(
     event_id: int,
     image_id: int,
     request: Request,
+    delete_confirmation: str = Form(default=""),
     db: Session = Depends(get_db),
 ):
     admin_redirect = require_admin(request)
@@ -612,6 +860,15 @@ def admin_delete_event_image(
         return RedirectResponse(
             url="/admin/events?error=Event+image+not+found", status_code=status.HTTP_303_SEE_OTHER
         )
+
+    confirm_mode = (request.query_params.get("confirm_mode") or "").strip().lower()
+    if confirm_mode == "typed":
+        normalized_confirmation = (delete_confirmation or "").strip().lower()
+        if not normalized_confirmation.startswith("delete"):
+            return RedirectResponse(
+                url="/admin/events?error=Type+delete+to+confirm+image+deletion",
+                status_code=status.HTTP_303_SEE_OTHER,
+            )
 
     image_key = extract_s3_object_key_from_url(image.image_url)
     if image_key:
@@ -691,9 +948,6 @@ def admin_create_artist(
     youtube_music_url: str = Form(default=""),
     amazon_music_url: str = Form(default=""),
     imusic_url: str = Form(default=""),
-    featured_media_type: str = Form(default=""),
-    featured_media_url: str = Form(default=""),
-    featured_media_thumbnail_url: str = Form(default=""),
     featured_media_file: UploadFile | None = File(default=None),
     db: Session = Depends(get_db),
 ):
@@ -722,27 +976,10 @@ def admin_create_artist(
                 status_code=status.HTTP_303_SEE_OTHER,
             )
 
-    normalized_featured_type = (featured_media_type or "").strip().lower()
-    normalized_featured_url = (featured_media_url or "").strip()
-    normalized_featured_thumbnail = (featured_media_thumbnail_url or "").strip() or None
-    has_featured_input = bool(
-        normalized_featured_type
-        or normalized_featured_url
-        or normalized_featured_thumbnail
-        or (featured_media_file and featured_media_file.filename)
-    )
+    has_featured_input = bool(featured_media_file and featured_media_file.filename)
     resolved_featured_url: str | None = None
-    resolved_featured_type: str | None = None
     if has_featured_input:
-        if normalized_featured_type not in {"image", "video"}:
-            return RedirectResponse(
-                url="/admin/artist?error=Featured+media+type+must+be+image+or+video",
-                status_code=status.HTTP_303_SEE_OTHER,
-            )
-        resolved_featured_type = normalized_featured_type
-        resolved_featured_url = normalized_featured_url
-
-        if normalized_featured_type == "image" and featured_media_file and featured_media_file.filename:
+        if featured_media_file and featured_media_file.filename:
             try:
                 _, _, uploaded_featured_url = upload_image_and_get_url(featured_media_file, get_s3_config())
             except UploadValidationError as exc:
@@ -756,18 +993,6 @@ def admin_create_artist(
                     status_code=status.HTTP_303_SEE_OTHER,
                 )
             resolved_featured_url = uploaded_featured_url
-
-        if normalized_featured_type == "video" and featured_media_file and featured_media_file.filename:
-            return RedirectResponse(
-                url="/admin/artist?error=For+video+featured+media+please+provide+a+video+URL",
-                status_code=status.HTTP_303_SEE_OTHER,
-            )
-
-        if not resolved_featured_url:
-            return RedirectResponse(
-                url="/admin/artist?error=Featured+media+URL+or+image+file+is+required",
-                status_code=status.HTTP_303_SEE_OTHER,
-            )
 
     artist = Artist(
         name=normalized_name,
@@ -784,9 +1009,9 @@ def admin_create_artist(
         youtube_music_url=(youtube_music_url or "").strip() or None,
         amazon_music_url=(amazon_music_url or "").strip() or None,
         imusic_url=(imusic_url or "").strip() or None,
-        featured_media_type=resolved_featured_type,
+        featured_media_type=("image" if resolved_featured_url else None),
         featured_media_url=resolved_featured_url,
-        featured_media_thumbnail_url=normalized_featured_thumbnail,
+        featured_media_thumbnail_url=None,
     )
     db.add(artist)
     db.commit()
@@ -799,9 +1024,6 @@ def admin_create_artist(
 def admin_add_artist_media(
     request: Request,
     artist_id: int = Form(...),
-    media_type: str = Form(...),
-    media_url: str = Form(default=""),
-    thumbnail_url: str = Form(default=""),
     file: UploadFile | None = File(default=None),
     db: Session = Depends(get_db),
 ):
@@ -815,31 +1037,24 @@ def admin_add_artist_media(
             url="/admin/artist?error=Artist+not+found", status_code=status.HTTP_303_SEE_OTHER
         )
 
-    normalized_type = (media_type or "").strip().lower()
-    if normalized_type not in {"image", "video"}:
+    normalized_type = "image"
+
+    if not file or not file.filename:
         return RedirectResponse(
-            url="/admin/artist?error=Invalid+media+type", status_code=status.HTTP_303_SEE_OTHER
+            url="/admin/artist?error=Image+file+is+required",
+            status_code=status.HTTP_303_SEE_OTHER,
         )
 
-    resolved_media_url = (media_url or "").strip()
-    if normalized_type == "image" and file and file.filename:
-        try:
-            _, _, public_image_url = upload_image_and_get_url(file, get_s3_config())
-        except UploadValidationError as exc:
-            return RedirectResponse(
-                url=f"/admin/artist?error={str(exc).replace(' ', '+')}",
-                status_code=status.HTTP_303_SEE_OTHER,
-            )
-        except UploadServiceError as exc:
-            return RedirectResponse(
-                url=f"/admin/artist?error={str(exc).replace(' ', '+')}",
-                status_code=status.HTTP_303_SEE_OTHER,
-            )
-        resolved_media_url = public_image_url
-
-    if not resolved_media_url:
+    try:
+        _, _, resolved_media_url = upload_image_and_get_url(file, get_s3_config())
+    except UploadValidationError as exc:
         return RedirectResponse(
-            url="/admin/artist?error=Media+URL+or+image+file+is+required",
+            url=f"/admin/artist?error={str(exc).replace(' ', '+')}",
+            status_code=status.HTTP_303_SEE_OTHER,
+        )
+    except UploadServiceError as exc:
+        return RedirectResponse(
+            url=f"/admin/artist?error={str(exc).replace(' ', '+')}",
             status_code=status.HTTP_303_SEE_OTHER,
         )
 
@@ -847,7 +1062,7 @@ def admin_add_artist_media(
         artist_id=artist.id,
         media_type=normalized_type,
         media_url=resolved_media_url,
-        thumbnail_url=(thumbnail_url or "").strip() or None,
+        thumbnail_url=None,
     )
     db.add(media)
     db.commit()
@@ -860,6 +1075,7 @@ def admin_add_artist_media(
 def admin_delete_artist(
     artist_id: int,
     request: Request,
+    delete_confirmation: str = Form(default=""),
     db: Session = Depends(get_db),
 ):
     admin_redirect = require_admin(request)
@@ -871,6 +1087,17 @@ def admin_delete_artist(
         return RedirectResponse(
             url="/admin/artist?error=Artist+not+found", status_code=status.HTTP_303_SEE_OTHER
         )
+
+    confirm_mode = (request.query_params.get("confirm_mode") or "").strip().lower()
+    if confirm_mode == "typed":
+        normalized_confirmation = (delete_confirmation or "").strip().lower()
+        expected_confirmation = f"delete {artist.name}".strip().lower()
+        if normalized_confirmation != expected_confirmation:
+            return RedirectResponse(
+                url="/admin/artist?error=Delete+confirmation+did+not+match.+Use+delete+" + artist.name.replace(" ", "+"),
+                status_code=status.HTTP_303_SEE_OTHER,
+            )
+
     db.delete(artist)
     db.commit()
     return RedirectResponse(
@@ -896,9 +1123,6 @@ def admin_update_artist(
     youtube_music_url: str = Form(default=""),
     amazon_music_url: str = Form(default=""),
     imusic_url: str = Form(default=""),
-    featured_media_type: str = Form(default=""),
-    featured_media_url: str = Form(default=""),
-    featured_media_thumbnail_url: str = Form(default=""),
     featured_media_file: UploadFile | None = File(default=None),
     db: Session = Depends(get_db),
 ):
@@ -963,24 +1187,10 @@ def admin_update_artist(
                 )
         artist.hero_image_url = public_image_url
 
-    normalized_featured_type = (featured_media_type or "").strip().lower()
-    normalized_featured_url = (featured_media_url or "").strip()
-    normalized_featured_thumbnail = (featured_media_thumbnail_url or "").strip()
-    has_featured_input = bool(
-        normalized_featured_type
-        or normalized_featured_url
-        or normalized_featured_thumbnail
-        or (featured_media_file and featured_media_file.filename)
-    )
+    has_featured_input = bool(featured_media_file and featured_media_file.filename)
     if has_featured_input:
-        if normalized_featured_type not in {"image", "video"}:
-            return RedirectResponse(
-                url="/admin/artist?error=Featured+media+type+must+be+image+or+video",
-                status_code=status.HTTP_303_SEE_OTHER,
-            )
-
-        resolved_featured_url = normalized_featured_url
-        if normalized_featured_type == "image" and featured_media_file and featured_media_file.filename:
+        resolved_featured_url = ""
+        if featured_media_file and featured_media_file.filename:
             previous_featured_image_url = artist.featured_media_url
             try:
                 _, _, uploaded_featured_url = upload_image_and_get_url(featured_media_file, s3_config)
@@ -1010,21 +1220,9 @@ def admin_update_artist(
                     )
             resolved_featured_url = uploaded_featured_url
 
-        if normalized_featured_type == "video" and featured_media_file and featured_media_file.filename:
-            return RedirectResponse(
-                url="/admin/artist?error=For+video+featured+media+please+provide+a+video+URL",
-                status_code=status.HTTP_303_SEE_OTHER,
-            )
-
-        if not resolved_featured_url:
-            return RedirectResponse(
-                url="/admin/artist?error=Featured+media+URL+or+image+file+is+required",
-                status_code=status.HTTP_303_SEE_OTHER,
-            )
-
-        artist.featured_media_type = normalized_featured_type
+        artist.featured_media_type = "image"
         artist.featured_media_url = resolved_featured_url
-        artist.featured_media_thumbnail_url = normalized_featured_thumbnail or None
+        artist.featured_media_thumbnail_url = None
     db.commit()
     return RedirectResponse(
         url="/admin/artist?message=Artist+updated+successfully", status_code=status.HTTP_303_SEE_OTHER
@@ -1035,19 +1233,38 @@ def admin_update_artist(
 def admin_delete_artist_media(
     media_id: int,
     request: Request,
+    delete_confirmation: str = Form(default=""),
     db: Session = Depends(get_db),
 ):
     admin_redirect = require_admin(request)
     if admin_redirect:
         return admin_redirect
 
+    return_to = request.query_params.get("return_to")
+    confirm_mode = (request.query_params.get("confirm_mode") or "").strip().lower()
+    target_url = return_to or "/admin/artist"
+
     media = db.query(Media).filter(Media.id == media_id).first()
     if not media:
+        separator = "&" if "?" in target_url else "?"
         return RedirectResponse(
-            url="/admin/artist?error=Media+not+found", status_code=status.HTTP_303_SEE_OTHER
+            url=f"{target_url}{separator}error=Media+not+found",
+            status_code=status.HTTP_303_SEE_OTHER,
         )
+
+    if confirm_mode == "typed":
+        normalized_confirmation = (delete_confirmation or "").strip().lower()
+        if not normalized_confirmation.startswith("delete"):
+            separator = "&" if "?" in target_url else "?"
+            return RedirectResponse(
+                url=f"{target_url}{separator}error=Type+delete+to+confirm+deletion",
+                status_code=status.HTTP_303_SEE_OTHER,
+            )
+
     db.delete(media)
     db.commit()
+    separator = "&" if "?" in target_url else "?"
     return RedirectResponse(
-        url="/admin/artist?message=Media+deleted+successfully", status_code=status.HTTP_303_SEE_OTHER
+        url=f"{target_url}{separator}message=Media+deleted+successfully",
+        status_code=status.HTTP_303_SEE_OTHER,
     )

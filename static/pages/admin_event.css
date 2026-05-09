@@ -1,7 +1,27 @@
 .admin-event-shell {
-  max-width: 1120px;
+  width: 100%;
+  max-width: none;
   margin: 0 auto;
-  padding: 2rem 1rem 3rem;
+  padding: 1.25rem 1.25rem 2rem;
+  box-sizing: border-box;
+}
+
+@media (min-width: 1024px) {
+  .admin-event-shell {
+    padding: 1.2rem 1.5rem 2.2rem;
+  }
+}
+
+@media (max-width: 900px) {
+  .admin-event-shell {
+    padding: 0.85rem 0.7rem 1.2rem;
+  }
+}
+
+@media (max-width: 520px) {
+  .admin-event-shell {
+    padding: 0.7rem 0.5rem 1rem;
+  }
 }
 
 .admin-event-header {
@@ -46,6 +66,25 @@
   margin: 0 0 0.8rem;
 }
 
+.panel-head {
+  margin-bottom: 0.8rem;
+}
+
+.panel-head h2 {
+  margin-bottom: 0.25rem;
+}
+
+.panel-subtitle {
+  margin: 0;
+  font-size: 0.88rem;
+  color: #64748b;
+}
+
+.event-create-form {
+  display: grid;
+  gap: 0.6rem;
+}
+
 .auth-form textarea {
   border: 1px solid #cfd6e3;
   border-radius: 8px;
@@ -62,16 +101,18 @@
 
 .event-admin-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  grid-template-columns: 1fr;
   gap: 1rem;
 }
 
 .event-admin-card {
   border: 1px solid #e2e8f0;
   border-radius: 10px;
-  padding: 0.85rem;
+  padding: 0.95rem;
   display: grid;
   gap: 0.7rem;
+  background: #ffffff;
+  box-shadow: 0 8px 16px rgba(15, 23, 42, 0.05);
 }
 
 .event-admin-head h3 {
@@ -86,6 +127,20 @@
 
 .event-admin-meta {
   color: #64748b;
+}
+
+.event-badges {
+  margin-top: 0.4rem;
+}
+
+.event-badge {
+  display: inline-block;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #3730a3;
+  font-size: 0.75rem;
+  font-weight: 700;
 }
 
 .event-admin-description {
@@ -140,6 +195,56 @@
   margin-top: 0.3rem;
 }
 
+.section-hidden {
+  display: none;
+}
+
+.event-image-delete-form {
+  margin-top: 0.2rem;
+}
+
+.event-delete-confirm-wrap {
+  margin-top: 0.35rem;
+}
+
+.event-delete-confirm-label {
+  display: block;
+  margin: 0 0 0.25rem;
+  font-size: 0.78rem;
+  color: #475569;
+}
+
+.event-delete-confirm-input {
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 0.48rem 0.62rem;
+  font-size: 0.88rem;
+  margin-bottom: 0.3rem;
+}
+
+.event-delete-confirm-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.event-delete-confirm-actions .delete-btn {
+  flex: 1;
+}
+
+.event-delete-close {
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #334155;
+  border-radius: 6px;
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+  line-height: 1;
+  font-size: 1rem;
+}
+
 .event-edit-block {
   margin: 0.35rem 0 0.5rem;
   border: 1px solid #e2e8f0;
@@ -180,4 +285,14 @@
 .event-update-btn:hover {
   background: #24344d;
   border-color: #24344d;
+}
+
+@media (max-width: 640px) {
+  .event-admin-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .event-image-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }

@@ -47,8 +47,12 @@ SEO_META = {
         "description": "Learn about MUSIKA's mission, teaching approach, and creative music learning community in Dimapur, Nagaland.",
     },
     "/artist": {
-        "title": "Faculty & Artists | MUSIKA",
-        "description": "Meet MUSIKA faculty and artists shaping music education, live performance, and creative mentorship.",
+        "title": "Faculty | MUSIKA",
+        "description": "Meet MUSIKA faculty shaping music education, live performance, and creative mentorship.",
+    },
+    "/faculty": {
+        "title": "Faculty | MUSIKA",
+        "description": "Meet MUSIKA faculty shaping music education, live performance, and creative mentorship.",
     },
     "/course": {
         "title": "Music Courses | MUSIKA Dimapur",
@@ -181,6 +185,7 @@ def sitemap_xml(request: Request):
     public_paths = [
         "/",
         "/about",
+        "/faculty",
         "/artist",
         "/course",
         "/event",
@@ -225,13 +230,21 @@ def robots_txt(request: Request):
 
 
 @router.get("/artist", response_class=HTMLResponse)
-def artist(
+def artist_redirect(request: Request, artist_id: int | None = Query(default=None, ge=1)):
+    url = "/faculty"
+    if artist_id:
+        url = _with_query(url, artist_id=str(artist_id))
+    return RedirectResponse(url=url, status_code=status.HTTP_307_TEMPORARY_REDIRECT)
+
+
+@router.get("/faculty", response_class=HTMLResponse)
+def faculty(
     request: Request,
     artist_id: int | None = Query(default=None, ge=1),
     db: Session = Depends(get_db),
 ):
     page = PAGE_CONTENTS["artist"]
-    context = shared_context("/artist")
+    context = shared_context("/faculty")
 
     artists = db.query(Artist).order_by(Artist.name.asc()).all()
     artist_ids = [item.id for item in artists]
@@ -465,6 +478,7 @@ def submit_contact_message(
         phone=(phone or "").strip() or None,
         subject=(subject or "").strip() or None,
         message=normalized_message,
+        is_seen=False,
     )
     try:
         db.add(payload)
@@ -521,6 +535,7 @@ def newsletter_subscribe(
     if existing:
         if not existing.is_active:
             existing.is_active = True
+            existing.is_seen = False
             try:
                 db.add(existing)
                 db.commit()
@@ -540,7 +555,7 @@ def newsletter_subscribe(
         )
 
     try:
-        db.add(NewsletterSubscription(email=normalized_email, is_active=True))
+        db.add(NewsletterSubscription(email=normalized_email, is_active=True, is_seen=False))
         db.commit()
     except SQLAlchemyError:
         db.rollback()

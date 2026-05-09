@@ -3,6 +3,11 @@
   gap: 1rem;
 }
 
+.admin-card {
+  border: 1px solid #d4d9e3;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+}
+
 .builder-mode-tabs {
   display: inline-flex;
   gap: 10px;
@@ -56,16 +61,20 @@
 }
 
 .btn-secondary {
-  border: 1px solid #cbd5e1;
-  background: #ffffff;
+  border: 1px solid #0f0f10;
+  background: #0f0f10;
+  color: #ffffff;
   padding: 0.55rem 0.8rem;
   border-radius: 10px;
   cursor: pointer;
   font-weight: 800;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
 }
 
 .btn-secondary:hover {
-  background: #f8fafc;
+  background: #1e1e20;
+  border-color: #1e1e20;
+  transform: translateY(-1px);
 }
 
 .btn-primary {
@@ -84,10 +93,10 @@
 }
 
 .builder-section {
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  border: 1px solid #dce3ef;
+  border-radius: 14px;
   padding: 0.9rem;
-  background: #ffffff;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
   display: grid;
   gap: 0.75rem;
 }
@@ -106,6 +115,18 @@
   border: 1px solid #cfd6e3;
   border-radius: 10px;
   padding: 0.65rem 0.75rem;
+  background: #ffffff;
+  color: #0f172a;
+}
+
+.builder-section-head input:focus,
+.builder-section-head select:focus,
+.builder-headers input:focus,
+.builder-row input:focus,
+.builder-top-row input:focus {
+  outline: 0;
+  border-color: #182233;
+  box-shadow: 0 0 0 3px rgba(24, 34, 51, 0.14);
 }
 
 .builder-headers {
@@ -156,3 +177,59 @@
   }
 }
 
+.hidden {
+  display: none !important;
+}
+
+.delete-confirm {
+  margin-top: 0.35rem;
+  padding: 0.75rem;
+  border: 1px solid #3a3a3a;
+  border-radius: 10px;
+  background: #0f0f10;
+  color: #ffffff;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.delete-confirm-title {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.delete-confirm-input {
+  border: 1px solid #4b5563;
+  background: #111827;
+  color: #ffffff;
+  border-radius: 8px;
+  padding: 0.55rem 0.7rem;
+}
+
+.delete-confirm-input:focus {
+  outline: none;
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+}
+
+.delete-confirm-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.delete-status {
+  margin: 0.25rem 0 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+  min-height: 1.2em;
+}
+
+.delete-status.success {
+  color: #15803d; /* green */
+}
+
+.delete-status.fail {
+  color: #b91c1c; /* red */
+}

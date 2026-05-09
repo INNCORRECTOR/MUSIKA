@@ -2,23 +2,33 @@
 
 {% block page_styles %}
   <link rel="stylesheet" href="/static/pages/auth.css" />
+  <link rel="stylesheet" href="/static/pages/admin_sidebar.css" />
+  <link rel="stylesheet" href="/static/pages/admin_home.css" />
 {% endblock %}
 
 {% block content %}
-  <section class="auth-shell">
-    <div class="auth-card">
-      <h1>Admin Home</h1>
-      <p class="admin-text">HHAHAHAA</p>
-      <p>Use the separate gallery management page to create genres and upload images.</p>
-      <p><a class="btn admin-home-link" href="/admin/gallary">Open AdminGallary Page</a></p>
-      <p><a class="btn admin-home-link" href="/admin/artist">Open AdminArtist Page</a></p>
-      <p><a class="btn admin-home-link" href="/admin/courses">Open AdminCourses Page</a></p>
-      <p><a class="btn admin-home-link" href="/admin/events">Open AdminEvents Page</a></p>
-      <p><a class="btn admin-home-link" href="/admin/inbox">Open AdminInbox Page</a></p>
+  <section class="auth-shell admin-home-shell">
+    <div class="admin-with-sidebar admin-home-layout">
+      {% set admin_active_page = '' %}
+      {% include "partials/admin_second_nav.html" %}
+      <div class="admin-main-content">
+        <div class="auth-card admin-home-card">
+          <h1>Admin Home</h1>
+          <p class="admin-home-welcome">Welcome to the Admin Home</p>
+          <p class="admin-home-subtitle">Inbox overview for new website activity.</p>
 
-      <form method="post" action="/logout">
-        <button type="submit">Logout</button>
-      </form>
+          <div class="admin-home-inbox-overview">
+            <a class="admin-home-stat-card" href="/admin/inbox">
+              <p class="admin-home-stat-label">New Messages</p>
+              <p class="admin-home-stat-value">{{ unread_contact_count|default(0) }}</p>
+            </a>
+            <a class="admin-home-stat-card" href="/admin/subscribers">
+              <p class="admin-home-stat-label">New Subscriptions</p>
+              <p class="admin-home-stat-value">{{ unread_subscription_count|default(0) }}</p>
+            </a>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 {% endblock %}

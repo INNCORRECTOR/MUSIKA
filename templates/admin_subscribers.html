@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block page_styles %}
+  <link rel="stylesheet" href="/static/pages/auth.css" />
+  <link rel="stylesheet" href="/static/pages/admin_sidebar.css" />
+  <link rel="stylesheet" href="/static/pages/admin_inbox.css" />
+  <link rel="stylesheet" href="/static/pages/admin_pages_mobile.css" />
+{% endblock %}
+
+{% block content %}
+  <section class="auth-shell inbox-shell admin-page-mobile-shell">
+    <div class="admin-with-sidebar">
+      {% set admin_active_page = 'subscribers' %}
+      {% include "partials/admin_second_nav.html" %}
+
+      <div class="auth-card inbox-card admin-main-content">
+        <h1>Admin Subscribers</h1>
+        {% if error %}
+          <p class="auth-error">{{ error }}</p>
+        {% endif %}
+
+        <section class="inbox-section">
+          <div class="inbox-section-head">
+            <h2>Newsletter Subscriptions</h2>
+          </div>
+          {% if subscriptions %}
+            <div class="table-wrap">
+              <table class="inbox-table inbox-table-newsletter">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Email</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for item in subscriptions %}
+                    <tr>
+                      <td class="col-date" data-label="Date">{{ item.created_at }}</td>
+                      <td class="col-email" data-label="Email">{{ item.email }}</td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <p class="inbox-empty">No newsletter subscriptions yet.</p>
+          {% endif %}
+        </section>
+      </div>
+    </div>
+  </section>
+{% endblock %}

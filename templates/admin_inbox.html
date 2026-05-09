@@ -2,73 +2,59 @@
 
 {% block page_styles %}
   <link rel="stylesheet" href="/static/pages/auth.css" />
+  <link rel="stylesheet" href="/static/pages/admin_sidebar.css" />
+  <link rel="stylesheet" href="/static/pages/admin_inbox.css" />
+  <link rel="stylesheet" href="/static/pages/admin_pages_mobile.css" />
 {% endblock %}
 
 {% block content %}
-  <section class="auth-shell">
-    <div class="auth-card" style="max-width: 1100px;">
-      <h1>Admin Inbox</h1>
-      {% if error %}
-        <p class="auth-error">{{ error }}</p>
-      {% endif %}
+  <section class="auth-shell inbox-shell admin-page-mobile-shell">
+    <div class="admin-with-sidebar">
+      {% set admin_active_page = 'inbox' %}
+      {% include "partials/admin_second_nav.html" %}
 
-      <h2 style="margin-top: 18px;">Contact Messages</h2>
-      {% if messages %}
-        <div style="overflow-x:auto;">
-          <table style="width:100%; border-collapse: collapse; margin-top: 10px;">
-            <thead>
-              <tr>
-                <th style="text-align:left; padding:8px; border-bottom:1px solid #2f3542;">Date</th>
-                <th style="text-align:left; padding:8px; border-bottom:1px solid #2f3542;">Name</th>
-                <th style="text-align:left; padding:8px; border-bottom:1px solid #2f3542;">Email</th>
-                <th style="text-align:left; padding:8px; border-bottom:1px solid #2f3542;">Phone</th>
-                <th style="text-align:left; padding:8px; border-bottom:1px solid #2f3542;">Subject</th>
-                <th style="text-align:left; padding:8px; border-bottom:1px solid #2f3542;">Message</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for item in messages %}
-                <tr>
-                  <td style="padding:8px; border-bottom:1px solid #1f2937;">{{ item.created_at }}</td>
-                  <td style="padding:8px; border-bottom:1px solid #1f2937;">{{ item.name }}</td>
-                  <td style="padding:8px; border-bottom:1px solid #1f2937;">{{ item.email }}</td>
-                  <td style="padding:8px; border-bottom:1px solid #1f2937;">{{ item.phone or "-" }}</td>
-                  <td style="padding:8px; border-bottom:1px solid #1f2937;">{{ item.subject or "-" }}</td>
-                  <td style="padding:8px; border-bottom:1px solid #1f2937; max-width: 360px;">{{ item.message }}</td>
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      {% else %}
-        <p>No contact messages yet.</p>
-      {% endif %}
+      <div class="auth-card inbox-card admin-main-content">
+        <h1>Admin Inbox</h1>
+        {% if error %}
+          <p class="auth-error">{{ error }}</p>
+        {% endif %}
 
-      <h2 style="margin-top: 24px;">Newsletter Subscriptions</h2>
-      {% if subscriptions %}
-        <div style="overflow-x:auto;">
-          <table style="width:100%; border-collapse: collapse; margin-top: 10px;">
-            <thead>
-              <tr>
-                <th style="text-align:left; padding:8px; border-bottom:1px solid #2f3542;">Date</th>
-                <th style="text-align:left; padding:8px; border-bottom:1px solid #2f3542;">Email</th>
-                <th style="text-align:left; padding:8px; border-bottom:1px solid #2f3542;">Active</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for item in subscriptions %}
+        <section class="inbox-section">
+          <div class="inbox-section-head">
+            <h2>Contact Messages</h2>
+          </div>
+          {% if messages %}
+            <div class="table-wrap">
+              <table class="inbox-table">
+              <thead>
                 <tr>
-                  <td style="padding:8px; border-bottom:1px solid #1f2937;">{{ item.created_at }}</td>
-                  <td style="padding:8px; border-bottom:1px solid #1f2937;">{{ item.email }}</td>
-                  <td style="padding:8px; border-bottom:1px solid #1f2937;">{{ "Yes" if item.is_active else "No" }}</td>
+                  <th>Date</th>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Phone</th>
+                  <th>Subject</th>
+                  <th>Message</th>
                 </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      {% else %}
-        <p>No newsletter subscriptions yet.</p>
-      {% endif %}
+              </thead>
+              <tbody>
+                {% for item in messages %}
+                  <tr>
+                    <td class="col-date" data-label="Date">{{ item.created_at }}</td>
+                    <td data-label="Name">{{ item.name }}</td>
+                    <td class="col-email" data-label="Email">{{ item.email }}</td>
+                    <td data-label="Phone">{{ item.phone or "-" }}</td>
+                    <td data-label="Subject">{{ item.subject or "-" }}</td>
+                    <td class="col-message" data-label="Message">{{ item.message }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+            </div>
+          {% else %}
+            <p class="inbox-empty">No contact messages yet.</p>
+          {% endif %}
+        </section>
+      </div>
     </div>
   </section>
 {% endblock %}

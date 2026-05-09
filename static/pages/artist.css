@@ -7,6 +7,122 @@
   margin: 0;
 }
 
+/* Faculty picker (simple + understandable) */
+.faculty-picker {
+  padding: 22px 34px 0;
+}
+
+.faculty-picker-title {
+  margin: 0 0 12px;
+  color: #f8fafc;
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.faculty-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.faculty-card {
+  display: grid;
+  grid-template-rows: 120px auto;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 14px;
+  overflow: hidden;
+  text-decoration: none;
+  background: rgba(2, 6, 12, 0.6);
+  transition: transform 140ms ease, border-color 140ms ease;
+}
+
+.faculty-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(226, 232, 240, 0.35);
+}
+
+.faculty-card.active {
+  border-color: rgba(59, 130, 246, 0.9);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
+}
+
+.faculty-card-img img {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  display: block;
+}
+
+.faculty-card-body {
+  padding: 10px 12px 12px;
+}
+
+.faculty-card-name {
+  margin: 0;
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 0.95rem;
+  line-height: 1.2;
+}
+
+.faculty-card-role {
+  margin: 6px 0 0;
+  color: #cbd5e1;
+  font-size: 0.85rem;
+  line-height: 1.25;
+}
+
+/* Make the page easier on mobile: no floating link towers */
+@media (max-width: 900px) {
+  .faculty-picker-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .faculty-picker {
+    padding: 18px 16px 0;
+  }
+
+  .artist-hero-inner {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .artist-content {
+    padding-left: 16px;
+    padding-right: 16px;
+    margin-top: 0;
+  }
+
+  .artist-social,
+  .artist-music {
+    position: static;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: flex-start;
+    margin: 14px 0 0;
+  }
+
+  .artist-social-link,
+  .artist-music-link {
+    width: 54px;
+    height: 54px;
+  }
+
+  .artist-social-link::after,
+  .artist-music-link::after {
+    display: none;
+  }
+}
+
+@media (max-width: 520px) {
+  .faculty-picker-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .main-content {
   background: #070b12;
   padding-bottom: 0;

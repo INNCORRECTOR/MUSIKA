@@ -1,0 +1,35 @@
+<aside class="admin-nav-sidebar" aria-label="Admin page navigation">
+  <h2 class="admin-nav-title">Admin Pages</h2>
+  {% set unread_messages = unread_contact_count|default(0) %}
+  {% set unread_subscriptions = unread_subscription_count|default(0) %}
+  <ul class="admin-nav-links">
+    <li><a class="admin-nav-link {% if admin_active_page == 'event' %}active{% endif %}" href="/admin/events">Event</a></li>
+    <li><a class="admin-nav-link {% if admin_active_page == 'artist' %}active{% endif %}" href="/admin/artist">Artist</a></li>
+    <li><a class="admin-nav-link {% if admin_active_page == 'gallery' %}active{% endif %}" href="/admin/gallary">Gallary</a></li>
+    <li>
+      <a class="admin-nav-link admin-nav-link-inbox {% if admin_active_page == 'inbox' %}active{% endif %}" href="/admin/inbox">
+        Inbox
+        {% if unread_messages > 0 %}
+          <span class="admin-nav-count-badge badge-messages" title="{{ unread_messages }} new message(s)">
+            {{ unread_messages }}
+          </span>
+        {% endif %}
+      </a>
+    </li>
+    <li>
+      <a class="admin-nav-link admin-nav-link-subscribers {% if admin_active_page == 'subscribers' %}active{% endif %}" href="/admin/subscribers">
+        Subscribers
+        {% if unread_subscriptions > 0 %}
+          <span class="admin-nav-count-badge badge-subscribers" title="{{ unread_subscriptions }} new subscription(s)">
+            {{ unread_subscriptions }}
+          </span>
+        {% endif %}
+      </a>
+    </li>
+    <li>
+      <form method="post" action="/logout" class="admin-nav-logout-form">
+        <button type="submit" class="admin-nav-link admin-nav-logout-btn">Logout</button>
+      </form>
+    </li>
+  </ul>
+</aside>

@@ -2,11 +2,16 @@
 
 {% block page_styles %}
   <link rel="stylesheet" href="/static/pages/auth.css" />
+  <link rel="stylesheet" href="/static/pages/admin_sidebar.css" />
   <link rel="stylesheet" href="/static/pages/admin_courses.css" />
 {% endblock %}
 
 {% block content %}
   <section class="auth-shell">
+    <div class="admin-with-sidebar">
+      {% set admin_active_page = '' %}
+      {% include "partials/admin_second_nav.html" %}
+      <div class="admin-main-content">
     <div class="auth-card admin-card">
       <h1>Admin Courses</h1>
       <p>Build the {{ (selected_mode or 'offline')|capitalize }} fee structure using sections, columns, and rows.</p>
@@ -54,6 +59,8 @@
         </div>
       </form>
     </div>
+      </div>
+    </div>
   </section>
 
   <script>
@@ -100,8 +107,48 @@
         `;
         columns.value = String((section.layout && section.layout.columns) || 2);
 
-        const removeSectionBtn = createEl("button", { type: "button", class: "danger", text: "Delete section" });
-        removeSectionBtn.addEventListener("click", () => wrapper.remove());
+        const removeSectionBtn = createEl("button", {
+          type: "button",
+          class: "danger",
+          text: "Delete section"
+        });
+
+        const deleteConfirm = createEl("div", { class: "delete-confirm hidden" });
+        deleteConfirm.innerHTML = `
+          <p class="delete-confirm-title">Type DELETE to confirm</p>
+          <input type="text" class="delete-confirm-input" placeholder='Type "DELETE"' />
+          <div class="delete-confirm-actions">
+            <button type="button" class="btn-secondary delete-cancel">Cancel</button>
+            <button type="button" class="danger delete-final">Delete</button>
+          </div>
+        `;
+
+        removeSectionBtn.addEventListener("click", () => {
+          deleteConfirm.classList.remove("hidden");
+          removeSectionBtn.style.display = "none";
+          const input = deleteConfirm.querySelector(".delete-confirm-input");
+          input.value = "";
+          input.focus();
+        });
+
+        deleteConfirm.querySelector(".delete-cancel").addEventListener("click", () => {
+          deleteConfirm.classList.add("hidden");
+          const input = deleteConfirm.querySelector(".delete-confirm-input");
+          if (input) input.value = "";
+          removeSectionBtn.style.display = "";
+        });
+
+        deleteConfirm.querySelector(".delete-final").addEventListener("click", () => {
+          const typed = deleteConfirm.querySelector(".delete-confirm-input").value.trim().toUpperCase();
+
+          if (typed !== "DELETE") {
+            window.alert('Not deleted. Type exactly "DELETE".');
+            return;
+          }
+
+          wrapper.remove();
+          window.alert("Deleted successfully.");
+        });
 
         head.append(heading, columns, removeSectionBtn);
 
@@ -119,7 +166,7 @@
         const addRowBtn = createEl("button", { type: "button", class: "btn-secondary", text: "+ Add row" });
         addRowBtn.addEventListener("click", () => addRow(rowsEl, []));
 
-        wrapper.append(head, headersWrap, rowsEl, addRowBtn);
+        wrapper.append(head, headersWrap, rowsEl, addRowBtn, deleteConfirm);
 
         sectionsContainer.appendChild(wrapper);
       }

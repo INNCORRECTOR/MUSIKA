@@ -2,143 +2,227 @@
 
 {% block page_styles %}
   <link rel="stylesheet" href="/static/pages/auth.css" />
+  <link rel="stylesheet" href="/static/pages/admin_sidebar.css" />
   <link rel="stylesheet" href="/static/pages/admin_event.css" />
+  <link rel="stylesheet" href="/static/pages/admin_pages_mobile.css" />
 {% endblock %}
 
 {% block content %}
-  <section class="admin-event-shell">
-    <div class="admin-event-header">
-      <h1>Admin Events</h1>
-      <p>Create, update, and manage events with multiple image uploads.</p>
-      <div class="admin-event-actions">
-        <a class="btn admin-back-link" href="/admin">Back to Admin Home</a>
-      </div>
-    </div>
+  <section class="auth-shell admin-page-mobile-shell admin-event-shell">
+    <div class="admin-with-sidebar">
+      {% set admin_active_page = 'event' %}
+      {% include "partials/admin_second_nav.html" %}
 
-    {% if message %}
-      <p class="auth-message">{{ message }}</p>
-    {% endif %}
-    {% if error %}
-      <p class="auth-error">{{ error }}</p>
-    {% endif %}
-
-    <section class="admin-panel">
-      <h2>Create Event</h2>
-      <form method="post" action="/admin/dashboard/events" enctype="multipart/form-data" class="auth-form">
-        <label for="event-title">Title</label>
-        <input id="event-title" name="title" type="text" required />
-
-        <label for="event-description">Description</label>
-        <textarea id="event-description" name="description" rows="4" placeholder="Optional details about this event"></textarea>
-
-        <div class="event-form-grid">
-          <div>
-            <label for="event-location">Location</label>
-            <input id="event-location" name="location" type="text" placeholder="Venue / area" />
-          </div>
-          <div>
-            <label for="event-state">State</label>
-            <input id="event-state" name="state" type="text" placeholder="Nagaland" />
-          </div>
-          <div>
-            <label for="event-date">Event Date</label>
-            <input id="event-date" name="event_date" type="date" required />
-          </div>
-          <div>
-            <label for="event-time">Event Time</label>
-            <input id="event-time" name="event_time" type="time" required />
+      <div class="admin-main-card admin-main-content">
+        <div class="admin-event-header">
+          <h1>Admin Events</h1>
+          <p>Create, update, and manage events with multiple image uploads.</p>
+          <div class="admin-event-actions">
+            <a class="btn admin-back-link" href="/admin">Back to Admin Home</a>
           </div>
         </div>
 
-        <label for="event-images">Event Images (multiple allowed)</label>
-        <input id="event-images" name="image_files" type="file" accept="image/*" multiple />
+        {% if message %}
+          <p class="auth-message">{{ message }}</p>
+        {% endif %}
+        {% if error %}
+          <p class="auth-error">{{ error }}</p>
+        {% endif %}
 
-        <button type="submit">Create Event</button>
-      </form>
-    </section>
+        <section class="admin-panel">
+          <div class="panel-head">
+            <h2>Create Event</h2>
+            <p class="panel-subtitle">Add event details first, then upload one or more images.</p>
+          </div>
+          <form method="post" action="/admin/dashboard/events" enctype="multipart/form-data" class="auth-form event-create-form">
+            <label for="event-title">Title</label>
+            <input id="event-title" name="title" type="text" required />
 
-    <section class="admin-panel">
-      <h2>Manage Events</h2>
-      {% if events %}
-        <div class="event-admin-grid">
-          {% for event in events %}
-            <article class="event-admin-card">
-              <div class="event-admin-head">
-                <h3>{{ event.title }}</h3>
-                <p>{{ event.event_date.strftime("%d %b %Y") }} · {{ event.event_time.strftime("%I:%M %p") }}</p>
-                {% if event.location or event.state %}
-                  <p class="event-admin-meta">{{ event.location or "" }}{% if event.location and event.state %}, {% endif %}{{ event.state or "" }}</p>
-                {% endif %}
+            <label for="event-description">Description</label>
+            <textarea id="event-description" name="description" rows="4" placeholder="Optional details about this event"></textarea>
+
+            <div class="event-form-grid">
+              <div>
+                <label for="event-location">Location</label>
+                <input id="event-location" name="location" type="text" placeholder="Venue / area" />
               </div>
+              <div>
+                <label for="event-state">State</label>
+                <input id="event-state" name="state" type="text" placeholder="Nagaland" />
+              </div>
+              <div>
+                <label for="event-date">Event Date</label>
+                <input id="event-date" name="event_date" type="date" required />
+              </div>
+              <div>
+                <label for="event-time">Event Time</label>
+                <input id="event-time" name="event_time" type="time" required />
+              </div>
+            </div>
 
-              {% if event.description %}
-                <p class="event-admin-description">{{ event.description }}</p>
-              {% endif %}
+            <label for="event-images">Event Images (multiple allowed)</label>
+            <input id="event-images" name="image_files" type="file" accept="image/*" multiple />
 
-              <details class="event-edit-block">
-                <summary>Edit event</summary>
-                <form
-                  method="post"
-                  action="/admin/dashboard/events/{{ event.id }}/update"
-                  enctype="multipart/form-data"
-                  class="auth-form event-edit-form"
-                >
-                  <label for="edit-title-{{ event.id }}">Title</label>
-                  <input id="edit-title-{{ event.id }}" name="title" type="text" required value="{{ event.title }}" />
+            <button type="submit">Create Event</button>
+          </form>
+        </section>
 
-                  <label for="edit-description-{{ event.id }}">Description</label>
-                  <textarea id="edit-description-{{ event.id }}" name="description" rows="4" placeholder="Optional details">{{ event.description or "" }}</textarea>
-
-                  <div class="event-form-grid">
-                    <div>
-                      <label for="edit-location-{{ event.id }}">Location</label>
-                      <input id="edit-location-{{ event.id }}" name="location" type="text" value="{{ event.location or '' }}" placeholder="Venue / area" />
-                    </div>
-                    <div>
-                      <label for="edit-state-{{ event.id }}">State</label>
-                      <input id="edit-state-{{ event.id }}" name="state" type="text" value="{{ event.state or '' }}" placeholder="Nagaland" />
-                    </div>
-                    <div>
-                      <label for="edit-date-{{ event.id }}">Event date</label>
-                      <input id="edit-date-{{ event.id }}" name="event_date" type="date" required value="{{ event.event_date.isoformat() }}" />
-                    </div>
-                    <div>
-                      <label for="edit-time-{{ event.id }}">Event time</label>
-                      <input id="edit-time-{{ event.id }}" name="event_time" type="time" required value="{{ event.event_time.strftime('%H:%M') }}" />
+        <section class="admin-panel">
+          <div class="panel-head">
+            <h2>Manage Events</h2>
+            <p class="panel-subtitle">{{ events|length }} total events</p>
+          </div>
+          {% if events %}
+            <div class="event-admin-grid">
+              {% for event in events %}
+                <article class="event-admin-card">
+                  <div class="event-admin-head">
+                    <h3>{{ event.title }}</h3>
+                    <p>{{ event.event_date.strftime("%d %b %Y") }} · {{ event.event_time.strftime("%I:%M %p") }}</p>
+                    {% if event.location or event.state %}
+                      <p class="event-admin-meta">{{ event.location or "" }}{% if event.location and event.state %}, {% endif %}{{ event.state or "" }}</p>
+                    {% endif %}
+                    <div class="event-badges">
+                      <span class="event-badge">{{ event.images|length }} images</span>
                     </div>
                   </div>
 
-                  <label for="edit-images-{{ event.id }}">Add more images (optional)</label>
-                  <input id="edit-images-{{ event.id }}" name="image_files" type="file" accept="image/*" multiple />
+                  {% if event.description %}
+                    <p class="event-admin-description">{{ event.description }}</p>
+                  {% endif %}
 
-                  <button type="submit" class="event-update-btn">Save changes</button>
-                </form>
-              </details>
+                  <details class="event-edit-block">
+                    <summary>Edit event</summary>
+                    <form
+                      method="post"
+                      action="/admin/dashboard/events/{{ event.id }}/update"
+                      enctype="multipart/form-data"
+                      class="auth-form event-edit-form"
+                    >
+                      <label for="edit-title-{{ event.id }}">Title</label>
+                      <input id="edit-title-{{ event.id }}" name="title" type="text" required value="{{ event.title }}" />
 
-              {% if event.images %}
-                <div class="event-image-grid">
-                  {% for image in event.images %}
-                    <div class="event-image-card">
-                      <img src="{{ image.image_url }}" alt="{{ event.title }}" />
-                      <form method="post" action="/admin/dashboard/events/{{ event.id }}/images/{{ image.id }}/delete">
-                        <button type="submit" class="delete-btn">Delete Image</button>
-                      </form>
+                      <label for="edit-description-{{ event.id }}">Description</label>
+                      <textarea id="edit-description-{{ event.id }}" name="description" rows="4" placeholder="Optional details">{{ event.description or "" }}</textarea>
+
+                      <div class="event-form-grid">
+                        <div>
+                          <label for="edit-location-{{ event.id }}">Location</label>
+                          <input id="edit-location-{{ event.id }}" name="location" type="text" value="{{ event.location or '' }}" placeholder="Venue / area" />
+                        </div>
+                        <div>
+                          <label for="edit-state-{{ event.id }}">State</label>
+                          <input id="edit-state-{{ event.id }}" name="state" type="text" value="{{ event.state or '' }}" placeholder="Nagaland" />
+                        </div>
+                        <div>
+                          <label for="edit-date-{{ event.id }}">Event date</label>
+                          <input id="edit-date-{{ event.id }}" name="event_date" type="date" required value="{{ event.event_date.isoformat() }}" />
+                        </div>
+                        <div>
+                          <label for="edit-time-{{ event.id }}">Event time</label>
+                          <input id="edit-time-{{ event.id }}" name="event_time" type="time" required value="{{ event.event_time.strftime('%H:%M') }}" />
+                        </div>
+                      </div>
+
+                      <label for="edit-images-{{ event.id }}">Add more images (optional)</label>
+                      <input id="edit-images-{{ event.id }}" name="image_files" type="file" accept="image/*" multiple />
+
+                      <button type="submit" class="event-update-btn">Save changes</button>
+                    </form>
+                  </details>
+
+                  {% if event.images %}
+                    <div class="event-image-grid">
+                      {% for image in event.images %}
+                        <div class="event-image-card">
+                          <img src="{{ image.image_url }}" alt="{{ event.title }}" />
+                          <form method="post" action="/admin/dashboard/events/{{ event.id }}/images/{{ image.id }}/delete?confirm_mode=typed" class="event-image-delete-form">
+                            <button
+                              type="button"
+                              class="delete-btn js-open-event-image-delete"
+                              id="event-image-delete-trigger-{{ image.id }}"
+                              data-target="event-image-delete-wrap-{{ image.id }}"
+                              data-input="event-image-delete-input-{{ image.id }}"
+                            >
+                              Delete Image
+                            </button>
+                            <div id="event-image-delete-wrap-{{ image.id }}" class="event-delete-confirm-wrap section-hidden">
+                              <label class="event-delete-confirm-label" for="event-image-delete-input-{{ image.id }}">
+                                Type <strong>delete</strong> to confirm
+                              </label>
+                              <input
+                                id="event-image-delete-input-{{ image.id }}"
+                                name="delete_confirmation"
+                                type="text"
+                                class="event-delete-confirm-input"
+                                placeholder="delete"
+                                required
+                              />
+                              <div class="event-delete-confirm-actions">
+                                <button type="submit" class="delete-btn">Confirm Delete</button>
+                                <button
+                                  type="button"
+                                  class="event-delete-close js-close-event-image-delete"
+                                  data-target="event-image-delete-wrap-{{ image.id }}"
+                                  data-trigger="event-image-delete-trigger-{{ image.id }}"
+                                  aria-label="Close delete confirmation"
+                                >
+                                  ×
+                                </button>
+                              </div>
+                            </div>
+                          </form>
+                        </div>
+                      {% endfor %}
                     </div>
-                  {% endfor %}
-                </div>
-              {% else %}
-                <p class="event-empty">No images uploaded for this event yet.</p>
-              {% endif %}
+                  {% else %}
+                    <p class="event-empty">No images uploaded for this event yet.</p>
+                  {% endif %}
 
-              <form method="post" action="/admin/dashboard/events/{{ event.id }}/delete">
-                <button type="submit" class="delete-btn delete-event-btn">Delete Event</button>
-              </form>
-            </article>
-          {% endfor %}
-        </div>
-      {% else %}
-        <p>No events found yet.</p>
-      {% endif %}
-    </section>
+                  <form method="post" action="/admin/dashboard/events/{{ event.id }}/delete" onsubmit="return confirm('Delete this event and all its images?');">
+                    <button type="submit" class="delete-btn delete-event-btn">Delete Event</button>
+                  </form>
+                </article>
+              {% endfor %}
+            </div>
+          {% else %}
+            <p>No events found yet.</p>
+          {% endif %}
+        </section>
+      </div>
+    </div>
   </section>
+  <script>
+    (function () {
+      const openButtons = document.querySelectorAll(".js-open-event-image-delete");
+      const closeButtons = document.querySelectorAll(".js-close-event-image-delete");
+
+      openButtons.forEach((button) => {
+        button.addEventListener("click", function () {
+          const targetId = this.dataset.target;
+          const inputId = this.dataset.input;
+          const wrap = targetId ? document.getElementById(targetId) : null;
+          if (!wrap) return;
+          wrap.classList.remove("section-hidden");
+          this.style.display = "none";
+          const input = inputId ? document.getElementById(inputId) : null;
+          if (input) input.focus();
+        });
+      });
+
+      closeButtons.forEach((button) => {
+        button.addEventListener("click", function () {
+          const targetId = this.dataset.target;
+          const triggerId = this.dataset.trigger;
+          const wrap = targetId ? document.getElementById(targetId) : null;
+          if (!wrap) return;
+          wrap.classList.add("section-hidden");
+          const input = wrap.querySelector("input[name='delete_confirmation']");
+          if (input) input.value = "";
+          const trigger = triggerId ? document.getElementById(triggerId) : null;
+          if (trigger) trigger.style.display = "";
+        });
+      });
+    })();
+  </script>
 {% endblock %}

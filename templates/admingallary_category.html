@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block page_styles %}
+  <link rel="stylesheet" href="/static/pages/auth.css" />
+  <link rel="stylesheet" href="/static/pages/admin_sidebar.css" />
+  <link rel="stylesheet" href="/static/pages/admin_gallery.css" />
+  <link rel="stylesheet" href="/static/pages/admin_pages_mobile.css" />
+{% endblock %}
+
+{% block content %}
+  <section class="auth-shell admin-page-mobile-shell admin-gallery-shell">
+    <div class="admin-with-sidebar">
+      {% set admin_active_page = 'gallery' %}
+      {% include "partials/admin_second_nav.html" %}
+      <div class="admin-main-card admin-main-content">
+        <div class="admin-gallery-header">
+          <h1>{{ genre.name }} Uploads</h1>
+          <p>View and manage all images in this category.</p>
+          <div class="admin-gallery-actions">
+            <a class="btn admin-back-link" href="/admin/gallary">Back to Categories</a>
+          </div>
+        </div>
+
+        {% if message %}
+          <p class="auth-message">{{ message }}</p>
+        {% endif %}
+        {% if error %}
+          <p class="auth-error">{{ error }}</p>
+        {% endif %}
+
+        <section class="admin-panel">
+          <h2>{{ genre.name }} ({{ genre.slug }})</h2>
+          <p class="uploads-meta">
+            Showing page {{ current_page }} of {{ total_pages }} ({{ total_uploads }} total uploads)
+          </p>
+
+          {% if category_images %}
+            <div class="upload-grid">
+              {% for image in category_images %}
+                <article class="upload-card">
+                  <img src="{{ image.image_url }}" alt="{{ image.caption or genre.slug }}" />
+                  <p><strong>{{ genre.slug|upper }}</strong></p>
+                  {% if image.caption %}
+                    <p>{{ image.caption }}</p>
+                  {% endif %}
+                  <form
+                    method="post"
+                    action="/admin/dashboard/images/{{ image.id }}/delete?return_to=/admin/gallary/categories/{{ genre.slug }}?page={{ current_page }}%26page_size={{ page_size }}"
+                  >
+                    <button type="submit" class="delete-btn">Delete Image</button>
+                  </form>
+                </article>
+              {% endfor %}
+            </div>
+
+            <div class="pagination-row">
+              {% if has_prev %}
+                <a class="btn page-btn" href="/admin/gallary/categories/{{ genre.slug }}?page={{ prev_page }}&page_size={{ page_size }}">
+                  Previous
+                </a>
+              {% else %}
+                <span class="btn page-btn disabled" aria-disabled="true">Previous</span>
+              {% endif %}
+
+              <span class="page-indicator">Page {{ current_page }} / {{ total_pages }}</span>
+
+              {% if has_next %}
+                <a class="btn page-btn" href="/admin/gallary/categories/{{ genre.slug }}?page={{ next_page }}&page_size={{ page_size }}">
+                  Next
+                </a>
+              {% else %}
+                <span class="btn page-btn disabled" aria-disabled="true">Next</span>
+              {% endif %}
+            </div>
+          {% else %}
+            <p>No uploads in this category yet.</p>
+          {% endif %}
+        </section>
+      </div>
+    </div>
+  </section>
+{% endblock %}

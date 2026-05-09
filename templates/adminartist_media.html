@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block page_styles %}
+  <link rel="stylesheet" href="/static/pages/auth.css" />
+  <link rel="stylesheet" href="/static/pages/admin_sidebar.css" />
+  <link rel="stylesheet" href="/static/pages/admin_gallery.css" />
+  <link rel="stylesheet" href="/static/pages/admin_artist.css?v=2" />
+  <link rel="stylesheet" href="/static/pages/admin_pages_mobile.css" />
+{% endblock %}
+
+{% block content %}
+  <section class="auth-shell admin-page-mobile-shell admin-gallery-shell admin-artist-page">
+    <div class="admin-with-sidebar">
+      {% set admin_active_page = 'artist' %}
+      {% include "partials/admin_second_nav.html" %}
+      <div class="admin-main-card admin-main-content">
+        <div class="admin-gallery-header">
+          <h1>{{ artist.name }} Media</h1>
+          <p class="admin-artist-lead">Manage uploaded media for this artist.</p>
+          <div class="admin-gallery-actions">
+            <a class="btn admin-back-link" href="/admin/artist">Back to Manage Artists</a>
+          </div>
+        </div>
+
+        {% if message %}
+          <p class="auth-message admin-flash admin-flash--ok">{{ message }}</p>
+        {% endif %}
+        {% if error %}
+          <p class="auth-error admin-flash admin-flash--err">{{ error }}</p>
+        {% endif %}
+
+        <section class="admin-panel">
+          <h2 class="admin-panel-title">All media</h2>
+          <p class="uploads-meta">Showing page {{ current_page }} of {{ total_pages }} ({{ total_media }} items)</p>
+
+          {% if media_items %}
+            <div class="upload-grid artist-media-grid">
+              {% for media in media_items %}
+                <article class="upload-card">
+                  {% if media.media_type == "image" %}
+                    <img src="{{ media.media_url }}" alt="{{ artist.name }}" loading="lazy" />
+                  {% elif media.thumbnail_url %}
+                    <img src="{{ media.thumbnail_url }}" alt="{{ artist.name }}" loading="lazy" />
+                  {% else %}
+                    <div class="video-placeholder">VIDEO</div>
+                  {% endif %}
+                  <p><strong>{{ artist.name }}</strong></p>
+                  <p class="upload-card-meta">{{ media.media_type|upper }}</p>
+                  <a href="{{ media.media_url }}" target="_blank" rel="noopener noreferrer">Open URL</a>
+
+                  <form
+                    method="post"
+                    action="/admin/dashboard/artists/media/{{ media.id }}/delete?confirm_mode=typed&return_to=/admin/artist/{{ artist.id }}/media?page={{ current_page }}%26page_size={{ page_size }}"
+                    class="artist-media-delete-form"
+                  >
+                    <button
+                      type="button"
+                      class="delete-btn js-open-media-delete"
+                      data-target="media-delete-wrap-{{ media.id }}"
+                      data-input="media-delete-input-{{ media.id }}"
+                      data-trigger="media-delete-trigger-{{ media.id }}"
+                      id="media-delete-trigger-{{ media.id }}"
+                    >
+                      Delete
+                    </button>
+                    <div id="media-delete-wrap-{{ media.id }}" class="media-delete-wrap section-hidden">
+                      <label class="delete-confirm-label" for="media-delete-input-{{ media.id }}">
+                        Type <strong>delete</strong> to confirm
+                      </label>
+                      <input
+                        id="media-delete-input-{{ media.id }}"
+                        name="delete_confirmation"
+                        type="text"
+                        class="delete-confirm-input"
+                        placeholder="delete"
+                        required
+                      />
+                      <div class="media-delete-actions">
+                        <button type="submit" class="delete-btn">Confirm Delete</button>
+                        <button
+                          type="button"
+                          class="delete-confirm-close js-close-media-delete"
+                          data-target="media-delete-wrap-{{ media.id }}"
+                          data-trigger="media-delete-trigger-{{ media.id }}"
+                          aria-label="Close delete confirmation"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    </div>
+                  </form>
+                </article>
+              {% endfor %}
+            </div>
+
+            <div class="pagination-row">
+              {% if has_prev %}
+                <a class="btn page-btn" href="/admin/artist/{{ artist.id }}/media?page={{ prev_page }}&page_size={{ page_size }}">Previous</a>
+              {% else %}
+                <span class="btn page-btn disabled" aria-disabled="true">Previous</span>
+              {% endif %}
+
+              <span class="page-indicator">Page {{ current_page }} / {{ total_pages }}</span>
+
+              {% if has_next %}
+                <a class="btn page-btn" href="/admin/artist/{{ artist.id }}/media?page={{ next_page }}&page_size={{ page_size }}">Next</a>
+              {% else %}
+                <span class="btn page-btn disabled" aria-disabled="true">Next</span>
+              {% endif %}
+            </div>
+          {% else %}
+            <p class="admin-empty">No media entries for this artist yet.</p>
+          {% endif %}
+        </section>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    (function () {
+      const openButtons = document.querySelectorAll(".js-open-media-delete");
+      const closeButtons = document.querySelectorAll(".js-close-media-delete");
+
+      openButtons.forEach((button) => {
+        button.addEventListener("click", function () {
+          const targetId = this.dataset.target;
+          const inputId = this.dataset.input;
+          const wrapper = targetId ? document.getElementById(targetId) : null;
+          if (!wrapper) return;
+          wrapper.classList.remove("section-hidden");
+          this.style.display = "none";
+          const input = inputId ? document.getElementById(inputId) : null;
+          if (input) input.focus();
+        });
+      });
+
+      closeButtons.forEach((button) => {
+        button.addEventListener("click", function () {
+          const targetId = this.dataset.target;
+          const triggerId = this.dataset.trigger;
+          const wrapper = targetId ? document.getElementById(targetId) : null;
+          if (!wrapper) return;
+          wrapper.classList.add("section-hidden");
+          const input = wrapper.querySelector("input[name='delete_confirmation']");
+          if (input) input.value = "";
+          const trigger = triggerId ? document.getElementById(triggerId) : null;
+          if (trigger) trigger.style.display = "";
+        });
+      });
+    })();
+  </script>
+{% endblock %}

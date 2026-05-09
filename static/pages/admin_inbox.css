@@ -1,0 +1,340 @@
+.inbox-shell {
+  justify-content: stretch;
+  padding: 1.25rem 1.25rem 2rem;
+}
+
+.inbox-card {
+  width: 100%;
+  max-width: none;
+  border: 1px solid #d4d9e3;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+}
+
+.inbox-section {
+  margin-top: 1rem;
+  padding: 0.8rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+}
+
+.inbox-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  margin-bottom: 0.6rem;
+}
+
+.inbox-section-head h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  color: #0f172a;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+.inbox-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: fixed;
+}
+
+.inbox-table th {
+  text-align: left;
+  padding: 0.7rem 0.65rem;
+  border-bottom: 1px solid #cbd5e1;
+  background: #f1f5f9;
+  color: #0f172a;
+  font-size: 0.78rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.inbox-table td {
+  padding: 0.7rem 0.65rem;
+  border-bottom: 1px solid #e2e8f0;
+  color: #1e293b;
+  vertical-align: top;
+}
+
+.inbox-table tbody tr:hover td {
+  background: #f8fafc;
+}
+
+.col-date {
+  white-space: nowrap;
+  color: #334155;
+}
+
+.col-email {
+  color: #0f172a;
+  font-weight: 700;
+  word-break: break-word;
+}
+
+.inbox-table-newsletter .col-email {
+  min-width: 280px;
+}
+
+.col-message {
+  max-width: 420px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.inbox-empty {
+  margin: 0.2rem 0 0;
+  color: #64748b;
+  font-weight: 600;
+}
+
+@media (min-width: 1024px) {
+  .inbox-shell {
+    padding: 1.2rem 1.5rem 2.2rem;
+  }
+
+  .inbox-card {
+    width: 100%;
+    max-width: none;
+    padding: 1.4rem 1.5rem;
+  }
+
+  .inbox-section {
+    padding: 1rem 1.05rem;
+  }
+
+  .table-wrap {
+    overflow-x: visible;
+  }
+
+  .inbox-table th,
+  .inbox-table td {
+    padding: 0.8rem 0.75rem;
+  }
+
+  .inbox-section:first-of-type .inbox-table th:nth-child(1),
+  .inbox-section:first-of-type .inbox-table td:nth-child(1) {
+    width: 13%;
+  }
+
+  .inbox-section:first-of-type .inbox-table th:nth-child(2),
+  .inbox-section:first-of-type .inbox-table td:nth-child(2) {
+    width: 12%;
+  }
+
+  .inbox-section:first-of-type .inbox-table th:nth-child(3),
+  .inbox-section:first-of-type .inbox-table td:nth-child(3) {
+    width: 20%;
+  }
+
+  .inbox-section:first-of-type .inbox-table th:nth-child(4),
+  .inbox-section:first-of-type .inbox-table td:nth-child(4) {
+    width: 12%;
+  }
+
+  .inbox-section:first-of-type .inbox-table th:nth-child(5),
+  .inbox-section:first-of-type .inbox-table td:nth-child(5) {
+    width: 15%;
+  }
+
+  .inbox-section:first-of-type .inbox-table th:nth-child(6),
+  .inbox-section:first-of-type .inbox-table td:nth-child(6) {
+    width: 28%;
+  }
+
+  .inbox-table-newsletter th:nth-child(1),
+  .inbox-table-newsletter td:nth-child(1) {
+    width: 28%;
+  }
+
+  .inbox-table-newsletter th:nth-child(2),
+  .inbox-table-newsletter td:nth-child(2) {
+    width: 72%;
+  }
+}
+
+@media (max-width: 720px) {
+  .inbox-section {
+    padding: 0.65rem;
+  }
+}
+
+@media (max-width: 900px) {
+  .inbox-shell {
+    padding: 0.85rem 0.7rem 1.2rem;
+  }
+
+  .inbox-card {
+    padding: 1rem 0.9rem;
+    border-radius: 10px;
+  }
+
+  .inbox-section {
+    margin-top: 0.75rem;
+    padding: 0.65rem;
+    border-radius: 12px;
+  }
+
+  .inbox-section-head h2 {
+    font-size: 0.95rem;
+  }
+
+  .table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .inbox-table {
+    table-layout: auto;
+    min-width: 760px;
+  }
+
+  .inbox-table-newsletter {
+    min-width: 480px;
+  }
+
+  .inbox-table th,
+  .inbox-table td {
+    padding: 0.62rem 0.56rem;
+    font-size: 0.83rem;
+  }
+
+  .col-date {
+    white-space: nowrap;
+  }
+
+  .col-email {
+    min-width: 210px;
+  }
+
+  .col-message {
+    max-width: none;
+    min-width: 260px;
+  }
+}
+
+@media (max-width: 520px) {
+  .inbox-shell {
+    padding: 0.7rem 0.5rem 1rem;
+  }
+
+  .inbox-card {
+    padding: 0.85rem 0.7rem;
+    border-radius: 9px;
+  }
+
+  .inbox-section {
+    padding: 0.55rem;
+  }
+
+  .inbox-table th,
+  .inbox-table td {
+    padding: 0.55rem 0.5rem;
+    font-size: 0.79rem;
+  }
+
+  .inbox-table {
+    min-width: 680px;
+  }
+
+  .inbox-table-newsletter {
+    min-width: 360px;
+  }
+}
+
+/* Card rows on phone — no horizontal scroll (scoped to shared admin mobile shell) */
+@media (max-width: 680px) {
+  .admin-page-mobile-shell .inbox-card h1 {
+    font-size: 1.15rem;
+    line-height: 1.25;
+    margin-bottom: 0.35rem;
+  }
+
+  .admin-page-mobile-shell .table-wrap {
+    overflow-x: visible;
+    -webkit-overflow-scrolling: auto;
+  }
+
+  .admin-page-mobile-shell .inbox-table {
+    min-width: 0 !important;
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+
+  .admin-page-mobile-shell .inbox-table thead {
+    display: none;
+  }
+
+  .admin-page-mobile-shell .inbox-table tbody {
+    display: block;
+  }
+
+  .admin-page-mobile-shell .inbox-table tbody tr {
+    display: block;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    margin-bottom: 0.65rem;
+    padding: 0.45rem 0.75rem 0.5rem;
+    background: #ffffff;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+  }
+
+  .admin-page-mobile-shell .inbox-table tbody tr:last-child {
+    margin-bottom: 0;
+  }
+
+  .admin-page-mobile-shell .inbox-table tbody tr:hover td {
+    background: transparent;
+  }
+
+  .admin-page-mobile-shell .inbox-table tbody td {
+    display: block;
+    width: 100% !important;
+    padding: 0.5rem 0;
+    border: 0;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 0.84rem;
+  }
+
+  .admin-page-mobile-shell .inbox-table tbody td:last-child {
+    border-bottom: 0;
+    padding-bottom: 0.15rem;
+  }
+
+  .admin-page-mobile-shell .inbox-table tbody td::before {
+    content: attr(data-label);
+    display: block;
+    font-weight: 800;
+    font-size: 0.66rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #64748b;
+    margin-bottom: 0.28rem;
+  }
+
+  .admin-page-mobile-shell .inbox-table .col-date {
+    white-space: normal;
+  }
+
+  .admin-page-mobile-shell .inbox-table .col-email {
+    min-width: 0;
+    word-break: break-word;
+  }
+
+  .admin-page-mobile-shell .inbox-table .col-message {
+    max-width: none;
+    min-width: 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .admin-page-mobile-shell .inbox-section {
+    padding: 0.65rem 0.55rem;
+  }
+}

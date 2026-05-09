@@ -5,6 +5,9 @@
   --artist-accent-soft: rgba(15, 118, 110, 0.08);
   --artist-border: #e2e8f0;
   --artist-muted: #64748b;
+  --artist-heading: #0f172a;
+  --artist-surface: #ffffff;
+  --artist-surface-soft: #f8fafc;
 }
 
 .admin-artist-lead {
@@ -27,22 +30,54 @@
 }
 
 .admin-flash--err {
-  border-radius: 10px;
+  background: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
 }
 
 .admin-artist-top-grid {
   align-items: start;
+  gap: 1rem;
+  grid-template-columns: 1fr;
+}
+
+.admin-artist-switch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin: 0 0 0.95rem;
+}
+
+.admin-artist-switch-btn {
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #0f172a;
+  border-radius: 999px;
+  padding: 0.5rem 0.9rem;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.admin-artist-switch-btn.active {
+  background: #0f766e;
+  border-color: #0f766e;
+  color: #ffffff;
+}
+
+.section-hidden {
+  display: none;
 }
 
 .admin-panel--accent {
   border-color: #ccfbf1;
-  box-shadow: 0 1px 0 rgba(15, 118, 110, 0.06);
+  box-shadow: 0 8px 18px rgba(15, 118, 110, 0.07);
 }
 
 .admin-panel-title {
   margin: 0 0 0.35rem;
   font-size: 1.15rem;
-  color: #0f172a;
+  color: var(--artist-heading);
 }
 
 .admin-panel-desc {
@@ -69,24 +104,24 @@
 
 /* Fieldsets inside forms */
 .admin-fieldset {
-  margin: 0 0 1rem;
-  padding: 0.85rem 1rem 1rem;
+  margin: 0 0 1.1rem;
+  padding: 1rem;
   border: 1px solid var(--artist-border);
-  border-radius: 10px;
-  background: #fafbfc;
+  border-radius: 12px;
+  background: var(--artist-surface-soft);
 }
 
 .admin-fieldset--compact {
-  background: #ffffff;
+  background: var(--artist-surface);
 }
 
 .admin-fieldset-legend {
-  padding: 0 0.35rem;
+  padding: 0 0.45rem;
   font-size: 0.82rem;
   font-weight: 800;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #0f172a;
+  color: var(--artist-heading);
 }
 
 .admin-fieldset-hint,
@@ -103,7 +138,87 @@
 
 .admin-form-grid-2 {
   display: grid;
-  gap: 0.65rem 1rem;
+  gap: 0.85rem 1rem;
+}
+
+.admin-form-grid-2--tight {
+  margin-top: 0.65rem;
+}
+
+.admin-form-grid-2--tight .admin-field-hint {
+  margin-bottom: 0.4rem;
+}
+
+.profile-layout-grid {
+  display: grid;
+  gap: 0.85rem 1rem;
+}
+
+.profile-main-fields label,
+.profile-media-card label {
+  display: block;
+  margin: 0 0 0.35rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.admin-artist-form input,
+.admin-artist-form textarea,
+.admin-artist-form select {
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #0f172a;
+  padding: 0.58rem 0.72rem;
+  font-size: 0.92rem;
+  font-family: inherit;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.admin-artist-form input::placeholder,
+.admin-artist-form textarea::placeholder {
+  color: #94a3b8;
+}
+
+.admin-artist-form input[type="file"] {
+  padding: 0.42rem 0.5rem;
+  background: #f8fafc;
+}
+
+.admin-artist-form input:focus,
+.admin-artist-form textarea:focus,
+.admin-artist-form select:focus {
+  outline: none;
+  border-color: #14b8a6;
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.16);
+}
+
+.profile-main-fields textarea {
+  width: 100%;
+  min-height: 190px;
+  height: 240px;
+  resize: both;
+}
+
+.profile-media-fields {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.profile-media-card {
+  border: 1px dashed #dbe4ee;
+  border-radius: 10px;
+  background: #ffffff;
+  padding: 0.75rem;
+}
+
+@media (min-width: 900px) {
+  .profile-layout-grid {
+    grid-template-columns: 1.3fr 1fr;
+    align-items: start;
+  }
 }
 
 @media (min-width: 640px) {
@@ -143,6 +258,7 @@
 /* Artist list / cards */
 .artist-list {
   gap: 0.85rem;
+  grid-template-columns: 1fr;
 }
 
 .artist-item {
@@ -156,7 +272,7 @@
 }
 
 .artist-roster-card-body {
-  padding: 1rem 1rem 0.75rem;
+  padding: 1rem 1rem 0.85rem;
   width: 100%;
 }
 
@@ -217,6 +333,7 @@
 
 .artist-bio--preview {
   display: -webkit-box;
+  line-clamp: 3;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
@@ -240,9 +357,30 @@
   text-decoration: underline;
 }
 
+.artist-roster-link-view-media {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.38rem 0.72rem;
+  border-radius: 8px;
+  background: #1d4ed8;
+  border: 1px solid #1d4ed8;
+  color: #ffffff;
+  text-decoration: none;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.artist-roster-link-view-media:hover {
+  background: #1e40af;
+  border-color: #1e40af;
+  color: #ffffff;
+  text-decoration: none;
+}
+
 /* Collapsible edit */
 .artist-edit-details {
-  margin-top: 0.5rem;
+  margin-top: 0.65rem;
   border: 1px dashed #cbd5e1;
   border-radius: 10px;
   background: var(--artist-accent-soft);
@@ -282,7 +420,7 @@
 
 .artist-edit-form {
   margin: 0;
-  padding: 0.85rem 1rem 1rem;
+  padding: 0.95rem 1rem 1rem;
   display: block;
   max-width: none;
 }
@@ -360,6 +498,35 @@
   text-decoration: underline;
 }
 
+.artist-media-grid .upload-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  transition: transform 140ms ease, box-shadow 140ms ease;
+}
+
+.artist-media-grid .upload-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 18px rgba(15, 23, 42, 0.08);
+}
+
+.artist-media-delete-form {
+  margin-top: 0.45rem;
+}
+
+.media-delete-wrap {
+  margin-top: 0.5rem;
+}
+
+.media-delete-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.media-delete-actions .delete-btn {
+  flex: 1;
+}
+
 .video-placeholder {
   width: 100%;
   height: 140px;
@@ -373,4 +540,24 @@
   letter-spacing: 0.08em;
   font-size: 0.78rem;
   font-weight: 700;
+}
+
+@media (min-width: 1100px) {
+  .artist-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-fieldset {
+    padding: 0.85rem 0.8rem 0.9rem;
+  }
+
+  .btn-admin-primary {
+    width: 100%;
+  }
+
+  .artist-edit-summary {
+    font-size: 0.86rem;
+  }
 }

@@ -2,98 +2,203 @@
 
 {% block page_styles %}
   <link rel="stylesheet" href="/static/pages/auth.css" />
+  <link rel="stylesheet" href="/static/pages/admin_sidebar.css" />
   <link rel="stylesheet" href="/static/pages/admin_gallery.css" />
+  <link rel="stylesheet" href="/static/pages/admin_pages_mobile.css" />
 {% endblock %}
 
 {% block content %}
-  <section class="admin-gallery-shell">
-    <div class="admin-gallery-header">
-      <h1>AdminGallary</h1>
-      <p>Create categories, upload gallery images, and manage latest items.</p>
-      <div class="admin-gallery-actions">
-        <a class="btn admin-back-link" href="/admin">Back to Admin Home</a>
+  <section class="auth-shell admin-page-mobile-shell admin-gallery-shell">
+    <div class="admin-with-sidebar">
+      {% set admin_active_page = 'gallery' %}
+      {% include "partials/admin_second_nav.html" %}
+
+      <div class="admin-main-card admin-main-content">
+        <div class="admin-gallery-header">
+          <h1>AdminGallary</h1>
+          <p>Create categories, upload gallery images, and manage latest items.</p>
+          <div class="admin-gallery-actions">
+            <a class="btn admin-back-link" href="/admin">Back to Admin Home</a>
+          </div>
+        </div>
+
+        {% if message %}
+          <p class="auth-message">{{ message }}</p>
+        {% endif %}
+        {% if error %}
+          <p class="auth-error">{{ error }}</p>
+        {% endif %}
+
+        <div class="admin-gallery-grid">
+          <section class="admin-panel">
+            <h2>Create Category</h2>
+            <form method="post" action="/admin/dashboard/genres" class="auth-form">
+              <label for="genre-name">Category Name</label>
+              <input id="genre-name" name="name" type="text" required />
+              <button type="submit">Create Category</button>
+            </form>
+          </section>
+
+          <section class="admin-panel">
+            <h2>Upload Image</h2>
+            <form method="post" action="/admin/dashboard/images" enctype="multipart/form-data" class="auth-form">
+              <label for="genre-slug">Select Category</label>
+              <select id="genre-slug" name="genre_slug" required>
+                <option value="">Choose category</option>
+                {% for genre in genres %}
+                  <option value="{{ genre.slug }}">{{ genre.name }} ({{ genre.slug }})</option>
+                {% endfor %}
+              </select>
+
+              <label for="caption">Caption (Optional)</label>
+              <input id="caption" name="caption" type="text" placeholder="Event caption" />
+
+              <label for="file">Image</label>
+              <input id="file" name="file" type="file" accept="image/*" required />
+              <button type="submit">Upload</button>
+            </form>
+          </section>
+        </div>
+
+        <section class="admin-panel">
+          <h2>Manage Categories</h2>
+          {% if genres %}
+            <div class="category-list">
+              {% for genre in genres %}
+                <article class="category-item">
+                  <div>
+                    <p class="category-name">{{ genre.name }}</p>
+                    <p class="category-slug">{{ genre.slug }}</p>
+                  </div>
+                  <div class="category-actions">
+                    <div class="category-view-action">
+                      <a class="btn view-category-btn" href="/admin/gallary/categories/{{ genre.slug }}">
+                        View
+                      </a>
+                    </div>
+                    <div class="category-delete-action">
+                      <form method="post" action="/admin/dashboard/categories/{{ genre.id }}/delete">
+                        <button
+                          type="button"
+                          class="delete-btn delete-category-btn js-open-delete-confirm"
+                          id="open-delete-confirm-{{ genre.id }}"
+                          data-target="delete-confirm-wrap-{{ genre.id }}"
+                          data-input="delete-confirm-{{ genre.id }}"
+                        >
+                          Delete Category
+                        </button>
+                        <div id="delete-confirm-wrap-{{ genre.id }}" class="delete-confirm-wrap hidden-confirm">
+                          <div class="delete-confirm-head">
+                            <label class="delete-confirm-label" for="delete-confirm-{{ genre.id }}">
+                              Type <strong>delete {{ genre.name }}</strong> to confirm
+                            </label>
+                            <button
+                              type="button"
+                              class="delete-confirm-close js-close-delete-confirm"
+                              data-target="delete-confirm-wrap-{{ genre.id }}"
+                              data-trigger="open-delete-confirm-{{ genre.id }}"
+                              aria-label="Close delete confirmation"
+                            >
+                              ×
+                            </button>
+                          </div>
+                          <input
+                            id="delete-confirm-{{ genre.id }}"
+                            name="delete_confirmation"
+                            type="text"
+                            class="delete-confirm-input"
+                            placeholder="delete {{ genre.name }}"
+                            required
+                          />
+                          <button type="submit" class="delete-btn delete-category-btn">Confirm Delete</button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                </article>
+              {% endfor %}
+            </div>
+          {% else %}
+            <p>No categories found.</p>
+          {% endif %}
+        </section>
+
+        <section class="admin-panel">
+          <h2>All Uploads</h2>
+          <p class="uploads-meta">
+            Showing page {{ current_page }} of {{ total_pages }} ({{ total_uploads }} total uploads)
+          </p>
+          {% if latest_images %}
+            <div class="upload-grid">
+              {% for image, genre_slug in latest_images %}
+                <article class="upload-card">
+                  <img src="{{ image.image_url }}" alt="{{ image.caption or genre_slug }}" />
+                  <p><strong>{{ genre_slug|upper }}</strong></p>
+                  {% if image.caption %}
+                    <p>{{ image.caption }}</p>
+                  {% endif %}
+                  <form method="post" action="/admin/dashboard/images/{{ image.id }}/delete">
+                    <button type="submit" class="delete-btn">Delete Image</button>
+                  </form>
+                </article>
+              {% endfor %}
+            </div>
+            <div class="pagination-row">
+              {% if has_prev %}
+                <a class="btn page-btn" href="/admin/gallary?page={{ prev_page }}&page_size={{ page_size }}">Previous</a>
+              {% else %}
+                <span class="btn page-btn disabled" aria-disabled="true">Previous</span>
+              {% endif %}
+
+              <span class="page-indicator">Page {{ current_page }} / {{ total_pages }}</span>
+
+              {% if has_next %}
+                <a class="btn page-btn" href="/admin/gallary?page={{ next_page }}&page_size={{ page_size }}">Next</a>
+              {% else %}
+                <span class="btn page-btn disabled" aria-disabled="true">Next</span>
+              {% endif %}
+            </div>
+          {% else %}
+            <p>No uploads yet.</p>
+          {% endif %}
+        </section>
       </div>
     </div>
-
-    {% if message %}
-      <p class="auth-message">{{ message }}</p>
-    {% endif %}
-    {% if error %}
-      <p class="auth-error">{{ error }}</p>
-    {% endif %}
-
-    <div class="admin-gallery-grid">
-      <section class="admin-panel">
-        <h2>Create Category</h2>
-        <form method="post" action="/admin/dashboard/genres" class="auth-form">
-          <label for="genre-name">Category Name</label>
-          <input id="genre-name" name="name" type="text" required />
-          <button type="submit">Create Category</button>
-        </form>
-      </section>
-
-      <section class="admin-panel">
-        <h2>Upload Image</h2>
-        <form method="post" action="/admin/dashboard/images" enctype="multipart/form-data" class="auth-form">
-          <label for="genre-slug">Select Category</label>
-          <select id="genre-slug" name="genre_slug" required>
-            <option value="">Choose category</option>
-            {% for genre in genres %}
-              <option value="{{ genre.slug }}">{{ genre.name }} ({{ genre.slug }})</option>
-            {% endfor %}
-          </select>
-
-          <label for="caption">Caption (Optional)</label>
-          <input id="caption" name="caption" type="text" placeholder="Event caption" />
-
-          <label for="file">Image</label>
-          <input id="file" name="file" type="file" accept="image/*" required />
-          <button type="submit">Upload</button>
-        </form>
-      </section>
-    </div>
-
-    <section class="admin-panel">
-      <h2>Manage Categories</h2>
-      {% if genres %}
-        <div class="category-list">
-          {% for genre in genres %}
-            <article class="category-item">
-              <div>
-                <p class="category-name">{{ genre.name }}</p>
-                <p class="category-slug">{{ genre.slug }}</p>
-              </div>
-              <form method="post" action="/admin/dashboard/categories/{{ genre.id }}/delete">
-                <button type="submit" class="delete-btn delete-category-btn">Delete Category</button>
-              </form>
-            </article>
-          {% endfor %}
-        </div>
-      {% else %}
-        <p>No categories found.</p>
-      {% endif %}
-    </section>
-
-    <section class="admin-panel">
-      <h2>Latest Uploads</h2>
-      {% if latest_images %}
-        <div class="upload-grid">
-          {% for image, genre_slug in latest_images %}
-            <article class="upload-card">
-              <img src="{{ image.image_url }}" alt="{{ image.caption or genre_slug }}" />
-              <p><strong>{{ genre_slug|upper }}</strong></p>
-              {% if image.caption %}
-                <p>{{ image.caption }}</p>
-              {% endif %}
-              <form method="post" action="/admin/dashboard/images/{{ image.id }}/delete">
-                <button type="submit" class="delete-btn">Delete Image</button>
-              </form>
-            </article>
-          {% endfor %}
-        </div>
-      {% else %}
-        <p>No uploads yet.</p>
-      {% endif %}
-    </section>
   </section>
+  <script>
+    (function () {
+      const triggerButtons = document.querySelectorAll(".js-open-delete-confirm");
+      const closeButtons = document.querySelectorAll(".js-close-delete-confirm");
+      triggerButtons.forEach((button) => {
+        button.addEventListener("click", function () {
+          const targetId = this.dataset.target;
+          const inputId = this.dataset.input;
+          if (!targetId) return;
+          const wrapper = document.getElementById(targetId);
+          if (!wrapper) return;
+          wrapper.classList.remove("hidden-confirm");
+          this.style.display = "none";
+          const input = inputId ? document.getElementById(inputId) : null;
+          if (input) input.focus();
+        });
+      });
+
+      closeButtons.forEach((button) => {
+        button.addEventListener("click", function () {
+          const targetId = this.dataset.target;
+          const triggerId = this.dataset.trigger;
+          if (!targetId) return;
+          const wrapper = document.getElementById(targetId);
+          if (!wrapper) return;
+          wrapper.classList.add("hidden-confirm");
+
+          const input = wrapper.querySelector("input[name='delete_confirmation']");
+          if (input) input.value = "";
+
+          const trigger = triggerId ? document.getElementById(triggerId) : null;
+          if (trigger) trigger.style.display = "";
+        });
+      });
+    })();
+  </script>
 {% endblock %}

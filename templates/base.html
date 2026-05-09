@@ -38,7 +38,7 @@
         </a>
         {% set current_path = active_path if active_path is defined else request.url.path %}
         {% for item in nav_items %}
-          {% if item.href == "/artist" and artist_menu is defined and artist_menu %}
+          {% if item.href == "/faculty" and artist_menu is defined and artist_menu %}
             <div class="nav-dropdown">
               <a
                 class="nav-link {% if current_path == item.href %}active{% endif %}"
@@ -51,7 +51,7 @@
                 {% for nav_artist in artist_menu %}
                   <a
                     class="nav-dropdown-link {% if selected_artist_id == nav_artist.id %}active{% endif %}"
-                    href="/artist?artist_id={{ nav_artist.id }}"
+                    href="/faculty?artist_id={{ nav_artist.id }}"
                   >
                     {{ nav_artist.name }}
                   </a>

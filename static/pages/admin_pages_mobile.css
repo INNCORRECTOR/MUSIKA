@@ -1,0 +1,131 @@
+/* Mobile layout for admin Event, Artist, Gallery (and subpages) — aligned with admin home */
+
+@media (max-width: 980px) {
+  .admin-page-mobile-shell .admin-nav-links {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.4rem;
+    overflow-x: visible;
+    padding-bottom: 0;
+  }
+
+  .admin-page-mobile-shell .admin-nav-link,
+  .admin-page-mobile-shell .admin-nav-logout-btn {
+    font-size: 0.74rem;
+    padding: 0.48rem 0.5rem;
+    text-align: center;
+    white-space: normal;
+  }
+}
+
+@media (max-width: 680px) {
+  .admin-page-mobile-shell.admin-event-shell,
+  .admin-page-mobile-shell.admin-gallery-shell,
+  .admin-page-mobile-shell.inbox-shell {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    max-width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 0.65rem 0.5rem 1.5rem;
+    box-sizing: border-box;
+  }
+
+  .admin-page-mobile-shell .admin-with-sidebar {
+    width: 100%;
+    max-width: 100%;
+    gap: 0.55rem;
+  }
+
+  .admin-page-mobile-shell .admin-main-content {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .admin-page-mobile-shell .admin-event-header h1,
+  .admin-page-mobile-shell .admin-gallery-header h1 {
+    font-size: 1.15rem;
+    line-height: 1.25;
+  }
+
+  .admin-page-mobile-shell .admin-event-header p,
+  .admin-page-mobile-shell .admin-gallery-header p,
+  .admin-page-mobile-shell .admin-artist-lead {
+    font-size: 0.875rem;
+    line-height: 1.45;
+  }
+
+  .admin-page-mobile-shell .admin-panel {
+    padding: 0.85rem 0.8rem 0.9rem;
+  }
+
+  .admin-page-mobile-shell .event-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-page-mobile-shell .admin-gallery-grid {
+    grid-template-columns: 1fr;
+    margin-top: 0.65rem;
+  }
+
+  .admin-page-mobile-shell .upload-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-page-mobile-shell .admin-artist-switch {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.45rem;
+  }
+
+  .admin-page-mobile-shell .admin-artist-switch-btn {
+    display: inline-flex;
+    width: 100%;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .admin-page-mobile-shell .admin-gallery-actions,
+  .admin-page-mobile-shell .admin-event-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .admin-page-mobile-shell .admin-gallery-actions .admin-back-link,
+  .admin-page-mobile-shell .admin-event-actions .admin-back-link {
+    width: 100%;
+    max-width: none;
+    box-sizing: border-box;
+    text-align: center;
+  }
+
+  .admin-page-mobile-shell .pagination-row {
+    flex-direction: column;
+    gap: 0.55rem;
+  }
+
+  .admin-page-mobile-shell .page-btn {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 380px) {
+  .admin-page-mobile-shell .admin-nav-links {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-page-mobile-shell.admin-event-shell,
+  .admin-page-mobile-shell.admin-gallery-shell,
+  .admin-page-mobile-shell.inbox-shell {
+    padding-left: 0.4rem;
+    padding-right: 0.4rem;
+  }
+
+  .admin-page-mobile-shell .upload-grid {
+    grid-template-columns: 1fr;
+  }
+}

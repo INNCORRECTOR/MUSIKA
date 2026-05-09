@@ -14,7 +14,7 @@ FOOTER_YOUTUBE_URL = "https://youtube.com/@musikanagaland?si=rwV1KhHTqJbjeYZG"
 NAV_ITEMS = [
     {"label": "Home", "href": "/"},
     {"label": "About", "href": "/about"},
-    {"label": "Faculty", "href": "/artist"},
+    {"label": "Faculty", "href": "/faculty"},
     {"label": "Courses", "href": "/course"},
     {"label": "Events", "href": "/event"},
     {"label": "Gallery", "href": "/gallery"},

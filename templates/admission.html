@@ -70,10 +70,10 @@
 
         <fieldset>
           <legend>Contact Numbers</legend>
-          <p class="admission-contact-lead">Indian mobile numbers only. Enter your 10-digit number.</p>
+          <p class="admission-contact-lead">Enter your 10-digit number.</p>
           <div class="admission-grid admission-grid-four">
-            <div class="admission-field admission-phone-field">
-              <span id="contact-1-label">Contact 1</span>
+            <label class="admission-field admission-phone-field" for="contact-1-input">
+              <span>Contact 1</span>
               <input
                 type="tel"
                 name="contact_1"
@@ -84,13 +84,13 @@
                 spellcheck="false"
                 maxlength="10"
                 pattern="[6-9][0-9]{9}"
-                title="10-digit Indian mobile number"
+                title=" "
                 required
-                aria-labelledby="contact-1-label"
                 aria-describedby="contact-1-error"
+                placeholder="Enter your Primary WhatsApp number"
               />
               <p class="admission-field-error admission-phone-error" id="contact-1-error" role="alert" hidden></p>
-            </div>
+            </label>
             <div class="admission-field admission-phone-field">
               <span id="contact-2-label">Contact 2</span>
               <input

@@ -107,3 +107,18 @@ CREATE TABLE IF NOT EXISTS admission_admin_reviews (
     REFERENCES users(id)
     ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Singleton row (id=1): bank / UPI / QR for fee instructions (admin, PDF, email, WhatsApp).
+CREATE TABLE IF NOT EXISTS admission_payment_settings (
+  id INT NOT NULL,
+  account_holder_name VARCHAR(180) DEFAULT NULL,
+  bank_account_number VARCHAR(40) DEFAULT NULL,
+  bank_ifsc VARCHAR(20) DEFAULT NULL,
+  upi_id VARCHAR(100) DEFAULT NULL,
+  scanner_image_url VARCHAR(1024) DEFAULT NULL,
+  scanner_image_key VARCHAR(512) DEFAULT NULL,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+INSERT IGNORE INTO admission_payment_settings (id) VALUES (1);

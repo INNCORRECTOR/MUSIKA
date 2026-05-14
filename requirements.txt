@@ -8,7 +8,10 @@ cffi==2.0.0
 click==8.3.3
 colorama==0.4.6
 cryptography==47.0.0
+defusedxml==0.7.1
 fastapi==0.136.0
+fonttools==4.62.1
+fpdf2==2.8.2
 greenlet==3.4.0
 h11==0.16.0
 idna==3.13
@@ -16,8 +19,7 @@ Jinja2==3.1.6
 jmespath==1.1.0
 MarkupSafe==3.0.3
 passlib==1.7.4
-Pillow==12.0.0
-fpdf2==2.8.2
+pillow==12.0.0
 pycparser==3.0
 pydantic==2.13.3
 pydantic_core==2.46.3

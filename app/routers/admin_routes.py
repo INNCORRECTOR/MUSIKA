@@ -112,7 +112,7 @@ def _get_or_create_admission_payment_settings(db: Session) -> tuple[AdmissionPay
         return row, None
     except SQLAlchemyError:
         db.rollback()
-        return None, "Payment settings unavailable. Run admission_payment_settings.sql on the database."
+        return None, "Payment settings unavailable. Run admission_tables.sql on the database (admission_payment_settings)."
 
 
 def _inject_admin_inbox_counts(context: dict, db: Session) -> None:
@@ -1193,7 +1193,7 @@ def admin_save_admission_payment_settings(
         db.commit()
     except SQLAlchemyError:
         db.rollback()
-        return redirect_err("Could not save payment settings. Run admission_payment_settings.sql if the table is missing.")
+        return redirect_err("Could not save payment settings. Run admission_tables.sql if admission_payment_settings is missing.")
 
     return RedirectResponse(
         url="/admin/admission-options?message=Payment+details+saved",

@@ -1,0 +1,357 @@
+{% extends "base.html" %}
+
+{% block page_styles %}
+  <link rel="stylesheet" href="/static/pages/auth.css" />
+  <link rel="stylesheet" href="/static/pages/admin_sidebar.css" />
+  <link rel="stylesheet" href="/static/pages/admin_inbox.css" />
+  <link rel="stylesheet" href="/static/pages/admin_admissions.css" />
+  <link rel="stylesheet" href="/static/pages/admin_pages_mobile.css" />
+{% endblock %}
+
+{% block content %}
+  <section class="auth-shell inbox-shell admin-page-mobile-shell">
+    <div class="admin-with-sidebar">
+      {% set admin_active_page = 'admissions' %}
+      {% include "partials/admin_second_nav.html" %}
+
+      <div class="auth-card inbox-card admin-main-content">
+        <div class="admission-detail-head">
+          <div>
+            <a class="admin-back-link" href="/admin/admissions">Back to admissions</a>
+            <h1>{{ application.first_name }} {{ application.last_name }}</h1>
+          </div>
+          <div class="admission-detail-actions">
+            <a class="btn admission-download-btn" href="/admin/admissions/{{ application.id }}/download">Download PDF</a>
+            <div class="admin-delete-reveal admission-detail-delete-reveal" data-admission-delete>
+              <button type="button" class="btn admission-delete-btn admin-delete-open-btn">Delete</button>
+              <div class="admin-delete-confirm-panel admission-detail-delete-panel" hidden>
+                <form
+                  method="post"
+                  action="/admin/admissions/{{ application.id }}/delete"
+                  class="admin-admission-delete-form admission-detail-delete-form"
+                >
+                  <input type="hidden" name="delete_return" value="detail" />
+                  <input
+                    type="text"
+                    name="delete_confirmation"
+                    autocomplete="off"
+                    placeholder="Type delete"
+                    aria-label="Type delete to confirm deletion"
+                    class="admin-delete-confirm-input admission-detail-delete-input"
+                  />
+                  <button type="submit" class="btn admission-delete-btn">Confirm</button>
+                </form>
+                <button type="button" class="admin-delete-cancel-x admission-detail-cancel-x" aria-label="Cancel deletion">×</button>
+              </div>
+            </div>
+            <span class="admission-status admission-status-{{ application.status }}">{{ application.status|title }}</span>
+          </div>
+        </div>
+
+        {% if message %}
+          <p class="auth-success">{{ message }}</p>
+        {% endif %}
+        {% if error %}
+          <p class="auth-error">{{ error }}</p>
+        {% endif %}
+
+        {% set sorted_contacts = application.contacts|sort(attribute='sort_order') %}
+        <form
+          action="/admin/admissions/{{ application.id }}/application"
+          method="post"
+          enctype="multipart/form-data"
+          class="admission-application-edit-form"
+          id="admin-admission-application-form"
+        >
+          <div class="admission-detail-grid">
+            <article class="admission-detail-card">
+              <h2>Personal Details</h2>
+              <div class="admission-edit-grid">
+                <label class="admission-field">
+                  <span>First Name</span>
+                  <input type="text" name="first_name" value="{{ application.first_name }}" autocomplete="given-name" required />
+                </label>
+                <label class="admission-field">
+                  <span>Last Name</span>
+                  <input type="text" name="last_name" value="{{ application.last_name }}" autocomplete="family-name" required />
+                </label>
+                <label class="admission-field">
+                  <span>Gender</span>
+                  <select name="gender" required>
+                    <option value="">Select gender</option>
+                    <option value="Male" {% if application.gender == 'Male' %}selected{% endif %}>Male</option>
+                    <option value="Female" {% if application.gender == 'Female' %}selected{% endif %}>Female</option>
+                  </select>
+                </label>
+                <label class="admission-field">
+                  <span>Date of Birth</span>
+                  <input type="date" name="date_of_birth" value="{{ application.date_of_birth.isoformat() if application.date_of_birth else '' }}" required />
+                </label>
+                <label class="admission-field">
+                  <span>Email</span>
+                  <input type="email" name="email" value="{{ application.email or '' }}" autocomplete="email" required />
+                </label>
+                <div class="admission-edit-span-full admission-edit-passport-block">
+                  {% if application.passport_photo_url %}
+                    <div class="admission-edit-label-row"><span>Current photo</span></div>
+                    <a class="admission-photo-link" href="{{ application.passport_photo_url }}" target="_blank" rel="noopener noreferrer">
+                      <img class="admission-passport-photo" src="{{ application.passport_photo_url }}" alt="" />
+                    </a>
+                    <p class="admission-subtext">Upload a new file below to replace it.</p>
+                  {% endif %}
+                  <label class="admission-field">
+                    <span>{% if application.passport_photo_url %}Replace passport photo{% else %}Passport Photo{% endif %}</span>
+                    <input type="file" name="passport_photo" id="admin-passport-photo-input" accept="image/*" />
+                    <small class="admission-subtext">Optional. Image under 1 MB.</small>
+                  </label>
+                </div>
+                <div class="admission-edit-span-full">
+                  <div class="admission-edit-label-row"><span>Contact numbers</span></div>
+                  <div class="admission-edit-contact-grid">
+                    <label class="admission-field">
+                      <span>Contact 1</span>
+                      <input type="tel" name="contact_1" value="{{ sorted_contacts[0].contact_value if sorted_contacts|length > 0 else '' }}" autocomplete="tel" required />
+                    </label>
+                    <label class="admission-field">
+                      <span>Contact 2</span>
+                      <input type="tel" name="contact_2" value="{{ sorted_contacts[1].contact_value if sorted_contacts|length > 1 else '' }}" />
+                    </label>
+                    <label class="admission-field">
+                      <span>Contact 3</span>
+                      <input type="tel" name="contact_3" value="{{ sorted_contacts[2].contact_value if sorted_contacts|length > 2 else '' }}" />
+                    </label>
+                    <label class="admission-field">
+                      <span>Contact 4</span>
+                      <input type="tel" name="contact_4" value="{{ sorted_contacts[3].contact_value if sorted_contacts|length > 3 else '' }}" />
+                    </label>
+                  </div>
+                </div>
+                <label class="admission-edit-span-full admission-field">
+                  <span>Mother / Father / Guardian / Self</span>
+                  <input type="text" name="guardian_name" value="{{ application.guardian_name or '' }}" />
+                </label>
+                <label class="admission-field">
+                  <span>Relation</span>
+                  <input type="text" name="guardian_relation" value="{{ application.guardian_relation or '' }}" placeholder="Father, Mother, Self..." />
+                </label>
+                <label class="admission-edit-span-full admission-field">
+                  <span>Occupation (guardian)</span>
+                  <input type="text" name="guardian_occupation" value="{{ application.guardian_occupation or '' }}" />
+                </label>
+              </div>
+            </article>
+
+            <article class="admission-detail-card">
+              <h2>Address & Course</h2>
+              <div class="admission-edit-grid">
+                <label class="admission-edit-span-full admission-field">
+                  <span>Address</span>
+                  <textarea name="address_line" rows="3">{{ application.address_line or '' }}</textarea>
+                </label>
+                <label class="admission-field">
+                  <span>City</span>
+                  <input type="text" name="city" value="{{ application.city or '' }}" required />
+                </label>
+                <label class="admission-field">
+                  <span>State</span>
+                  <input type="text" name="state_value" value="{{ application.state or '' }}" />
+                </label>
+                <label class="admission-field">
+                  <span>Pin Code</span>
+                  <input type="text" name="pin_code" value="{{ application.pin_code or '' }}" inputmode="numeric" />
+                </label>
+                <label class="admission-edit-span-full admission-field">
+                  <span>Special Remarks</span>
+                  <textarea name="special_remarks" rows="3">{{ application.special_remarks or '' }}</textarea>
+                </label>
+                <label class="admission-field">
+                  <span>Discipline</span>
+                  <select name="discipline" id="admin-admission-discipline">
+                    <option value="">Select course</option>
+                    {% for option in admission_options %}
+                      <option value="{{ option.name }}" data-discipline-id="{{ option.id }}" {% if application.discipline == option.name %}selected{% endif %}>{{ option.name }}</option>
+                    {% endfor %}
+                    {% if not admission_options %}
+                      <option value="" disabled>No courses configured yet</option>
+                    {% endif %}
+                  </select>
+                </label>
+                <label class="admission-field">
+                  <span>Grade</span>
+                  <select name="grade" id="admin-admission-grade">
+                    <option value="">Select grade</option>
+                  </select>
+                </label>
+                <label class="admission-field">
+                  <span>Affiliated</span>
+                  <select name="affiliated">
+                    <option value="">Select affiliation</option>
+                    <option value="Rock school London" {% if application.affiliated == 'Rock school London' %}selected{% endif %}>Rock school London</option>
+                    <option value="Trinity London" {% if application.affiliated == 'Trinity London' %}selected{% endif %}>Trinity London</option>
+                  </select>
+                </label>
+                <label class="admission-field">
+                  <span>Teacher</span>
+                  <select name="preferred_teacher" id="admin-admission-teacher">
+                    <option value="">Select teacher</option>
+                  </select>
+                </label>
+              </div>
+            </article>
+          </div>
+          <div class="admission-edit-save-row">
+            <button type="submit" class="btn">Save application details</button>
+          </div>
+        </form>
+
+        <section class="admission-detail-card admission-review-card">
+          <h2>For Office Use Only</h2>
+          <form
+            id="admin-admission-review-form"
+            action="/admin/admissions/{{ application.id }}/review"
+            method="post"
+            class="admission-review-form"
+          >
+            <label>
+              <span>Status</span>
+              <select name="status_value">
+                {% for option in ["new", "reviewing", "accepted", "rejected", "waitlisted"] %}
+                  <option value="{{ option }}" {% if application.status == option %}selected{% endif %}>{{ option|title }}</option>
+                {% endfor %}
+              </select>
+            </label>
+            <label>
+              <span>Accepted</span>
+              <select name="accepted">
+                <option value="" {% if review and review.accepted is none %}selected{% endif %}>Pending</option>
+                <option value="yes" {% if review and review.accepted is sameas true %}selected{% endif %}>Yes</option>
+                <option value="no" {% if review and review.accepted is sameas false %}selected{% endif %}>No</option>
+              </select>
+            </label>
+            <label>
+              <span>Fees Amount (INR)</span>
+              <input type="number" step="0.01" min="0" name="fees_amount_inr" value="{{ review.fees_amount_inr if review and review.fees_amount_inr is not none else '' }}" />
+            </label>
+            <label>
+              <span>Invoice No.</span>
+              <input type="text" name="invoice_no" value="{{ review.invoice_no if review else '' }}" />
+            </label>
+            <label>
+              <span>Dated</span>
+              <input type="date" name="invoice_dated" value="{{ review.invoice_dated if review and review.invoice_dated else '' }}" />
+            </label>
+            <label>
+              <span>Payment Details</span>
+              <select name="payment_method">
+                {% set selected_payment = review.payment_method if review else "" %}
+                <option value="" {% if not selected_payment %}selected{% endif %}>Select</option>
+                <option value="cash" {% if selected_payment == "cash" %}selected{% endif %}>Cash</option>
+                <option value="cheque" {% if selected_payment == "cheque" %}selected{% endif %}>Cheque</option>
+                <option value="online" {% if selected_payment == "online" %}selected{% endif %}>Online</option>
+              </select>
+            </label>
+            <label>
+              <span>Course Start Date</span>
+              <input type="date" name="course_start_date" value="{{ review.course_start_date if review and review.course_start_date else '' }}" />
+            </label>
+            <label>
+              <span>Course Duration</span>
+              <input type="text" name="course_duration" value="{{ review.course_duration if review else '' }}" />
+            </label>
+            <label>
+              <span>Individual / Group</span>
+              <select name="class_type">
+                {% set selected_class_type = review.class_type if review else "" %}
+                <option value="" {% if not selected_class_type %}selected{% endif %}>Select</option>
+                <option value="individual" {% if selected_class_type == "individual" %}selected{% endif %}>Individual</option>
+                <option value="group" {% if selected_class_type == "group" %}selected{% endif %}>Group</option>
+              </select>
+            </label>
+            <label class="review-full">
+              <span>Remarks</span>
+              <textarea name="remarks" rows="4">{{ review.remarks if review else '' }}</textarea>
+            </label>
+          </form>
+          <div class="admission-review-actions-row">
+            <button type="submit" form="admin-admission-review-form" class="btn admission-review-save-btn">Save Review</button>
+            {% if whatsapp_chat_url %}
+              <a class="btn admission-whatsapp-btn" href="{{ whatsapp_chat_url }}" target="_blank" rel="noopener noreferrer">Send via WhatsApp</a>
+            {% endif %}
+            {% if application.email %}
+              <form
+                method="post"
+                action="/admin/admissions/{{ application.id }}/send-followup-email"
+                class="admission-send-email-form admission-review-send-email-form"
+              >
+                <button type="submit" class="btn admission-email-btn">Send via mail</button>
+              </form>
+            {% endif %}
+          </div>
+        </section>
+      </div>
+    </div>
+  </section>
+  <script>
+    (function () {
+      const options = {{ admission_options|tojson }};
+      const disciplineSelect = document.getElementById("admin-admission-discipline");
+      const gradeSelect = document.getElementById("admin-admission-grade");
+      const teacherSelect = document.getElementById("admin-admission-teacher");
+      const initialGrade = {{ application.grade|tojson }};
+      const initialTeacher = {{ application.preferred_teacher|tojson }};
+      const passportInput = document.getElementById("admin-passport-photo-input");
+      const maxPassportBytes = 1 * 1024 * 1024;
+
+      function fillSelect(select, placeholder, items) {
+        if (!select) return;
+        select.innerHTML = "";
+        const placeholderOption = document.createElement("option");
+        placeholderOption.value = "";
+        placeholderOption.textContent = placeholder;
+        select.appendChild(placeholderOption);
+        (items || []).forEach((item) => {
+          const option = document.createElement("option");
+          option.value = item.name;
+          option.textContent = item.name;
+          select.appendChild(option);
+        });
+      }
+
+      function updateDependentOptions() {
+        if (!disciplineSelect || !gradeSelect || !teacherSelect) return;
+        const selected = options.find((item) => item.name === disciplineSelect.value);
+        fillSelect(gradeSelect, "Select grade", selected ? selected.grades : []);
+        fillSelect(teacherSelect, "Select teacher", selected ? selected.teachers : []);
+        if (initialGrade) {
+          const ok = [...gradeSelect.options].some((o) => o.value === initialGrade);
+          if (ok) gradeSelect.value = initialGrade;
+        }
+        if (initialTeacher) {
+          const ok = [...teacherSelect.options].some((o) => o.value === initialTeacher);
+          if (ok) teacherSelect.value = initialTeacher;
+        }
+      }
+
+      if (disciplineSelect && gradeSelect && teacherSelect) {
+        disciplineSelect.addEventListener("change", function () {
+          const selected = options.find((item) => item.name === disciplineSelect.value);
+          fillSelect(gradeSelect, "Select grade", selected ? selected.grades : []);
+          fillSelect(teacherSelect, "Select teacher", selected ? selected.teachers : []);
+        });
+        updateDependentOptions();
+      }
+
+      if (passportInput) {
+        passportInput.addEventListener("change", function () {
+          const file = passportInput.files && passportInput.files[0];
+          if (!file) return;
+          if (file.size > maxPassportBytes) {
+            alert("Please choose an image under 1 MB.");
+            passportInput.value = "";
+          }
+        });
+      }
+    })();
+  </script>
+  {% include "partials/admin_delete_reveal_script.html" %}
+{% endblock %}

@@ -1,15 +1,26 @@
 from datetime import date as dt_date, time as dt_time
+from decimal import Decimal, InvalidOperation
+from urllib.parse import quote_plus
 from fastapi import APIRouter, Depends, File, Form, Request, UploadFile, status
-from fastapi.responses import HTMLResponse, RedirectResponse
-from sqlalchemy import func, inspect, text
+from fastapi.responses import HTMLResponse, RedirectResponse, Response
+from sqlalchemy import func
 from sqlalchemy.exc import SQLAlchemyError
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session, selectinload
 import json
 
+from app.admission_followup import build_admission_followup_email, build_whatsapp_message_body
+from app.admission_validators import normalize_admission_email
 from app.config import get_s3_config
 from app.db import get_db
 from app.models import (
+    AdmissionAdminReview,
+    AdmissionApplication,
+    AdmissionContact,
+    AdmissionDiscipline,
+    AdmissionGrade,
+    AdmissionPaymentSettings,
+    AdmissionTeacher,
     Artist,
     ContactMessage,
     CourseFeeStructure,
@@ -21,48 +32,87 @@ from app.models import (
     NewsletterSubscription,
     User,
 )
-from app.routers.admin_common import extract_s3_object_key_from_url, normalize_whatsapp_input, require_admin
+from app.routers.admin_common import (
+    extract_s3_object_key_from_url,
+    normalize_whatsapp_input,
+    require_admin,
+    whatsapp_me_url_from_phone,
+)
 from app.routers.gallery_routes import slugify
 from app.routers.auth import AUTH_COOKIE_NAME, shared_auth_context
-from app.security import create_access_token, verify_password
+from app.security import create_access_token, decode_access_token, verify_password
+from app.mailer import send_multipart_email
+from app.services.admission_pdf import build_admission_application_pdf
 from app.services.s3_upload import (
     UploadServiceError,
     UploadValidationError,
     delete_image_by_key,
     upload_image_and_get_url,
+    upload_passport_photo_and_get_url,
 )
+from app.routers.pages import load_admission_options
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
 
 
 def _ensure_inbox_seen_columns(db: Session) -> None:
+    # Schema changes are handled by migrations, not runtime request flow.
+    return
+
+
+def _optional_date_from_form(value: str | None) -> dt_date | None:
+    raw = (value or "").strip()
+    if not raw:
+        return None
+    return dt_date.fromisoformat(raw)
+
+
+def _current_admin_user_id(request: Request) -> int | None:
+    token = request.cookies.get(AUTH_COOKIE_NAME)
+    if not token:
+        return None
     try:
-        inspector = inspect(db.bind)
-        contact_columns = {column["name"] for column in inspector.get_columns("contact_messages")}
-        subscription_columns = {column["name"] for column in inspector.get_columns("newsletter_subscriptions")}
+        payload = decode_access_token(token)
     except Exception:
-        return
+        return None
+    if not payload.get("is_admin"):
+        return None
+    try:
+        return int(payload.get("sub"))
+    except (TypeError, ValueError):
+        return None
 
-    has_changes = False
-    if "is_seen" not in contact_columns:
-        try:
-            db.execute(text("ALTER TABLE contact_messages ADD COLUMN is_seen BOOLEAN NOT NULL DEFAULT 0"))
-            has_changes = True
-        except SQLAlchemyError:
-            db.rollback()
-    if "is_seen" not in subscription_columns:
-        try:
-            db.execute(text("ALTER TABLE newsletter_subscriptions ADD COLUMN is_seen BOOLEAN NOT NULL DEFAULT 0"))
-            has_changes = True
-        except SQLAlchemyError:
-            db.rollback()
 
-    if has_changes:
-        try:
+def _download_filename_part(value: str) -> str:
+    cleaned = "".join(char.lower() if char.isalnum() else "-" for char in value)
+    return "-".join(part for part in cleaned.split("-") if part)
+
+
+def _absolute_base_url(request: Request) -> str:
+    return str(request.base_url).rstrip("/")
+
+
+def _get_admission_payment_settings(db: Session) -> AdmissionPaymentSettings | None:
+    try:
+        return db.query(AdmissionPaymentSettings).filter(AdmissionPaymentSettings.id == 1).first()
+    except SQLAlchemyError:
+        return None
+
+
+def _get_or_create_admission_payment_settings(db: Session) -> tuple[AdmissionPaymentSettings | None, str | None]:
+    """Load singleton payment settings; create empty row if missing. Error if table absent."""
+    try:
+        row = db.query(AdmissionPaymentSettings).filter(AdmissionPaymentSettings.id == 1).first()
+        if row is None:
+            row = AdmissionPaymentSettings(id=1)
+            db.add(row)
             db.commit()
-        except SQLAlchemyError:
-            db.rollback()
+            db.refresh(row)
+        return row, None
+    except SQLAlchemyError:
+        db.rollback()
+        return None, "Payment settings unavailable. Run admission_payment_settings.sql on the database."
 
 
 def _inject_admin_inbox_counts(context: dict, db: Session) -> None:
@@ -77,15 +127,23 @@ def _inject_admin_inbox_counts(context: dict, db: Session) -> None:
             .scalar()
             or 0
         )
+        unread_admission_count = (
+            db.query(func.count(AdmissionApplication.id))
+            .filter(AdmissionApplication.is_seen.is_(False))
+            .scalar()
+            or 0
+        )
     except SQLAlchemyError:
         unread_contact_count = 0
         unread_subscription_count = 0
+        unread_admission_count = 0
 
     context.update(
         {
             "unread_contact_count": unread_contact_count,
             "unread_subscription_count": unread_subscription_count,
-            "unread_total_count": unread_contact_count + unread_subscription_count,
+            "unread_admission_count": unread_admission_count,
+            "unread_total_count": unread_contact_count + unread_subscription_count + unread_admission_count,
         }
     )
 
@@ -148,20 +206,20 @@ def admin_create_genre(
     slug = slugify(normalized_name)
     if not normalized_name or not slug:
         return RedirectResponse(
-            url="/admin/gallary?error=Invalid+category+name", status_code=status.HTTP_303_SEE_OTHER
+            url="/admin/gallery?error=Invalid+category+name", status_code=status.HTTP_303_SEE_OTHER
         )
 
     exists = db.query(GalleryGenre).filter(GalleryGenre.slug == slug).first()
     if exists:
         return RedirectResponse(
-            url="/admin/gallary?error=Category+already+exists", status_code=status.HTTP_303_SEE_OTHER
+            url="/admin/gallery?error=Category+already+exists", status_code=status.HTTP_303_SEE_OTHER
         )
 
     genre = GalleryGenre(name=normalized_name, slug=slug)
     db.add(genre)
     db.commit()
     return RedirectResponse(
-        url="/admin/gallary?message=Category+created+successfully", status_code=status.HTTP_303_SEE_OTHER
+        url="/admin/gallery?message=Category+created+successfully", status_code=status.HTTP_303_SEE_OTHER
     )
 
 
@@ -181,19 +239,19 @@ def admin_upload_image(
     genre = db.query(GalleryGenre).filter(GalleryGenre.slug == slug).first()
     if not genre:
         return RedirectResponse(
-            url="/admin/gallary?error=Category+not+found", status_code=status.HTTP_303_SEE_OTHER
+            url="/admin/gallery?error=Category+not+found", status_code=status.HTTP_303_SEE_OTHER
         )
 
     try:
         object_key, _, public_image_url = upload_image_and_get_url(file, get_s3_config())
     except UploadValidationError as exc:
         return RedirectResponse(
-            url=f"/admin/gallary?error={str(exc).replace(' ', '+')}",
+            url=f"/admin/gallery?error={str(exc).replace(' ', '+')}",
             status_code=status.HTTP_303_SEE_OTHER,
         )
     except UploadServiceError as exc:
         return RedirectResponse(
-            url=f"/admin/gallary?error={str(exc).replace(' ', '+')}",
+            url=f"/admin/gallery?error={str(exc).replace(' ', '+')}",
             status_code=status.HTTP_303_SEE_OTHER,
         )
 
@@ -207,19 +265,25 @@ def admin_upload_image(
     db.add(image)
     db.commit()
     return RedirectResponse(
-        url="/admin/gallary?message=Image+uploaded+successfully", status_code=status.HTTP_303_SEE_OTHER
+        url="/admin/gallery?message=Image+uploaded+successfully", status_code=status.HTTP_303_SEE_OTHER
     )
 
 
-@router.get("/admin/gallary", response_class=HTMLResponse)
+@router.get("/admin/gallary", include_in_schema=False)
+def admin_gallery_list_legacy_redirect(request: Request) -> RedirectResponse:
+    query = str(request.url.query)
+    target = "/admin/gallery" + (f"?{query}" if query else "")
+    return RedirectResponse(url=target, status_code=status.HTTP_301_MOVED_PERMANENTLY)
+
+
 @router.get("/admin/gallery", response_class=HTMLResponse)
-def admin_gallary_page(
+def admin_gallery_page(
     request: Request,
     page: int = 1,
     page_size: int = 5,
     db: Session = Depends(get_db),
 ):
-    context = shared_auth_context(request, "Admin Gallary")
+    context = shared_auth_context(request, "Admin Gallery")
     admin_redirect = require_admin(request)
     if admin_redirect:
         return admin_redirect
@@ -257,12 +321,19 @@ def admin_gallary_page(
         }
     )
     _inject_admin_inbox_counts(context, db)
-    return templates.TemplateResponse(request, "admingallary.html", context)
+    return templates.TemplateResponse(request, "admingallery.html", context)
 
 
-@router.get("/admin/gallary/categories/{genre_slug}", response_class=HTMLResponse)
+@router.get("/admin/gallary/categories/{genre_slug}", include_in_schema=False)
+def admin_gallery_category_legacy_redirect(genre_slug: str, request: Request) -> RedirectResponse:
+    query = str(request.url.query)
+    base = f"/admin/gallery/categories/{genre_slug}"
+    target = base + (f"?{query}" if query else "")
+    return RedirectResponse(url=target, status_code=status.HTTP_301_MOVED_PERMANENTLY)
+
+
 @router.get("/admin/gallery/categories/{genre_slug}", response_class=HTMLResponse)
-def admin_gallary_category_page(
+def admin_gallery_category_page(
     genre_slug: str,
     request: Request,
     page: int = 1,
@@ -278,7 +349,7 @@ def admin_gallary_category_page(
     genre = db.query(GalleryGenre).filter(GalleryGenre.slug == slug).first()
     if not genre:
         return RedirectResponse(
-            url="/admin/gallary?error=Category+not+found",
+            url="/admin/gallery?error=Category+not+found",
             status_code=status.HTTP_303_SEE_OTHER,
         )
 
@@ -318,7 +389,7 @@ def admin_gallary_category_page(
         }
     )
     _inject_admin_inbox_counts(context, db)
-    return templates.TemplateResponse(request, "admingallary_category.html", context)
+    return templates.TemplateResponse(request, "admingallery_category.html", context)
 
 
 @router.post("/admin/dashboard/images/{image_id}/delete")
@@ -335,7 +406,7 @@ def admin_delete_image(
 
     image = db.query(GalleryImage).filter(GalleryImage.id == image_id).first()
     if not image:
-        target_url = return_to or "/admin/gallary"
+        target_url = return_to or "/admin/gallery"
         separator = "&" if "?" in target_url else "?"
         return RedirectResponse(
             url=f"{target_url}{separator}error=Image+not+found",
@@ -345,14 +416,14 @@ def admin_delete_image(
     try:
         delete_image_by_key(image.s3_key, get_s3_config())
     except UploadValidationError as exc:
-        target_url = return_to or "/admin/gallary"
+        target_url = return_to or "/admin/gallery"
         separator = "&" if "?" in target_url else "?"
         return RedirectResponse(
             url=f"{target_url}{separator}error={str(exc).replace(' ', '+')}",
             status_code=status.HTTP_303_SEE_OTHER,
         )
     except UploadServiceError as exc:
-        target_url = return_to or "/admin/gallary"
+        target_url = return_to or "/admin/gallery"
         separator = "&" if "?" in target_url else "?"
         return RedirectResponse(
             url=f"{target_url}{separator}error={str(exc).replace(' ', '+')}",
@@ -361,7 +432,7 @@ def admin_delete_image(
 
     db.delete(image)
     db.commit()
-    target_url = return_to or "/admin/gallary"
+    target_url = return_to or "/admin/gallery"
     separator = "&" if "?" in target_url else "?"
     return RedirectResponse(
         url=f"{target_url}{separator}message=Image+deleted+successfully",
@@ -383,14 +454,14 @@ def admin_delete_category(
     genre = db.query(GalleryGenre).filter(GalleryGenre.id == genre_id).first()
     if not genre:
         return RedirectResponse(
-            url="/admin/gallary?error=Category+not+found", status_code=status.HTTP_303_SEE_OTHER
+            url="/admin/gallery?error=Category+not+found", status_code=status.HTTP_303_SEE_OTHER
         )
 
     expected_confirmation = f"delete {genre.name}".strip().lower()
     provided_confirmation = (delete_confirmation or "").strip().lower()
     if provided_confirmation != expected_confirmation:
         return RedirectResponse(
-            url="/admin/gallary?error=Delete+confirmation+did+not+match.+Use+delete+" + genre.name.replace(" ", "+"),
+            url="/admin/gallery?error=Delete+confirmation+did+not+match.+Use+delete+" + genre.name.replace(" ", "+"),
             status_code=status.HTTP_303_SEE_OTHER,
         )
 
@@ -400,19 +471,19 @@ def admin_delete_category(
             delete_image_by_key(image.s3_key, get_s3_config())
     except UploadValidationError as exc:
         return RedirectResponse(
-            url=f"/admin/gallary?error={str(exc).replace(' ', '+')}",
+            url=f"/admin/gallery?error={str(exc).replace(' ', '+')}",
             status_code=status.HTTP_303_SEE_OTHER,
         )
     except UploadServiceError as exc:
         return RedirectResponse(
-            url=f"/admin/gallary?error={str(exc).replace(' ', '+')}",
+            url=f"/admin/gallery?error={str(exc).replace(' ', '+')}",
             status_code=status.HTTP_303_SEE_OTHER,
         )
 
     db.delete(genre)
     db.commit()
     return RedirectResponse(
-        url="/admin/gallary?message=Category+deleted+successfully", status_code=status.HTTP_303_SEE_OTHER
+        url="/admin/gallery?message=Category+deleted+successfully", status_code=status.HTTP_303_SEE_OTHER
     )
 
 
@@ -684,6 +755,712 @@ def admin_subscribers_page(request: Request, db: Session = Depends(get_db)):
     )
     _inject_admin_inbox_counts(context, db)
     return templates.TemplateResponse(request, "admin_subscribers.html", context)
+
+
+@router.get("/admin/admissions", response_class=HTMLResponse)
+def admin_admissions_page(request: Request, db: Session = Depends(get_db)):
+    context = shared_auth_context(request, "Admin Admissions")
+    admin_redirect = require_admin(request)
+    if admin_redirect:
+        return admin_redirect
+
+    try:
+        applications = (
+            db.query(AdmissionApplication)
+            .order_by(AdmissionApplication.created_at.desc(), AdmissionApplication.id.desc())
+            .limit(200)
+            .all()
+        )
+        db.query(AdmissionApplication).filter(AdmissionApplication.is_seen.is_(False)).update(
+            {AdmissionApplication.is_seen: True},
+            synchronize_session=False,
+        )
+        db.commit()
+        admissions_error = None
+    except SQLAlchemyError:
+        db.rollback()
+        applications = []
+        admissions_error = "Database tables missing. Run admission_tables.sql first."
+
+    context.update(
+        {
+            "applications": applications,
+            "message": request.query_params.get("message"),
+            "error": request.query_params.get("error") or admissions_error,
+        }
+    )
+    _inject_admin_inbox_counts(context, db)
+    return templates.TemplateResponse(request, "admin_admissions.html", context)
+
+
+@router.get("/admin/admissions/{admission_id}", response_class=HTMLResponse)
+def admin_admission_detail(admission_id: int, request: Request, db: Session = Depends(get_db)):
+    context = shared_auth_context(request, "Admission Details")
+    admin_redirect = require_admin(request)
+    if admin_redirect:
+        return admin_redirect
+
+    application = (
+        db.query(AdmissionApplication)
+        .options(selectinload(AdmissionApplication.contacts), selectinload(AdmissionApplication.review))
+        .filter(AdmissionApplication.id == admission_id)
+        .first()
+    )
+    if not application:
+        return RedirectResponse(
+            url="/admin/admissions?error=Admission+not+found", status_code=status.HTTP_303_SEE_OTHER
+        )
+
+    if not application.is_seen:
+        application.is_seen = True
+        db.add(application)
+        db.commit()
+
+    payment_settings = _get_admission_payment_settings(db)
+    whatsapp_chat_url = None
+    if application.contacts:
+        primary_phone = sorted(application.contacts, key=lambda c: c.sort_order)[0].contact_value
+        body = build_whatsapp_message_body(application, payment_settings)
+        whatsapp_chat_url = whatsapp_me_url_from_phone(primary_phone, text=body)
+
+    context.update(
+        {
+            "application": application,
+            "review": application.review,
+            "admission_options": load_admission_options(db),
+            "whatsapp_chat_url": whatsapp_chat_url,
+            "message": request.query_params.get("message"),
+            "error": request.query_params.get("error"),
+        }
+    )
+    _inject_admin_inbox_counts(context, db)
+    return templates.TemplateResponse(request, "admin_admission_detail.html", context)
+
+
+@router.post("/admin/admissions/{admission_id}/send-followup-email")
+def admin_send_admission_followup_email(
+    admission_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    admin_redirect = require_admin(request)
+    if admin_redirect:
+        return admin_redirect
+
+    application = (
+        db.query(AdmissionApplication)
+        .options(selectinload(AdmissionApplication.review))
+        .filter(AdmissionApplication.id == admission_id)
+        .first()
+    )
+    if not application:
+        return RedirectResponse(
+            url="/admin/admissions?error=Admission+not+found", status_code=status.HTTP_303_SEE_OTHER
+        )
+
+    to_email, email_err = normalize_admission_email(application.email or "", required=True)
+    if email_err or not to_email:
+        return RedirectResponse(
+            url=f"/admin/admissions/{admission_id}?error={quote_plus('Save a valid email address on this application before sending.')}",
+            status_code=status.HTTP_303_SEE_OTHER,
+        )
+
+    payment_settings = _get_admission_payment_settings(db)
+    subject, plain, html_body = build_admission_followup_email(application, payment_settings)
+    ok, send_err = send_multipart_email(to_email, subject, plain, html_body)
+    if not ok:
+        return RedirectResponse(
+            url=f"/admin/admissions/{admission_id}?error={quote_plus(send_err or 'Email could not be sent.')}",
+            status_code=status.HTTP_303_SEE_OTHER,
+        )
+
+    return RedirectResponse(
+        url=f"/admin/admissions/{admission_id}?message={quote_plus('Email sent to the applicant.')}",
+        status_code=status.HTTP_303_SEE_OTHER,
+    )
+
+
+@router.post("/admin/admissions/{admission_id}/application")
+def admin_save_admission_application(
+    admission_id: int,
+    request: Request,
+    first_name: str = Form(...),
+    last_name: str = Form(...),
+    gender: str = Form(default=""),
+    date_of_birth: str = Form(default=""),
+    email: str = Form(default=""),
+    contact_1: str = Form(default=""),
+    contact_2: str = Form(default=""),
+    contact_3: str = Form(default=""),
+    contact_4: str = Form(default=""),
+    guardian_relation: str = Form(default=""),
+    guardian_name: str = Form(default=""),
+    guardian_occupation: str = Form(default=""),
+    address_line: str = Form(default=""),
+    city: str = Form(default=""),
+    state_value: str = Form(default=""),
+    pin_code: str = Form(default=""),
+    special_remarks: str = Form(default=""),
+    discipline: str = Form(default=""),
+    grade: str = Form(default=""),
+    affiliated: str = Form(default=""),
+    preferred_teacher: str = Form(default=""),
+    passport_photo: UploadFile | None = File(default=None),
+    db: Session = Depends(get_db),
+):
+    admin_redirect = require_admin(request)
+    if admin_redirect:
+        return admin_redirect
+
+    application = (
+        db.query(AdmissionApplication)
+        .options(selectinload(AdmissionApplication.contacts))
+        .filter(AdmissionApplication.id == admission_id)
+        .first()
+    )
+    if not application:
+        return RedirectResponse(
+            url="/admin/admissions?error=Admission+not+found", status_code=status.HTTP_303_SEE_OTHER
+        )
+
+    normalized_first_name = (first_name or "").strip()
+    normalized_last_name = (last_name or "").strip()
+    normalized_gender = (gender or "").strip()
+    normalized_city = (city or "").strip()
+    contact_values = [
+        value.strip()
+        for value in (contact_1, contact_2, contact_3, contact_4)
+        if value and value.strip()
+    ]
+
+    def redirect_error(msg: str) -> RedirectResponse:
+        return RedirectResponse(
+            url=f"/admin/admissions/{admission_id}?error={quote_plus(msg)}",
+            status_code=status.HTTP_303_SEE_OTHER,
+        )
+
+    if not normalized_first_name or not normalized_last_name:
+        return redirect_error("Please fill first name and last name.")
+    if not normalized_gender or not (date_of_birth or "").strip():
+        return redirect_error("Please fill gender and date of birth.")
+    normalized_email, email_err = normalize_admission_email(email, required=True)
+    if email_err:
+        return redirect_error(email_err)
+    if not contact_values:
+        return redirect_error("Please add at least one contact number.")
+    if not normalized_city:
+        return redirect_error("Please fill city.")
+
+    try:
+        parsed_date_of_birth = _optional_date_from_form(date_of_birth)
+    except ValueError:
+        return redirect_error("Please enter a valid date of birth.")
+    if parsed_date_of_birth is None:
+        return redirect_error("Please enter a valid date of birth.")
+
+    old_photo_key = application.passport_photo_key
+    pending_new_key: str | None = None
+    pending_new_url: str | None = None
+    if passport_photo and passport_photo.filename:
+        try:
+            pending_new_key, _, pending_new_url = upload_passport_photo_and_get_url(passport_photo, get_s3_config())
+        except UploadValidationError as exc:
+            return redirect_error(str(exc))
+        except UploadServiceError as exc:
+            return redirect_error(str(exc))
+
+    application.first_name = normalized_first_name
+    application.last_name = normalized_last_name
+    application.gender = normalized_gender
+    application.date_of_birth = parsed_date_of_birth
+    application.email = normalized_email
+    application.guardian_name = (guardian_name or "").strip() or None
+    application.guardian_relation = (guardian_relation or "").strip() or None
+    application.guardian_occupation = (guardian_occupation or "").strip() or None
+    application.address_line = (address_line or "").strip() or None
+    application.city = normalized_city
+    application.state = (state_value or "").strip() or None
+    application.pin_code = (pin_code or "").strip() or None
+    application.special_remarks = (special_remarks or "").strip() or None
+    application.discipline = (discipline or "").strip() or None
+    application.grade = (grade or "").strip() or None
+    application.affiliated = (affiliated or "").strip() or None
+    application.preferred_teacher = (preferred_teacher or "").strip() or None
+    application.is_seen = True
+
+    if pending_new_key and pending_new_url:
+        application.passport_photo_key = pending_new_key
+        application.passport_photo_url = pending_new_url
+
+    application.contacts.clear()
+    for index, contact_value in enumerate(contact_values, start=1):
+        application.contacts.append(
+            AdmissionContact(contact_value=contact_value, sort_order=index)
+        )
+
+    try:
+        db.add(application)
+        db.commit()
+    except SQLAlchemyError:
+        db.rollback()
+        if pending_new_key:
+            try:
+                delete_image_by_key(pending_new_key, get_s3_config())
+            except (UploadValidationError, UploadServiceError):
+                pass
+        return redirect_error("Could not save application details.")
+
+    if pending_new_key and old_photo_key and old_photo_key != pending_new_key:
+        try:
+            delete_image_by_key(old_photo_key, get_s3_config())
+        except (UploadValidationError, UploadServiceError):
+            pass
+
+    return RedirectResponse(
+        url=f"/admin/admissions/{admission_id}?message=Application+details+saved",
+        status_code=status.HTTP_303_SEE_OTHER,
+    )
+
+
+@router.get("/admin/admissions/{admission_id}/download")
+def admin_download_admission(admission_id: int, request: Request, db: Session = Depends(get_db)):
+    admin_redirect = require_admin(request)
+    if admin_redirect:
+        return admin_redirect
+
+    application = (
+        db.query(AdmissionApplication)
+        .options(selectinload(AdmissionApplication.contacts), selectinload(AdmissionApplication.review))
+        .filter(AdmissionApplication.id == admission_id)
+        .first()
+    )
+    if not application:
+        return RedirectResponse(
+            url="/admin/admissions?error=Admission+not+found", status_code=status.HTTP_303_SEE_OTHER
+        )
+
+    filename_name = _download_filename_part(f"{application.first_name}-{application.last_name}")
+    filename = f"musika-admission-{application.id}-{filename_name or 'application'}.pdf"
+    payment_settings = _get_admission_payment_settings(db)
+    return Response(
+        content=build_admission_application_pdf(application, payment_settings=payment_settings),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+@router.post("/admin/admissions/{admission_id}/delete")
+def admin_delete_admission_application(
+    admission_id: int,
+    request: Request,
+    delete_confirmation: str = Form(default=""),
+    delete_return: str = Form(default="list"),
+    db: Session = Depends(get_db),
+):
+    """Remove application row (cascade: contacts, office review) and delete passport photo from S3."""
+    admin_redirect = require_admin(request)
+    if admin_redirect:
+        return admin_redirect
+
+    application = db.query(AdmissionApplication).filter(AdmissionApplication.id == admission_id).first()
+    if not application:
+        return RedirectResponse(
+            url="/admin/admissions?error=Admission+not+found",
+            status_code=status.HTTP_303_SEE_OTHER,
+        )
+
+    if (delete_confirmation or "").strip().lower() != "delete":
+        err = quote_plus("Type delete to confirm.")
+        if (delete_return or "").strip().lower() == "detail":
+            return RedirectResponse(
+                url=f"/admin/admissions/{admission_id}?error={err}",
+                status_code=status.HTTP_303_SEE_OTHER,
+            )
+        return RedirectResponse(
+            url=f"/admin/admissions?error={err}",
+            status_code=status.HTTP_303_SEE_OTHER,
+        )
+
+    photo_key = application.passport_photo_key or extract_s3_object_key_from_url(application.passport_photo_url)
+
+    try:
+        db.delete(application)
+        db.commit()
+    except SQLAlchemyError:
+        db.rollback()
+        return RedirectResponse(
+            url="/admin/admissions?error=Could+not+delete+application",
+            status_code=status.HTTP_303_SEE_OTHER,
+        )
+
+    if photo_key:
+        try:
+            delete_image_by_key(photo_key, get_s3_config())
+        except (UploadValidationError, UploadServiceError):
+            pass
+
+    return RedirectResponse(
+        url="/admin/admissions?message=Admission+application+deleted",
+        status_code=status.HTTP_303_SEE_OTHER,
+    )
+
+
+@router.get("/admin/admission-options", response_class=HTMLResponse)
+def admin_admission_options_page(request: Request, db: Session = Depends(get_db)):
+    context = shared_auth_context(request, "Admission Setup")
+    admin_redirect = require_admin(request)
+    if admin_redirect:
+        return admin_redirect
+
+    try:
+        disciplines = (
+            db.query(AdmissionDiscipline)
+            .options(selectinload(AdmissionDiscipline.grades), selectinload(AdmissionDiscipline.teachers))
+            .filter(AdmissionDiscipline.is_active.is_(True))
+            .order_by(AdmissionDiscipline.name.asc())
+            .all()
+        )
+        options_error = None
+    except SQLAlchemyError:
+        disciplines = []
+        options_error = "Admission option tables missing. Create admission_disciplines, admission_grades, and admission_teachers first."
+
+    payment_settings, payment_settings_error = _get_or_create_admission_payment_settings(db)
+
+    context.update(
+        {
+            "disciplines": disciplines,
+            "payment_settings": payment_settings,
+            "payment_settings_error": payment_settings_error,
+            "message": request.query_params.get("message"),
+            "error": request.query_params.get("error") or options_error,
+        }
+    )
+    _inject_admin_inbox_counts(context, db)
+    return templates.TemplateResponse(request, "admin_admission_options.html", context)
+
+
+@router.post("/admin/admission-options/payment-settings")
+def admin_save_admission_payment_settings(
+    request: Request,
+    account_holder_name: str = Form(default=""),
+    bank_account_number: str = Form(default=""),
+    bank_ifsc: str = Form(default=""),
+    upi_id: str = Form(default=""),
+    scanner_image: UploadFile | None = File(default=None),
+    db: Session = Depends(get_db),
+):
+    admin_redirect = require_admin(request)
+    if admin_redirect:
+        return admin_redirect
+
+    def redirect_err(msg: str) -> RedirectResponse:
+        return RedirectResponse(
+            url=f"/admin/admission-options?error={quote_plus(msg)}",
+            status_code=status.HTTP_303_SEE_OTHER,
+        )
+
+    row = db.query(AdmissionPaymentSettings).filter(AdmissionPaymentSettings.id == 1).first()
+    if row is None:
+        row = AdmissionPaymentSettings(id=1)
+        db.add(row)
+
+    prev_key = row.scanner_image_key
+
+    row.account_holder_name = (account_holder_name or "").strip() or None
+    row.bank_account_number = (bank_account_number or "").strip() or None
+    ifsc = (bank_ifsc or "").strip().upper() or None
+    row.bank_ifsc = ifsc
+    row.upi_id = (upi_id or "").strip() or None
+
+    if scanner_image and scanner_image.filename:
+        try:
+            new_key, _, public_url = upload_image_and_get_url(scanner_image, get_s3_config())
+        except UploadValidationError as exc:
+            return redirect_err(str(exc))
+        except UploadServiceError as exc:
+            return redirect_err(str(exc))
+        if prev_key and prev_key != new_key:
+            try:
+                delete_image_by_key(prev_key, get_s3_config())
+            except (UploadValidationError, UploadServiceError):
+                pass
+        row.scanner_image_key = new_key
+        row.scanner_image_url = public_url
+
+    try:
+        db.add(row)
+        db.commit()
+    except SQLAlchemyError:
+        db.rollback()
+        return redirect_err("Could not save payment settings. Run admission_payment_settings.sql if the table is missing.")
+
+    return RedirectResponse(
+        url="/admin/admission-options?message=Payment+details+saved",
+        status_code=status.HTTP_303_SEE_OTHER,
+    )
+
+
+@router.post("/admin/admission-options/disciplines")
+def admin_create_admission_discipline(
+    request: Request,
+    name: str = Form(...),
+    db: Session = Depends(get_db),
+):
+    admin_redirect = require_admin(request)
+    if admin_redirect:
+        return admin_redirect
+
+    normalized_name = (name or "").strip()
+    if not normalized_name:
+        return RedirectResponse(
+            url="/admin/admission-options?error=Discipline+name+is+required",
+            status_code=status.HTTP_303_SEE_OTHER,
+        )
+
+    existing = db.query(AdmissionDiscipline).filter(AdmissionDiscipline.name == normalized_name).first()
+    if existing:
+        existing.is_active = True
+        db.add(existing)
+    else:
+        db.add(AdmissionDiscipline(name=normalized_name, is_active=True))
+    db.commit()
+    return RedirectResponse(
+        url="/admin/admission-options?message=Discipline+saved",
+        status_code=status.HTTP_303_SEE_OTHER,
+    )
+
+
+@router.post("/admin/admission-options/grades")
+def admin_create_admission_grade(
+    request: Request,
+    discipline_id: int = Form(...),
+    name: str = Form(...),
+    sort_order: int = Form(default=0),
+    db: Session = Depends(get_db),
+):
+    admin_redirect = require_admin(request)
+    if admin_redirect:
+        return admin_redirect
+
+    discipline = (
+        db.query(AdmissionDiscipline)
+        .filter(AdmissionDiscipline.id == discipline_id, AdmissionDiscipline.is_active.is_(True))
+        .first()
+    )
+    normalized_name = (name or "").strip()
+    if not discipline or not normalized_name:
+        return RedirectResponse(
+            url="/admin/admission-options?error=Select+a+discipline+and+grade+name",
+            status_code=status.HTTP_303_SEE_OTHER,
+        )
+
+    db.add(
+        AdmissionGrade(
+            discipline_id=discipline.id,
+            name=normalized_name,
+            sort_order=sort_order,
+            is_active=True,
+        )
+    )
+    db.commit()
+    return RedirectResponse(
+        url="/admin/admission-options?message=Grade+saved",
+        status_code=status.HTTP_303_SEE_OTHER,
+    )
+
+
+@router.post("/admin/admission-options/teachers")
+def admin_create_admission_teacher(
+    request: Request,
+    discipline_id: int = Form(...),
+    name: str = Form(...),
+    db: Session = Depends(get_db),
+):
+    admin_redirect = require_admin(request)
+    if admin_redirect:
+        return admin_redirect
+
+    discipline = (
+        db.query(AdmissionDiscipline)
+        .filter(AdmissionDiscipline.id == discipline_id, AdmissionDiscipline.is_active.is_(True))
+        .first()
+    )
+    normalized_name = (name or "").strip()
+    if not discipline or not normalized_name:
+        return RedirectResponse(
+            url="/admin/admission-options?error=Select+a+discipline+and+teacher+name",
+            status_code=status.HTTP_303_SEE_OTHER,
+        )
+
+    db.add(AdmissionTeacher(discipline_id=discipline.id, name=normalized_name, is_active=True))
+    db.commit()
+    return RedirectResponse(
+        url="/admin/admission-options?message=Teacher+saved",
+        status_code=status.HTTP_303_SEE_OTHER,
+    )
+
+
+@router.post("/admin/admission-options/disciplines/{discipline_id}/delete")
+def admin_delete_admission_discipline(
+    discipline_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    admin_redirect = require_admin(request)
+    if admin_redirect:
+        return admin_redirect
+
+    discipline = db.query(AdmissionDiscipline).filter(AdmissionDiscipline.id == discipline_id).first()
+    if not discipline:
+        return RedirectResponse(
+            url="/admin/admission-options?error=Discipline+not+found",
+            status_code=status.HTTP_303_SEE_OTHER,
+        )
+    db.delete(discipline)
+    db.commit()
+    return RedirectResponse(
+        url="/admin/admission-options?message=Discipline+deleted",
+        status_code=status.HTTP_303_SEE_OTHER,
+    )
+
+
+@router.post("/admin/admission-options/grades/{grade_id}/delete")
+def admin_delete_admission_grade(
+    grade_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    admin_redirect = require_admin(request)
+    if admin_redirect:
+        return admin_redirect
+
+    grade = db.query(AdmissionGrade).filter(AdmissionGrade.id == grade_id).first()
+    if not grade:
+        return RedirectResponse(
+            url="/admin/admission-options?error=Grade+not+found",
+            status_code=status.HTTP_303_SEE_OTHER,
+        )
+    db.delete(grade)
+    db.commit()
+    return RedirectResponse(
+        url="/admin/admission-options?message=Grade+deleted",
+        status_code=status.HTTP_303_SEE_OTHER,
+    )
+
+
+@router.post("/admin/admission-options/teachers/{teacher_id}/delete")
+def admin_delete_admission_teacher(
+    teacher_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    admin_redirect = require_admin(request)
+    if admin_redirect:
+        return admin_redirect
+
+    teacher = db.query(AdmissionTeacher).filter(AdmissionTeacher.id == teacher_id).first()
+    if not teacher:
+        return RedirectResponse(
+            url="/admin/admission-options?error=Teacher+not+found",
+            status_code=status.HTTP_303_SEE_OTHER,
+        )
+    db.delete(teacher)
+    db.commit()
+    return RedirectResponse(
+        url="/admin/admission-options?message=Teacher+deleted",
+        status_code=status.HTTP_303_SEE_OTHER,
+    )
+
+
+@router.post("/admin/admissions/{admission_id}/review")
+def admin_save_admission_review(
+    admission_id: int,
+    request: Request,
+    accepted: str = Form(default=""),
+    status_value: str = Form(default=""),
+    fees_amount_inr: str = Form(default=""),
+    invoice_no: str = Form(default=""),
+    invoice_dated: str = Form(default=""),
+    payment_method: str = Form(default=""),
+    course_start_date: str = Form(default=""),
+    course_duration: str = Form(default=""),
+    class_type: str = Form(default=""),
+    remarks: str = Form(default=""),
+    db: Session = Depends(get_db),
+):
+    admin_redirect = require_admin(request)
+    if admin_redirect:
+        return admin_redirect
+
+    application = db.query(AdmissionApplication).filter(AdmissionApplication.id == admission_id).first()
+    if not application:
+        return RedirectResponse(
+            url="/admin/admissions?error=Admission+not+found", status_code=status.HTTP_303_SEE_OTHER
+        )
+
+    normalized_status = (status_value or "").strip().lower() or application.status
+    if normalized_status not in {"new", "reviewing", "accepted", "rejected", "waitlisted"}:
+        return RedirectResponse(
+            url=f"/admin/admissions/{admission_id}?error=Invalid+admission+status",
+            status_code=status.HTTP_303_SEE_OTHER,
+        )
+
+    accepted_value: bool | None
+    if accepted == "yes":
+        accepted_value = True
+    elif accepted == "no":
+        accepted_value = False
+    else:
+        accepted_value = None
+
+    try:
+        parsed_invoice_date = _optional_date_from_form(invoice_dated)
+        parsed_course_start_date = _optional_date_from_form(course_start_date)
+    except ValueError:
+        return RedirectResponse(
+            url=f"/admin/admissions/{admission_id}?error=Please+enter+valid+dates",
+            status_code=status.HTTP_303_SEE_OTHER,
+        )
+
+    normalized_fees = (fees_amount_inr or "").strip()
+    try:
+        parsed_fees_amount = Decimal(normalized_fees) if normalized_fees else None
+    except InvalidOperation:
+        return RedirectResponse(
+            url=f"/admin/admissions/{admission_id}?error=Please+enter+a+valid+fees+amount",
+            status_code=status.HTTP_303_SEE_OTHER,
+        )
+
+    review = application.review or AdmissionAdminReview(admission_id=application.id)
+    review.reviewed_by_user_id = _current_admin_user_id(request)
+    review.accepted = accepted_value
+    review.fees_amount_inr = parsed_fees_amount
+    review.invoice_no = (invoice_no or "").strip() or None
+    review.invoice_dated = parsed_invoice_date
+    review.payment_method = (payment_method or "").strip() or None
+    review.course_start_date = parsed_course_start_date
+    review.course_duration = (course_duration or "").strip() or None
+    review.class_type = (class_type or "").strip() or None
+    review.remarks = (remarks or "").strip() or None
+    application.status = normalized_status
+    application.is_seen = True
+
+    try:
+        db.add(application)
+        db.add(review)
+        db.commit()
+    except SQLAlchemyError:
+        db.rollback()
+        return RedirectResponse(
+            url=f"/admin/admissions/{admission_id}?error=Could+not+save+review",
+            status_code=status.HTTP_303_SEE_OTHER,
+        )
+
+    return RedirectResponse(
+        url=f"/admin/admissions/{admission_id}?message=Admission+review+saved",
+        status_code=status.HTTP_303_SEE_OTHER,
+    )
 
 
 @router.post("/admin/dashboard/events")

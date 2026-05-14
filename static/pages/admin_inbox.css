@@ -86,6 +86,72 @@
   word-break: break-word;
 }
 
+.col-message-expandable {
+  white-space: normal;
+}
+
+.inbox-message-details {
+  margin: 0;
+}
+
+.inbox-message-summary {
+  cursor: pointer;
+  list-style: none;
+  font-weight: 600;
+  color: #334155;
+}
+
+.inbox-message-summary::-webkit-details-marker {
+  display: none;
+}
+
+.inbox-message-preview {
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.inbox-message-expand-hint {
+  display: inline-block;
+  margin-left: 0.35rem;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #2563eb;
+}
+
+.inbox-message-collapse-label {
+  display: none;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.inbox-message-details[open] .inbox-message-preview,
+.inbox-message-details[open] .inbox-message-expand-hint {
+  display: none;
+}
+
+.inbox-message-details[open] .inbox-message-collapse-label {
+  display: inline-block;
+}
+
+.inbox-message-full {
+  margin-top: 0.55rem;
+  padding-top: 0.55rem;
+  border-top: 1px dashed #cbd5e1;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-weight: 600;
+  color: #1e293b;
+  max-height: min(55vh, 28rem);
+  overflow-y: auto;
+}
+
 .inbox-empty {
   margin: 0.2rem 0 0;
   color: #64748b;
@@ -332,6 +398,10 @@
     min-width: 0;
     white-space: pre-wrap;
     word-break: break-word;
+  }
+
+  .admin-page-mobile-shell .inbox-table .col-message-expandable {
+    white-space: normal;
   }
 
   .admin-page-mobile-shell .inbox-section {

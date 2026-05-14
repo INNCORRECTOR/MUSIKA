@@ -26,6 +26,10 @@
               <p class="admin-home-stat-label">New Subscriptions</p>
               <p class="admin-home-stat-value">{{ unread_subscription_count|default(0) }}</p>
             </a>
+            <a class="admin-home-stat-card" href="/admin/admissions">
+              <p class="admin-home-stat-label">New Admissions</p>
+              <p class="admin-home-stat-value">{{ unread_admission_count|default(0) }}</p>
+            </a>
           </div>
         </div>
       </div>

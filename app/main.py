@@ -14,8 +14,10 @@ from app.security import hash_password
 
 
 def seed_default_admin() -> None:
-    admin_email = os.getenv("ADMIN_EMAIL", "admin@musika.local").strip().lower()
-    admin_password = os.getenv("ADMIN_PASSWORD", "admin123")
+    admin_email = os.getenv("ADMIN_EMAIL", "").strip().lower()
+    admin_password = os.getenv("ADMIN_PASSWORD")
+    if not admin_email or not admin_password:
+        return
     db = SessionLocal()
     try:
         existing_admin = db.query(User).filter(User.email == admin_email).first()

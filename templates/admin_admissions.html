@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block page_styles %}
+  <link rel="stylesheet" href="/static/pages/auth.css" />
+  <link rel="stylesheet" href="/static/pages/admin_sidebar.css" />
+  <link rel="stylesheet" href="/static/pages/admin_inbox.css" />
+  <link rel="stylesheet" href="/static/pages/admin_admissions.css" />
+  <link rel="stylesheet" href="/static/pages/admin_pages_mobile.css" />
+{% endblock %}
+
+{% block content %}
+  <section class="auth-shell inbox-shell admin-page-mobile-shell">
+    <div class="admin-with-sidebar">
+      {% set admin_active_page = 'admissions' %}
+      {% include "partials/admin_second_nav.html" %}
+
+      <div class="auth-card inbox-card admin-main-content">
+        <h1>Admin Admissions</h1>
+        {% if message %}
+          <p class="auth-success">{{ message }}</p>
+        {% endif %}
+        {% if error %}
+          <p class="auth-error">{{ error }}</p>
+        {% endif %}
+
+        <section class="inbox-section">
+          <div class="inbox-section-head">
+            <h2>Admission Applications</h2>
+          </div>
+          {% if applications %}
+            <div class="table-wrap">
+              <table class="inbox-table admissions-table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for item in applications %}
+                    <tr>
+                      <td data-label="Name">
+                        <strong>{{ item.first_name }} {{ item.last_name }}</strong>
+                      </td>
+                      <td class="admissions-col-email" data-label="Email">{{ item.email or "—" }}</td>
+                      <td data-label="Status">
+                        <span class="admission-status admission-status-{{ item.status }}">{{ item.status|title }}</span>
+                      </td>
+                      <td data-label="Action">
+                        <span class="admin-admissions-actions">
+                          <a class="admin-action-link" href="/admin/admissions/{{ item.id }}">View</a>
+                          <a class="admin-action-link" href="/admin/admissions/{{ item.id }}/download">Download</a>
+                          <span class="admin-delete-reveal" data-admission-delete>
+                            <button type="button" class="admin-delete-open-btn admin-delete-text-btn admin-admissions-delete-btn">
+                              Delete
+                            </button>
+                            <div class="admin-delete-confirm-panel" hidden>
+                              <form
+                                method="post"
+                                action="/admin/admissions/{{ item.id }}/delete"
+                                class="admin-admission-delete-form admin-admissions-delete-form-row"
+                              >
+                                <input type="hidden" name="delete_return" value="list" />
+                                <input
+                                  type="text"
+                                  name="delete_confirmation"
+                                  autocomplete="off"
+                                  placeholder="Type delete"
+                                  aria-label="Type delete to confirm deletion"
+                                  class="admin-delete-confirm-input"
+                                />
+                                <button type="submit" class="admin-delete-text-btn admin-admissions-delete-btn">Confirm</button>
+                              </form>
+                              <button type="button" class="admin-delete-cancel-x" aria-label="Cancel deletion">×</button>
+                            </div>
+                          </span>
+                        </span>
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <p class="inbox-empty">No admission applications yet.</p>
+          {% endif %}
+        </section>
+      </div>
+    </div>
+  </section>
+  {% include "partials/admin_delete_reveal_script.html" %}
+  <script>
+    (function () {
+      try {
+        var params = new URLSearchParams(window.location.search);
+        if (params.has("message") || params.has("error")) {
+          window.history.replaceState({}, "", window.location.pathname);
+        }
+      } catch (e) {}
+    })();
+  </script>
+{% endblock %}

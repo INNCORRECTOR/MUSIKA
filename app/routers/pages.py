@@ -1,7 +1,15 @@
-from datetime import datetime
+import os
+import re
+from datetime import date as dt_date, datetime
+from pathlib import Path
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
-from fastapi import APIRouter, BackgroundTasks, Depends, Form, Query, Request, status
+from dotenv import load_dotenv
+
+# Same .env as mailer (project root), so ADMIN_ALERT_EMAIL / SMTP are visible regardless of cwd.
+load_dotenv(Path(__file__).resolve().parent.parent.parent / ".env", override=True)
+
+from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, Query, Request, UploadFile, status
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.exc import SQLAlchemyError
@@ -18,11 +26,16 @@ from app.content import (
     PAGE_CONTENTS,
     SITE_NAME,
 )
+from app.admission_validators import normalize_admission_email
+from app.config import get_s3_config
 from app.db import get_db
-from app.mailer import send_newsletter_welcome_email
+from app.mailer import send_alert_admission_received, send_newsletter_welcome_email
 import json
 
 from app.models import (
+    AdmissionApplication,
+    AdmissionContact,
+    AdmissionDiscipline,
     Artist,
     ContactMessage,
     CourseFeeStructure,
@@ -32,9 +45,42 @@ from app.models import (
     Media,
     NewsletterSubscription,
 )
+from app.services.s3_upload import (
+    UploadServiceError,
+    UploadValidationError,
+    delete_image_by_key,
+    upload_passport_photo_and_get_url,
+)
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
+
+_IN_MOBILE_SHORT = "Enter all 10 digits of the mobile number."
+_IN_MOBILE_LONG = "Enter a 10-digit Indian mobile number (extra digits detected)."
+_IN_MOBILE_START = "Indian mobile numbers start with 6, 7, 8, or 9."
+
+
+def _normalize_indian_mobile(raw: str, *, required: bool) -> tuple[str | None, str | None]:
+    """Parse optional/required Indian mobile; returns (+91XXXXXXXXXX, None) or (None, error)."""
+    s = (raw or "").strip()
+    if not s:
+        if required:
+            return None, "Mobile number is required."
+        return None, None
+
+    digits = re.sub(r"\D", "", s)
+    if len(digits) == 12 and digits.startswith("91"):
+        digits = digits[2:]
+    elif len(digits) == 11 and digits.startswith("0"):
+        digits = digits[1:]
+
+    if len(digits) < 10:
+        return None, _IN_MOBILE_SHORT
+    if len(digits) > 10:
+        return None, _IN_MOBILE_LONG
+    if digits[0] not in "6789":
+        return None, _IN_MOBILE_START
+    return f"+91{digits}", None
 
 
 SEO_META = {
@@ -57,6 +103,10 @@ SEO_META = {
     "/course": {
         "title": "Music Courses | MUSIKA Dimapur",
         "description": "Explore MUSIKA music courses designed for beginners and advancing artists in production, vocals, and performance. Financial assistance for deserving and talented students." ,
+    },
+    "/admission": {
+        "title": "Admission | MUSIKA School of Music",
+        "description": "Apply for MUSIKA music programs by submitting the admission form online.",
     },
     "/event": {
         "title": "Music Events & Workshops | MUSIKA",
@@ -130,6 +180,37 @@ def load_course_mode_data(mode: str | None, db: Session):
     return selected_mode, data
 
 
+def load_admission_options(db: Session) -> list[dict]:
+    try:
+        disciplines = (
+            db.query(AdmissionDiscipline)
+            .options(selectinload(AdmissionDiscipline.grades), selectinload(AdmissionDiscipline.teachers))
+            .filter(AdmissionDiscipline.is_active.is_(True))
+            .order_by(AdmissionDiscipline.name.asc())
+            .all()
+        )
+    except SQLAlchemyError:
+        return []
+
+    return [
+        {
+            "id": discipline.id,
+            "name": discipline.name,
+            "grades": [
+                {"id": grade.id, "name": grade.name}
+                for grade in discipline.grades
+                if grade.is_active
+            ],
+            "teachers": [
+                {"id": teacher.id, "name": teacher.name}
+                for teacher in discipline.teachers
+                if teacher.is_active
+            ],
+        }
+        for discipline in disciplines
+    ]
+
+
 @router.get("/", response_class=HTMLResponse)
 def home(request: Request, db: Session = Depends(get_db)):
     context = shared_context("/")
@@ -172,6 +253,13 @@ def _build_site_base_url(request: Request) -> str:
     return str(request.base_url).rstrip("/")
 
 
+def _optional_date_from_form(value: str | None) -> dt_date | None:
+    raw = (value or "").strip()
+    if not raw:
+        return None
+    return dt_date.fromisoformat(raw)
+
+
 @router.get("/about", response_class=HTMLResponse)
 def about(request: Request, db: Session = Depends(get_db)):
     context = shared_context("/about")
@@ -188,6 +276,7 @@ def sitemap_xml(request: Request):
         "/faculty",
         "/artist",
         "/course",
+        "/admission",
         "/event",
         "/gallery",
         "/contact",
@@ -336,6 +425,193 @@ def course(
         }
     )
     return templates.TemplateResponse(request, "course.html", context)
+
+
+@router.get("/admission", response_class=HTMLResponse)
+def admission(request: Request, db: Session = Depends(get_db)):
+    context = shared_context("/admission")
+    context["nav_highlight_path"] = "/course"
+    context.update(
+        {
+            "artist_menu": load_artist_menu(db),
+            "admission_options": load_admission_options(db),
+            "message": request.query_params.get("message"),
+            "error": request.query_params.get("error"),
+        }
+    )
+    return templates.TemplateResponse(request, "admission.html", context)
+
+
+@router.post("/admission")
+def submit_admission(
+    background_tasks: BackgroundTasks,
+    first_name: str = Form(...),
+    last_name: str = Form(...),
+    gender: str = Form(default=""),
+    date_of_birth: str = Form(default=""),
+    email: str = Form(default=""),
+    contact_1: str = Form(default=""),
+    contact_2: str = Form(default=""),
+    contact_3: str = Form(default=""),
+    contact_4: str = Form(default=""),
+    guardian_relation: str = Form(default=""),
+    guardian_name: str = Form(default=""),
+    guardian_occupation: str = Form(default=""),
+    address_line: str = Form(default=""),
+    city: str = Form(default=""),
+    state_value: str = Form(default=""),
+    pin_code: str = Form(default=""),
+    special_remarks: str = Form(default=""),
+    discipline: str = Form(default=""),
+    grade: str = Form(default=""),
+    affiliated: str = Form(default=""),
+    preferred_teacher: str = Form(default=""),
+    passport_photo: UploadFile | None = File(default=None),
+    db: Session = Depends(get_db),
+):
+    normalized_first_name = (first_name or "").strip()
+    normalized_last_name = (last_name or "").strip()
+    normalized_gender = (gender or "").strip()
+    normalized_city = (city or "").strip()
+
+    if not normalized_first_name or not normalized_last_name:
+        return RedirectResponse(
+            url=_with_query("/admission", error="Please fill first name and last name."),
+            status_code=status.HTTP_303_SEE_OTHER,
+        )
+
+    if not normalized_gender or not (date_of_birth or "").strip():
+        return RedirectResponse(
+            url=_with_query("/admission", error="Please fill gender and date of birth."),
+            status_code=status.HTTP_303_SEE_OTHER,
+        )
+
+    normalized_email, email_err = normalize_admission_email(email, required=True)
+    if email_err:
+        return RedirectResponse(
+            url=_with_query("/admission", error=email_err),
+            status_code=status.HTTP_303_SEE_OTHER,
+        )
+
+    normalized_contacts: list[str] = []
+    for raw, required in (
+        (contact_1, True),
+        (contact_2, False),
+        (contact_3, False),
+        (contact_4, False),
+    ):
+        phone, err = _normalize_indian_mobile(raw, required=required)
+        if err:
+            return RedirectResponse(
+                url=_with_query("/admission", error=err),
+                status_code=status.HTTP_303_SEE_OTHER,
+            )
+        if phone:
+            normalized_contacts.append(phone)
+
+    if not normalized_contacts:
+        return RedirectResponse(
+            url=_with_query("/admission", error="Please add at least one contact number."),
+            status_code=status.HTTP_303_SEE_OTHER,
+        )
+
+    if not normalized_city:
+        return RedirectResponse(
+            url=_with_query("/admission", error="Please fill city."),
+            status_code=status.HTTP_303_SEE_OTHER,
+        )
+
+    try:
+        parsed_date_of_birth = _optional_date_from_form(date_of_birth)
+    except ValueError:
+        return RedirectResponse(
+            url=_with_query("/admission", error="Please enter a valid date of birth."),
+            status_code=status.HTTP_303_SEE_OTHER,
+        )
+
+    passport_photo_key: str | None = None
+    passport_photo_url: str | None = None
+    if passport_photo and passport_photo.filename:
+        try:
+            passport_photo_key, _, passport_photo_url = upload_passport_photo_and_get_url(
+                passport_photo,
+                get_s3_config(),
+            )
+        except UploadValidationError as exc:
+            return RedirectResponse(
+                url=_with_query("/admission", error=str(exc)),
+                status_code=status.HTTP_303_SEE_OTHER,
+            )
+        except UploadServiceError as exc:
+            return RedirectResponse(
+                url=_with_query("/admission", error=str(exc)),
+                status_code=status.HTTP_303_SEE_OTHER,
+            )
+
+    application = AdmissionApplication(
+        first_name=normalized_first_name,
+        last_name=normalized_last_name,
+        gender=normalized_gender,
+        date_of_birth=parsed_date_of_birth,
+        email=normalized_email,
+        guardian_name=(guardian_name or "").strip() or None,
+        guardian_relation=(guardian_relation or "").strip() or None,
+        guardian_occupation=(guardian_occupation or "").strip() or None,
+        address_line=(address_line or "").strip() or None,
+        city=normalized_city,
+        state=(state_value or "").strip() or None,
+        pin_code=(pin_code or "").strip() or None,
+        special_remarks=(special_remarks or "").strip() or None,
+        discipline=(discipline or "").strip() or None,
+        grade=(grade or "").strip() or None,
+        affiliated=(affiliated or "").strip() or None,
+        preferred_teacher=(preferred_teacher or "").strip() or None,
+        passport_photo_key=passport_photo_key,
+        passport_photo_url=passport_photo_url,
+        status="new",
+        is_seen=False,
+    )
+
+    try:
+        db.add(application)
+        db.flush()
+        db.add_all(
+            [
+                AdmissionContact(
+                    admission_id=application.id,
+                    contact_value=contact_value,
+                    sort_order=index,
+                )
+                for index, contact_value in enumerate(normalized_contacts, start=1)
+            ]
+        )
+        db.commit()
+    except SQLAlchemyError:
+        db.rollback()
+        if passport_photo_key:
+            try:
+                delete_image_by_key(passport_photo_key, get_s3_config())
+            except (UploadValidationError, UploadServiceError):
+                pass
+        return RedirectResponse(
+            url=_with_query("/admission", error="Database tables missing. Run admission_tables.sql first."),
+            status_code=status.HTTP_303_SEE_OTHER,
+        )
+
+    admin_alert = (os.getenv("ADMIN_ALERT_EMAIL") or "").strip()
+    if admin_alert:
+        background_tasks.add_task(send_alert_admission_received, admin_alert)
+
+    return RedirectResponse(
+        url=_with_query(
+            "/admission",
+            message=(
+                "Thank you! We have received your application. Please wait—we will reach out to you "
+                "soon through WhatsApp and email."
+            ),
+        ),
+        status_code=status.HTTP_303_SEE_OTHER,
+    )
 
 
 @router.get("/course/partial", response_class=HTMLResponse)

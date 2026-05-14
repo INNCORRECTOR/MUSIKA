@@ -15,7 +15,7 @@
 
       <div class="admin-main-card admin-main-content">
         <div class="admin-gallery-header">
-          <h1>AdminGallary</h1>
+          <h1>Admin Gallery</h1>
           <p>Create categories, upload gallery images, and manage latest items.</p>
           <div class="admin-gallery-actions">
             <a class="btn admin-back-link" href="/admin">Back to Admin Home</a>
@@ -72,7 +72,7 @@
                   </div>
                   <div class="category-actions">
                     <div class="category-view-action">
-                      <a class="btn view-category-btn" href="/admin/gallary/categories/{{ genre.slug }}">
+                      <a class="btn view-category-btn" href="/admin/gallery/categories/{{ genre.slug }}">
                         View
                       </a>
                     </div>
@@ -145,7 +145,7 @@
             </div>
             <div class="pagination-row">
               {% if has_prev %}
-                <a class="btn page-btn" href="/admin/gallary?page={{ prev_page }}&page_size={{ page_size }}">Previous</a>
+                <a class="btn page-btn" href="/admin/gallery?page={{ prev_page }}&page_size={{ page_size }}">Previous</a>
               {% else %}
                 <span class="btn page-btn disabled" aria-disabled="true">Previous</span>
               {% endif %}
@@ -153,7 +153,7 @@
               <span class="page-indicator">Page {{ current_page }} / {{ total_pages }}</span>
 
               {% if has_next %}
-                <a class="btn page-btn" href="/admin/gallary?page={{ next_page }}&page_size={{ page_size }}">Next</a>
+                <a class="btn page-btn" href="/admin/gallery?page={{ next_page }}&page_size={{ page_size }}">Next</a>
               {% else %}
                 <span class="btn page-btn disabled" aria-disabled="true">Next</span>
               {% endif %}

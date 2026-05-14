@@ -37,14 +37,29 @@
                 </tr>
               </thead>
               <tbody>
+                {% set inbox_preview_chars = 220 %}
                 {% for item in messages %}
+                  {% set msg_body = item.message or "" %}
                   <tr>
                     <td class="col-date" data-label="Date">{{ item.created_at }}</td>
                     <td data-label="Name">{{ item.name }}</td>
                     <td class="col-email" data-label="Email">{{ item.email }}</td>
                     <td data-label="Phone">{{ item.phone or "-" }}</td>
                     <td data-label="Subject">{{ item.subject or "-" }}</td>
-                    <td class="col-message" data-label="Message">{{ item.message }}</td>
+                    <td class="col-message{% if msg_body|length > inbox_preview_chars %} col-message-expandable{% endif %}" data-label="Message">
+                      {% if msg_body|length > inbox_preview_chars %}
+                        <details class="inbox-message-details">
+                          <summary class="inbox-message-summary">
+                            <span class="inbox-message-preview">{{ msg_body[:inbox_preview_chars] }}…</span>
+                            <span class="inbox-message-expand-hint">Show full</span>
+                            <span class="inbox-message-collapse-label">Show less</span>
+                          </summary>
+                          <div class="inbox-message-full">{{ msg_body }}</div>
+                        </details>
+                      {% else %}
+                        {{ msg_body }}
+                      {% endif %}
+                    </td>
                   </tr>
                 {% endfor %}
               </tbody>

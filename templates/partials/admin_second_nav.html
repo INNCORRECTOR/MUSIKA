@@ -2,10 +2,22 @@
   <h2 class="admin-nav-title">Admin Pages</h2>
   {% set unread_messages = unread_contact_count|default(0) %}
   {% set unread_subscriptions = unread_subscription_count|default(0) %}
+  {% set unread_admissions = unread_admission_count|default(0) %}
   <ul class="admin-nav-links">
     <li><a class="admin-nav-link {% if admin_active_page == 'event' %}active{% endif %}" href="/admin/events">Event</a></li>
     <li><a class="admin-nav-link {% if admin_active_page == 'artist' %}active{% endif %}" href="/admin/artist">Artist</a></li>
-    <li><a class="admin-nav-link {% if admin_active_page == 'gallery' %}active{% endif %}" href="/admin/gallary">Gallary</a></li>
+    <li><a class="admin-nav-link {% if admin_active_page == 'gallery' %}active{% endif %}" href="/admin/gallery">Gallery</a></li>
+    <li><a class="admin-nav-link {% if admin_active_page == 'admission_options' %}active{% endif %}" href="/admin/admission-options">Admission Setup</a></li>
+    <li>
+      <a class="admin-nav-link admin-nav-link-admissions {% if admin_active_page == 'admissions' %}active{% endif %}" href="/admin/admissions">
+        Admissions
+        {% if unread_admissions > 0 %}
+          <span class="admin-nav-count-badge badge-admissions" title="{{ unread_admissions }} new admission(s)">
+            {{ unread_admissions }}
+          </span>
+        {% endif %}
+      </a>
+    </li>
     <li>
       <a class="admin-nav-link admin-nav-link-inbox {% if admin_active_page == 'inbox' %}active{% endif %}" href="/admin/inbox">
         Inbox

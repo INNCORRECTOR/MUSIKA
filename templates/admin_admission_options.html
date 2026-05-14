@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+
+{% block page_styles %}
+  <link rel="stylesheet" href="/static/pages/auth.css" />
+  <link rel="stylesheet" href="/static/pages/admin_sidebar.css" />
+  <link rel="stylesheet" href="/static/pages/admin_inbox.css" />
+  <link rel="stylesheet" href="/static/pages/admin_admissions.css" />
+  <link rel="stylesheet" href="/static/pages/admin_pages_mobile.css" />
+{% endblock %}
+
+{% block content %}
+  <section class="auth-shell inbox-shell admin-page-mobile-shell">
+    <div class="admin-with-sidebar">
+      {% set admin_active_page = 'admission_options' %}
+      {% include "partials/admin_second_nav.html" %}
+
+      <div class="auth-card inbox-card admin-main-content admission-setup-page">
+        <h1>Admission setup</h1>
+
+        {% if message %}
+          <p class="auth-success">{{ message }}</p>
+        {% endif %}
+        {% if error %}
+          <p class="auth-error">{{ error }}</p>
+        {% endif %}
+        {% if payment_settings_error %}
+          <p class="auth-error">{{ payment_settings_error }}</p>
+        {% endif %}
+
+        {% if payment_settings %}
+          <section class="admission-detail-card admission-options-card admission-payment-settings-card">
+            <h2>Fee payment details</h2>
+            <form
+              method="post"
+              action="/admin/admission-options/payment-settings"
+              enctype="multipart/form-data"
+              class="admission-payment-settings-form"
+            >
+              <div class="admission-payment-bank-grid">
+                <label>
+                  <span>Account holder name</span>
+                  <input type="text" name="account_holder_name" value="{{ payment_settings.account_holder_name or '' }}" autocomplete="name" />
+                </label>
+                <label>
+                  <span>Bank account number</span>
+                  <input type="text" name="bank_account_number" value="{{ payment_settings.bank_account_number or '' }}" inputmode="numeric" autocomplete="off" />
+                </label>
+                <label>
+                  <span>IFSC</span>
+                  <input type="text" name="bank_ifsc" value="{{ payment_settings.bank_ifsc or '' }}" maxlength="20" autocomplete="off" placeholder="e.g. SBIN0001234" />
+                </label>
+                <label>
+                  <span>UPI ID</span>
+                  <input type="text" name="upi_id" value="{{ payment_settings.upi_id or '' }}" placeholder="name@bank" autocomplete="off" />
+                </label>
+              </div>
+
+              <div class="admission-payment-qr-section">
+                <p class="admission-payment-qr-heading">QR code for pay / scan</p>
+                {% if payment_settings.scanner_image_url %}
+                  <div class="admission-payment-scanner-preview">
+                    <span class="admission-payment-preview-label">Current image</span>
+                    <img
+                      class="admission-payment-scanner-img"
+                      src="{{ payment_settings.scanner_image_url }}"
+                      alt="Payment QR code"
+                    />
+                  </div>
+                {% endif %}
+                <label>
+                  <span>{% if payment_settings.scanner_image_url %}Replace QR image{% else %}Upload QR image{% endif %}</span>
+                  <input type="file" name="scanner_image" accept="image/*" />
+                </label>
+              </div>
+
+              <div class="admission-setup-form-actions">
+                <button type="submit" class="btn">Save fee details</button>
+              </div>
+            </form>
+          </section>
+        {% endif %}
+
+        <section class="admission-detail-card admission-options-card">
+          <h3 class="admission-setup-card-title">Add discipline</h3>
+          <form action="/admin/admission-options/disciplines" method="post" class="admission-options-form">
+            <label>
+              <span>Discipline / Course Name</span>
+              <input type="text" name="name" placeholder="Piano, Drums, Vocals..." required />
+            </label>
+            <button type="submit" class="btn">Add discipline</button>
+          </form>
+        </section>
+
+        <section class="admission-options-grid">
+          <article class="admission-detail-card admission-options-card">
+            <h3 class="admission-setup-card-title">Add grade</h3>
+            <form action="/admin/admission-options/grades" method="post" class="admission-options-form">
+              <label>
+                <span>Discipline</span>
+                <select name="discipline_id" required>
+                  <option value="">Select discipline</option>
+                  {% for discipline in disciplines %}
+                    <option value="{{ discipline.id }}">{{ discipline.name }}</option>
+                  {% endfor %}
+                </select>
+              </label>
+              <label>
+                <span>Grade Name</span>
+                <input type="text" name="name" placeholder="Beginner, Grade 1..." required />
+              </label>
+              <label>
+                <span>Sort Order</span>
+                <input type="number" name="sort_order" value="0" />
+              </label>
+              <button type="submit" class="btn">Add grade</button>
+            </form>
+          </article>
+
+          <article class="admission-detail-card admission-options-card">
+            <h3 class="admission-setup-card-title">Add teacher</h3>
+            <form action="/admin/admission-options/teachers" method="post" class="admission-options-form">
+              <label>
+                <span>Discipline</span>
+                <select name="discipline_id" required>
+                  <option value="">Select discipline</option>
+                  {% for discipline in disciplines %}
+                    <option value="{{ discipline.id }}">{{ discipline.name }}</option>
+                  {% endfor %}
+                </select>
+              </label>
+              <label>
+                <span>Teacher Name</span>
+                <input type="text" name="name" placeholder="Teacher name" required />
+              </label>
+              <button type="submit" class="btn">Add teacher</button>
+            </form>
+          </article>
+        </section>
+
+        <section class="inbox-section">
+          <div class="inbox-section-head">
+            <h2>Disciplines</h2>
+          </div>
+          {% if disciplines %}
+            <div class="admission-options-list">
+              {% for discipline in disciplines %}
+                <article class="admission-option-item">
+                  <div class="admission-option-head">
+                    <h3>{{ discipline.name }}</h3>
+                    <form action="/admin/admission-options/disciplines/{{ discipline.id }}/delete" method="post">
+                      <button type="submit" class="admin-delete-text-btn">Delete Discipline</button>
+                    </form>
+                  </div>
+
+                  <div class="admission-option-columns">
+                    <div>
+                      <h4>Grades</h4>
+                      {% set active_grades = discipline.grades|selectattr("is_active")|list %}
+                      {% if active_grades %}
+                        <ul class="admission-option-list">
+                          {% for grade in active_grades %}
+                            <li>
+                              <span>{{ grade.name }}</span>
+                              <form action="/admin/admission-options/grades/{{ grade.id }}/delete" method="post">
+                                <button type="submit" class="admin-delete-text-btn">Delete</button>
+                              </form>
+                            </li>
+                          {% endfor %}
+                        </ul>
+                      {% else %}
+                        <p class="inbox-empty">No grades yet.</p>
+                      {% endif %}
+                    </div>
+
+                    <div>
+                      <h4>Teachers</h4>
+                      {% set active_teachers = discipline.teachers|selectattr("is_active")|list %}
+                      {% if active_teachers %}
+                        <ul class="admission-option-list">
+                          {% for teacher in active_teachers %}
+                            <li>
+                              <span>{{ teacher.name }}</span>
+                              <form action="/admin/admission-options/teachers/{{ teacher.id }}/delete" method="post">
+                                <button type="submit" class="admin-delete-text-btn">Delete</button>
+                              </form>
+                            </li>
+                          {% endfor %}
+                        </ul>
+                      {% else %}
+                        <p class="inbox-empty">No teachers yet.</p>
+                      {% endif %}
+                    </div>
+                  </div>
+                </article>
+              {% endfor %}
+            </div>
+          {% else %}
+            <p class="inbox-empty">No admission options yet. Add a discipline to begin.</p>
+          {% endif %}
+        </section>
+      </div>
+    </div>
+  </section>
+{% endblock %}

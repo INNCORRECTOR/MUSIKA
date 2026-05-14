@@ -8,10 +8,34 @@ import os
 import smtplib
 import ssl
 from email.message import EmailMessage
+from pathlib import Path
+
+from dotenv import load_dotenv
 
 from app.content import BRAND_LOGO_URL, SITE_NAME
 
+# Load .env from project root so SMTP vars work even when the server cwd is not the repo root.
+load_dotenv(Path(__file__).resolve().parent.parent / ".env", override=True)
+
 logger = logging.getLogger(__name__)
+
+
+def _normalize_smtp_password(raw: str) -> str:
+    """Gmail app passwords are 16 chars; Google often shows them as four groups with spaces."""
+    s = (raw or "").strip()
+    if not s:
+        return ""
+    compact = "".join(s.split())
+    if len(compact) == 16 and compact.isalnum():
+        return compact
+    return s
+
+
+def _normalize_from_header(raw: str) -> str:
+    s = (raw or "").strip()
+    if len(s) >= 2 and s[0] == s[-1] and s[0] in {'"', "'"}:
+        s = s[1:-1].strip()
+    return s
 
 
 def _newsletter_welcome_html(site_name: str, logo_url: str) -> str:
@@ -71,6 +95,84 @@ def _newsletter_welcome_html(site_name: str, logo_url: str) -> str:
 </html>"""
 
 
+def _smtp_send_message(msg: EmailMessage) -> tuple[bool, str | None]:
+    """Send a fully built EmailMessage. Returns (True, None) or (False, error_message)."""
+    host = (os.getenv("SMTP_HOST") or "").strip()
+    if not host:
+        return False, "SMTP is not configured (set SMTP_HOST)."
+
+    user = (os.getenv("SMTP_USER") or os.getenv("SMTP_USERNAME") or "").strip()
+    password = _normalize_smtp_password(os.getenv("SMTP_PASSWORD") or "")
+    if not user or not password:
+        return False, "Set SMTP_USER and SMTP_PASSWORD to send email."
+
+    port_str = (os.getenv("SMTP_PORT") or "587").strip()
+    try:
+        port = int(port_str)
+    except ValueError:
+        port = 587
+
+    use_ssl = (os.getenv("SMTP_USE_SSL") or "").strip().lower() in ("1", "true", "yes")
+    use_tls = (os.getenv("SMTP_USE_TLS") or "true").strip().lower() in ("1", "true", "yes")
+
+    to_addr = msg["To"]
+    try:
+        ctx = ssl.create_default_context()
+        if use_ssl:
+            with smtplib.SMTP_SSL(host, port, context=ctx) as smtp:
+                smtp.login(user, password)
+                smtp.send_message(msg)
+        else:
+            with smtplib.SMTP(host, port, timeout=30) as smtp:
+                smtp.ehlo()
+                if use_tls:
+                    smtp.starttls(context=ctx)
+                    smtp.ehlo()
+                smtp.login(user, password)
+                smtp.send_message(msg)
+    except Exception as exc:
+        logger.exception("SMTP failed sending to %s", to_addr)
+        return False, str(exc) or "SMTP send failed."
+
+    return True, None
+
+
+def send_multipart_email(
+    to_address: str,
+    subject: str,
+    body_text: str,
+    body_html: str | None = None,
+) -> tuple[bool, str | None]:
+    """
+    Send HTML + plain multipart email using the same SMTP env vars as the newsletter.
+
+    Returns (True, None) on success, or (False, short_error_message) on missing config or send failure.
+    """
+    to_address = (to_address or "").strip()
+    if not to_address:
+        return False, "Recipient address is missing."
+
+    from_email = _normalize_from_header(
+        os.getenv("NEWSLETTER_FROM_EMAIL") or os.getenv("SMTP_FROM_EMAIL") or os.getenv("SMTP_USER") or ""
+    )
+    if not from_email:
+        return False, "Set NEWSLETTER_FROM_EMAIL or SMTP_FROM_EMAIL (or SMTP_USER)."
+
+    reply_to = (os.getenv("SMTP_REPLY_TO") or "").strip()
+
+    msg = EmailMessage()
+    msg["Subject"] = subject
+    msg["From"] = from_email
+    msg["To"] = to_address
+    if reply_to:
+        msg["Reply-To"] = reply_to
+    msg.set_content(body_text)
+    if body_html:
+        msg.add_alternative(body_html, subtype="html")
+
+    return _smtp_send_message(msg)
+
+
 def send_newsletter_welcome_email(to_address: str) -> None:
     """
     Send a thank-you message to a new (or reactivated) newsletter subscriber.
@@ -90,44 +192,6 @@ def send_newsletter_welcome_email(to_address: str) -> None:
 
     If SMTP_HOST is missing or send fails, logs only (subscription already saved).
     """
-    host = (os.getenv("SMTP_HOST") or "").strip()
-    if not host:
-        logger.warning(
-            "Newsletter welcome email skipped: set SMTP_HOST (e.g. smtp.gmail.com) for (%s)",
-            to_address,
-        )
-        return
-
-    user = (os.getenv("SMTP_USER") or os.getenv("SMTP_USERNAME") or "").strip()
-    password = (os.getenv("SMTP_PASSWORD") or "").strip()
-    if not user or not password:
-        logger.warning(
-            "Newsletter welcome email skipped: set SMTP_USER and SMTP_PASSWORD (%s)",
-            to_address,
-        )
-        return
-
-    port_str = (os.getenv("SMTP_PORT") or "587").strip()
-    try:
-        port = int(port_str)
-    except ValueError:
-        port = 587
-
-    use_ssl = (os.getenv("SMTP_USE_SSL") or "").strip().lower() in ("1", "true", "yes")
-    use_tls = (os.getenv("SMTP_USE_TLS") or "true").strip().lower() in ("1", "true", "yes")
-
-    from_email = (
-        os.getenv("NEWSLETTER_FROM_EMAIL") or os.getenv("SMTP_FROM_EMAIL") or user or ""
-    ).strip()
-    if not from_email:
-        logger.warning(
-            "Newsletter welcome email skipped: set NEWSLETTER_FROM_EMAIL or SMTP_FROM_EMAIL (%s)",
-            to_address,
-        )
-        return
-
-    reply_to = (os.getenv("SMTP_REPLY_TO") or "").strip()
-
     subject = f"Welcome — you have joined the {SITE_NAME} list!"
     body_text = (
         f"Hi there,\n\n"
@@ -142,28 +206,82 @@ def send_newsletter_welcome_email(to_address: str) -> None:
     )
     body_html = _newsletter_welcome_html(SITE_NAME, BRAND_LOGO_URL)
 
-    msg = EmailMessage()
-    msg["Subject"] = subject
-    msg["From"] = from_email
-    msg["To"] = to_address
-    if reply_to:
-        msg["Reply-To"] = reply_to
-    msg.set_content(body_text)
-    msg.add_alternative(body_html, subtype="html")
+    ok, err = send_multipart_email(to_address, subject, body_text, body_html)
+    if not ok:
+        logger.warning(
+            "Newsletter welcome email skipped for %s: %s",
+            to_address,
+            err or "unknown",
+        )
 
-    try:
-        ctx = ssl.create_default_context()
-        if use_ssl:
-            with smtplib.SMTP_SSL(host, port, context=ctx) as smtp:
-                smtp.login(user, password)
-                smtp.send_message(msg)
-        else:
-            with smtplib.SMTP(host, port, timeout=30) as smtp:
-                smtp.ehlo()
-                if use_tls:
-                    smtp.starttls(context=ctx)
-                    smtp.ehlo()
-                smtp.login(user, password)
-                smtp.send_message(msg)
-    except Exception:
-        logger.exception("SMTP failed sending newsletter welcome to %s", to_address)
+
+def send_alert_admission_received(to_address: str) -> None:
+    """
+    Notify the admin inbox when a new admission application is submitted.
+
+    Set ADMIN_ALERT_EMAIL to the address that should receive these alerts.
+    Uses the same SMTP env vars as send_multipart_email. If send fails, logs only.
+    """
+    safe_name = html.escape(SITE_NAME)
+    public_site = (os.getenv("PUBLIC_SITE_URL") or os.getenv("SITE_PUBLIC_URL") or "").strip().rstrip("/")
+    admin_url = f"{public_site}/admin/admissions" if public_site else ""
+
+    body_text = (
+        "Hello,\n\n"
+        "You have a new admission application. Log in to the admin panel (Admissions) to review it.\n\n"
+    )
+    if admin_url:
+        body_text += f"Link: {admin_url}\n\n"
+    body_text += f"— {SITE_NAME}"
+
+    cta_block = ""
+    if public_site:
+        safe_href = html.escape(admin_url, quote=True)
+        cta_block = (
+            f'<table role="presentation" cellspacing="0" cellpadding="0" style="margin:22px 0 0;">'
+            f'<tr><td style="border-radius:8px;background:#111827;">'
+            f'<a href="{safe_href}" style="display:inline-block;padding:12px 22px;font-family:Segoe UI,Helvetica,Arial,sans-serif;'
+            f'font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;">Open admissions</a>'
+            f"</td></tr></table>"
+        )
+
+    subject = f"You have a new admission — {SITE_NAME}"
+
+    body_html = f"""<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f3f4f6;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f3f4f6;">
+    <tr>
+      <td align="center" style="padding:32px 16px;">
+        <table role="presentation" cellspacing="0" cellpadding="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:14px;overflow:hidden;border:1px solid #e5e7eb;">
+          <tr>
+            <td style="padding:32px 28px 28px;font-family:Segoe UI,Helvetica,Arial,sans-serif;font-size:16px;line-height:1.65;color:#1d1d1d;">
+              <p style="margin:0 0 16px;font-size:20px;font-weight:600;color:#111827;">You have a new admission</p>
+              <p style="margin:0 0 16px;">Hello,</p>
+              <p style="margin:0 0 16px;">Someone just submitted an admission application. Review it in the admin panel.</p>
+              {cta_block}
+              <p style="margin:28px 0 0;padding-top:22px;border-top:1px solid #e5e7eb;color:#374151;">
+                <strong style="color:#111827;">{safe_name}</strong>
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:18px 28px 24px;font-family:Segoe UI,Helvetica,Arial,sans-serif;font-size:13px;line-height:1.5;color:#6b7280;text-align:center;background:#f9fafb;border-top:1px solid #e5e7eb;">
+              Automated message · Admissions alert
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>"""
+
+    ok, err = send_multipart_email(to_address, subject, body_text, body_html)
+    if not ok:
+        logger.warning(
+            "Admission alert email skipped for %s: %s",
+            to_address,
+            err or "unknown",
+        )

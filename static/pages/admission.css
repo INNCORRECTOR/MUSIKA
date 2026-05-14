@@ -1,0 +1,262 @@
+@import url("/static/pages/content-page.css");
+
+.main-content {
+  background: #06090f;
+}
+
+.admission-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 140px;
+  gap: 24px;
+  align-items: start;
+  padding: clamp(28px, 5vw, 58px) clamp(16px, 5vw, 64px);
+  background:
+    radial-gradient(circle at 85% 18%, rgba(191, 30, 46, 0.22), transparent 34%),
+    linear-gradient(135deg, #030508 0%, #0d121c 54%, #05080d 100%);
+  border: 1px solid rgba(191, 30, 46, 0.22);
+}
+
+.admission-kicker {
+  margin: 0 0 10px;
+  color: #bf1e2e;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+}
+
+.admission-hero h1 {
+  margin: 0;
+  color: #ffffff;
+  font-size: clamp(2rem, 5vw, 4rem);
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.admission-hero p:last-child {
+  max-width: 620px;
+  margin: 14px 0 0;
+  color: #d1d5db;
+  line-height: 1.6;
+}
+
+.admission-photo-box {
+  min-height: 150px;
+  border: 2px solid rgba(226, 232, 240, 0.75);
+  display: grid;
+  place-items: center;
+  color: #cbd5e1;
+  text-align: center;
+  font-weight: 700;
+  font-size: 0.82rem;
+}
+
+.admission-page {
+  padding: 24px clamp(12px, 4vw, 48px) 40px;
+  background: #06090f;
+}
+
+.admission-card {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: clamp(16px, 3vw, 28px);
+  background:
+    linear-gradient(180deg, rgba(6, 10, 16, 0.97), rgba(4, 8, 13, 0.98)),
+    radial-gradient(circle at 90% 8%, rgba(191, 30, 46, 0.12), transparent 36%);
+  border: 1px solid rgba(191, 30, 46, 0.25);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.32);
+}
+
+.admission-thank-you {
+  text-align: center;
+  padding: clamp(24px, 5vw, 48px) clamp(16px, 3vw, 32px);
+}
+
+.admission-thank-you-title {
+  margin: 0 0 12px;
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  color: #ffffff;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.admission-thank-you-text {
+  margin: 0 auto;
+  max-width: 520px;
+  color: #d1d5db;
+  font-size: 1.05rem;
+  line-height: 1.65;
+}
+
+.admission-form {
+  display: grid;
+  gap: 18px;
+}
+
+.admission-form fieldset {
+  margin: 0;
+  padding: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 10px;
+  background:
+    linear-gradient(180deg, rgba(8, 13, 22, 0.62), rgba(5, 9, 15, 0.72));
+}
+
+.admission-form fieldset:focus-within {
+  border-color: rgba(191, 30, 46, 0.48);
+  box-shadow: 0 0 0 1px rgba(191, 30, 46, 0.18);
+}
+
+.admission-form legend {
+  padding: 0 8px;
+  color: #bf1e2e;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  font-size: 0.78rem;
+}
+
+.admission-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.admission-grid-four {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.admission-contact-lead {
+  margin: 0 0 14px;
+  padding: 0;
+  color: #9ca3af;
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+.admission-phone-error {
+  margin-top: 6px;
+}
+
+.admission-field {
+  display: grid;
+  gap: 7px;
+}
+
+.admission-field span {
+  color: #dbe3f1;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.admission-field small {
+  color: #9ca3af;
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.admission-field-error {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 6px;
+  color: #fecaca;
+  background: rgba(239, 68, 68, 0.14);
+  border: 1px solid rgba(239, 68, 68, 0.38);
+  font-size: 0.8rem;
+  line-height: 1.35;
+}
+
+.admission-field input,
+.admission-field select,
+.admission-field textarea {
+  width: 100%;
+  padding: 12px 13px;
+  background: linear-gradient(180deg, rgba(10, 15, 24, 0.95), rgba(7, 11, 18, 0.96));
+  border: 1px solid rgba(148, 163, 184, 0.32);
+  border-radius: 5px;
+  color: #f8fafc;
+  outline: none;
+  min-height: 46px;
+}
+
+.admission-field select {
+  color: #f8fafc;
+  cursor: pointer;
+  color-scheme: dark;
+}
+
+.admission-field select option {
+  color: #111827;
+  background: #ffffff;
+}
+
+.admission-field select option:disabled {
+  color: #6b7280;
+}
+
+.admission-field textarea {
+  resize: vertical;
+}
+
+.admission-field input:focus,
+.admission-field select:focus,
+.admission-field textarea:focus {
+  border-color: rgba(191, 30, 46, 0.9);
+  box-shadow: 0 0 0 1px rgba(191, 30, 46, 0.38);
+}
+
+.admission-course-section {
+  border-color: rgba(191, 30, 46, 0.36);
+  background:
+    radial-gradient(circle at 92% 12%, rgba(191, 30, 46, 0.16), transparent 32%),
+    linear-gradient(180deg, rgba(9, 14, 23, 0.78), rgba(5, 9, 15, 0.88));
+}
+
+.admission-course-section legend {
+  color: #f43f5e;
+}
+
+.form-full {
+  grid-column: 1 / -1;
+}
+
+.admission-flash {
+  margin: 0 0 16px;
+  padding: 11px 13px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+
+.admission-flash-success {
+  color: #d1fae5;
+  background: rgba(16, 185, 129, 0.14);
+  border: 1px solid rgba(16, 185, 129, 0.38);
+}
+
+.admission-flash-error {
+  color: #fecaca;
+  background: rgba(239, 68, 68, 0.14);
+  border: 1px solid rgba(239, 68, 68, 0.38);
+}
+
+.admission-submit {
+  justify-self: start;
+  padding: 12px 22px;
+}
+
+@media (max-width: 820px) {
+  .admission-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .admission-photo-box {
+    max-width: 160px;
+  }
+
+  .admission-grid,
+  .admission-grid-four {
+    grid-template-columns: 1fr;
+  }
+}

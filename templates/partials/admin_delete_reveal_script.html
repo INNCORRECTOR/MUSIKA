@@ -1,0 +1,52 @@
+<script>
+  (function () {
+    function closePanel(wrap) {
+      if (!wrap) return;
+      var panel = wrap.querySelector(".admin-delete-confirm-panel");
+      var openBtn = wrap.querySelector(".admin-delete-open-btn");
+      var input = wrap.querySelector('input[name="delete_confirmation"]');
+      if (panel) panel.setAttribute("hidden", "");
+      if (openBtn) openBtn.removeAttribute("hidden");
+      if (input) input.value = "";
+    }
+
+    function closeAllExcept(except) {
+      document.querySelectorAll("[data-admission-delete]").forEach(function (w) {
+        if (except && w === except) return;
+        closePanel(w);
+      });
+    }
+
+    function openPanel(wrap) {
+      closeAllExcept(wrap);
+      var openBtn = wrap.querySelector(".admin-delete-open-btn");
+      var panel = wrap.querySelector(".admin-delete-confirm-panel");
+      var input = wrap.querySelector('input[name="delete_confirmation"]');
+      if (openBtn) openBtn.setAttribute("hidden", "");
+      if (panel) panel.removeAttribute("hidden");
+      if (input) {
+        input.value = "";
+        input.focus();
+      }
+    }
+
+    document.querySelectorAll("[data-admission-delete]").forEach(function (wrap) {
+      var openBtn = wrap.querySelector(".admin-delete-open-btn");
+      var cancel = wrap.querySelector(".admin-delete-cancel-x");
+      if (openBtn) {
+        openBtn.addEventListener("click", function () {
+          openPanel(wrap);
+        });
+      }
+      if (cancel) {
+        cancel.addEventListener("click", function () {
+          closePanel(wrap);
+        });
+      }
+    });
+
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") closeAllExcept(null);
+    });
+  })();
+</script>

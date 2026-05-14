@@ -17,7 +17,7 @@
           <h1>{{ genre.name }} Uploads</h1>
           <p>View and manage all images in this category.</p>
           <div class="admin-gallery-actions">
-            <a class="btn admin-back-link" href="/admin/gallary">Back to Categories</a>
+            <a class="btn admin-back-link" href="/admin/gallery">Back to Categories</a>
           </div>
         </div>
 
@@ -45,7 +45,7 @@
                   {% endif %}
                   <form
                     method="post"
-                    action="/admin/dashboard/images/{{ image.id }}/delete?return_to=/admin/gallary/categories/{{ genre.slug }}?page={{ current_page }}%26page_size={{ page_size }}"
+                    action="/admin/dashboard/images/{{ image.id }}/delete?return_to=/admin/gallery/categories/{{ genre.slug }}?page={{ current_page }}%26page_size={{ page_size }}"
                   >
                     <button type="submit" class="delete-btn">Delete Image</button>
                   </form>
@@ -55,7 +55,7 @@
 
             <div class="pagination-row">
               {% if has_prev %}
-                <a class="btn page-btn" href="/admin/gallary/categories/{{ genre.slug }}?page={{ prev_page }}&page_size={{ page_size }}">
+                <a class="btn page-btn" href="/admin/gallery/categories/{{ genre.slug }}?page={{ prev_page }}&page_size={{ page_size }}">
                   Previous
                 </a>
               {% else %}
@@ -65,7 +65,7 @@
               <span class="page-indicator">Page {{ current_page }} / {{ total_pages }}</span>
 
               {% if has_next %}
-                <a class="btn page-btn" href="/admin/gallary/categories/{{ genre.slug }}?page={{ next_page }}&page_size={{ page_size }}">
+                <a class="btn page-btn" href="/admin/gallery/categories/{{ genre.slug }}?page={{ next_page }}&page_size={{ page_size }}">
                   Next
                 </a>
               {% else %}

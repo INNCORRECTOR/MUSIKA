@@ -52,6 +52,11 @@
   padding-right: 2.2rem;
 }
 
+.admin-nav-link-admissions {
+  position: relative;
+  padding-right: 2.2rem;
+}
+
 .admin-nav-link-subscribers {
   position: relative;
   padding-right: 2.2rem;
@@ -84,6 +89,11 @@
   box-shadow: 0 4px 12px rgba(5, 150, 105, 0.35);
 }
 
+.badge-admissions {
+  background: #c2410c;
+  box-shadow: 0 4px 12px rgba(194, 65, 12, 0.35);
+}
+
 .admin-nav-link:hover {
   background: #f8fafc;
   border-color: #94a3b8;
@@ -106,6 +116,10 @@
 
 .admin-nav-link.active .admin-nav-count-badge.badge-subscribers {
   background: #10b981;
+}
+
+.admin-nav-link.active .admin-nav-count-badge.badge-admissions {
+  background: #fb923c;
 }
 
 .admin-nav-logout-form {

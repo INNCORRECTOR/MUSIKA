@@ -102,7 +102,7 @@
                       <path d="M12 7v5l3.5 2.5"/>
                     </svg>
                   </span>
-                  <p class="event-time">{{ event.event_date.strftime("%B %d") }} @ {{ event.event_time.strftime("%I:%M %p") }}</p>
+                  <p class="event-time">{{ event.event_date.strftime("%B %d, %Y") }} @ {{ event.event_time.strftime("%I:%M %p") }}</p>
                 </div>
                 <h3>{{ event.title }}</h3>
                 {% if event.location or event.state %}
@@ -148,7 +148,7 @@
                       <path d="M12 7v5l3.5 2.5"/>
                     </svg>
                   </span>
-                  <p class="event-time">{{ event.event_date.strftime("%B %d") }} @ {{ event.event_time.strftime("%I:%M %p") }}</p>
+                  <p class="event-time">{{ event.event_date.strftime("%B %d, %Y") }} @ {{ event.event_time.strftime("%I:%M %p") }}</p>
                 </div>
                 <h3>{{ event.title }}</h3>
                 {% if event.location or event.state %}

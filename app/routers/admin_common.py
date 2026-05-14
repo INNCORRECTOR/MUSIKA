@@ -1,5 +1,5 @@
 import re
-from urllib.parse import unquote, urlparse
+from urllib.parse import quote, unquote, urlparse
 
 import jwt
 from fastapi import Request, status
@@ -53,3 +53,21 @@ def normalize_whatsapp_input(value: str | None) -> str | None:
     if not digits:
         return raw
     return f"https://wa.me/{digits}"
+
+
+def whatsapp_me_url_from_phone(phone: str | None, *, text: str | None = None) -> str | None:
+    """Build https://wa.me/<digits> for WhatsApp Web/App. 10-digit Indian mobiles get prefix 91."""
+    raw = (phone or "").strip()
+    if not raw:
+        return None
+    digits = re.sub(r"\D", "", raw)
+    if not digits:
+        return None
+    if len(digits) == 10:
+        digits = "91" + digits
+    if len(digits) < 10:
+        return None
+    base = f"https://wa.me/{digits}"
+    if text:
+        return f"{base}?text={quote(text)}"
+    return base

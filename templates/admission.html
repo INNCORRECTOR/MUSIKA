@@ -1,0 +1,458 @@
+{% extends "base.html" %}
+
+{% block page_styles %}
+  <link rel="stylesheet" href="/static/pages/admission.css" />
+{% endblock %}
+
+{% block content %}
+  <section class="admission-hero" aria-labelledby="admission-title">
+    <div class="admission-hero-copy">
+      <p class="admission-kicker">Application Form</p>
+      <h1 id="admission-title">Apply to MUSIKA</h1>
+      <p>
+        Fill the admission details below. Our team will review your application and contact you
+        with the next steps.
+      </p>
+    </div>
+    <!-- <div class="admission-photo-box" aria-hidden="true">
+      <span>Passport<br />Photo</span>
+    </div> -->
+  </section>
+
+  <section class="admission-page" aria-label="Admission form">
+    <article class="admission-card">
+      {% if message %}
+        <div class="admission-thank-you" role="status" aria-live="polite">
+          <h2 class="admission-thank-you-title">Thank you</h2>
+          <p class="admission-thank-you-text">{{ message }}</p>
+        </div>
+      {% else %}
+      {% if error %}
+        <p class="admission-flash admission-flash-error">{{ error }}</p>
+      {% endif %}
+
+      <form action="/admission" method="post" enctype="multipart/form-data" class="admission-form" id="admission-form">
+        <fieldset>
+          <legend>Personal Details</legend>
+          <div class="admission-grid">
+            <label class="admission-field">
+              <span>First Name</span>
+              <input type="text" name="first_name" autocomplete="given-name" required />
+            </label>
+            <label class="admission-field">
+              <span>Last Name</span>
+              <input type="text" name="last_name" autocomplete="family-name" required />
+            </label>
+            <label class="admission-field">
+              <span>Gender</span>
+              <select name="gender" required>
+                <option value="">Select gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+              </select>
+            </label>
+            <label class="admission-field">
+              <span>Date of Birth</span>
+              <input type="date" name="date_of_birth" required />
+            </label>
+            <label class="admission-field">
+              <span>Email</span>
+              <input type="email" name="email" autocomplete="email" inputmode="email" required />
+            </label>
+            <label class="admission-field form-full">
+              <span>Passport Photo</span>
+              <input type="file" name="passport_photo" id="passport-photo-input" accept="image/*" />
+              <small>Upload a passport-size photo under 1 MB. Photo will be cropped to passport size if needed.</small>
+              <p class="admission-field-error" id="passport-photo-error" hidden></p>
+            </label>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Contact Numbers</legend>
+          <p class="admission-contact-lead">Indian mobile numbers only. Enter your 10-digit number.</p>
+          <div class="admission-grid admission-grid-four">
+            <div class="admission-field admission-phone-field">
+              <span id="contact-1-label">Contact 1</span>
+              <input
+                type="tel"
+                name="contact_1"
+                id="contact-1-input"
+                inputmode="numeric"
+                autocomplete="tel-national"
+                autocorrect="off"
+                spellcheck="false"
+                maxlength="10"
+                pattern="[6-9][0-9]{9}"
+                title="10-digit Indian mobile number"
+                required
+                aria-labelledby="contact-1-label"
+                aria-describedby="contact-1-error"
+              />
+              <p class="admission-field-error admission-phone-error" id="contact-1-error" role="alert" hidden></p>
+            </div>
+            <div class="admission-field admission-phone-field">
+              <span id="contact-2-label">Contact 2</span>
+              <input
+                type="tel"
+                name="contact_2"
+                id="contact-2-input"
+                inputmode="numeric"
+                autocomplete="tel-national"
+                autocorrect="off"
+                spellcheck="false"
+                maxlength="10"
+                pattern="[6-9][0-9]{9}"
+                title="10-digit Indian mobile number"
+                aria-labelledby="contact-2-label"
+                aria-describedby="contact-2-error"
+              />
+              <p class="admission-field-error admission-phone-error" id="contact-2-error" role="alert" hidden></p>
+            </div>
+            <div class="admission-field admission-phone-field">
+              <span id="contact-3-label">Contact 3</span>
+              <input
+                type="tel"
+                name="contact_3"
+                id="contact-3-input"
+                inputmode="numeric"
+                autocomplete="tel-national"
+                autocorrect="off"
+                spellcheck="false"
+                maxlength="10"
+                pattern="[6-9][0-9]{9}"
+                title="10-digit Indian mobile number"
+                aria-labelledby="contact-3-label"
+                aria-describedby="contact-3-error"
+              />
+              <p class="admission-field-error admission-phone-error" id="contact-3-error" role="alert" hidden></p>
+            </div>
+            <div class="admission-field admission-phone-field">
+              <span id="contact-4-label">Contact 4</span>
+              <input
+                type="tel"
+                name="contact_4"
+                id="contact-4-input"
+                inputmode="numeric"
+                autocomplete="tel-national"
+                autocorrect="off"
+                spellcheck="false"
+                maxlength="10"
+                pattern="[6-9][0-9]{9}"
+                title="10-digit Indian mobile number"
+                aria-labelledby="contact-4-label"
+                aria-describedby="contact-4-error"
+              />
+              <p class="admission-field-error admission-phone-error" id="contact-4-error" role="alert" hidden></p>
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Guardian Details</legend>
+          <div class="admission-grid">
+            <label class="admission-field">
+              <span>Mother / Father / Guardian / Self</span>
+              <input type="text" name="guardian_name" />
+            </label>
+            <label class="admission-field">
+              <span>Relation</span>
+              <input type="text" name="guardian_relation" placeholder="Father, Mother, Self..." />
+            </label>
+            <label class="admission-field form-full">
+              <span>Occupation</span>
+              <input type="text" name="guardian_occupation" />
+            </label>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Address & Other Details</legend>
+          <div class="admission-grid">
+            <label class="admission-field form-full">
+              <span>Address</span>
+              <textarea name="address_line" rows="3"></textarea>
+            </label>
+            <label class="admission-field">
+              <span>City</span>
+              <input type="text" name="city" required />
+            </label>
+            <label class="admission-field">
+              <span>State</span>
+              <input type="text" name="state_value" />
+            </label>
+            <label class="admission-field">
+              <span>Pin Code</span>
+              <input type="text" name="pin_code" inputmode="numeric" />
+            </label>
+            <label class="admission-field form-full">
+              <span>Any Other Special Remarks</span>
+              <textarea name="special_remarks" rows="3"></textarea>
+            </label>
+          </div>
+        </fieldset>
+
+        <fieldset class="admission-course-section">
+          <legend>Course Details</legend>
+          <div class="admission-grid">
+            <label class="admission-field">
+              <span>Discipline</span>
+              <select name="discipline" id="admission-discipline">
+                <option value="">Select course</option>
+                {% for option in admission_options %}
+                  <option value="{{ option.name }}" data-discipline-id="{{ option.id }}">{{ option.name }}</option>
+                {% endfor %}
+                {% if not admission_options %}
+                  <option value="" disabled>No courses configured yet</option>
+                {% endif %}
+              </select>
+            </label>
+            <label class="admission-field">
+              <span>Grade</span>
+              <select name="grade" id="admission-grade">
+                <option value="">Select grade</option>
+              </select>
+            </label>
+            <label class="admission-field">
+              <span>Affiliated</span>
+              <select name="affiliated">
+                <option value="">Select affiliation</option>
+                <option value="Rock school London">Rock school London</option>
+                <option value="Trinity London">Trinity London</option>
+              </select>
+            </label>
+            <label class="admission-field">
+              <span>Teacher</span>
+              <select name="preferred_teacher" id="admission-teacher">
+                <option value="">Select teacher</option>
+              </select>
+            </label>
+          </div>
+        </fieldset>
+
+        <button type="submit" class="btn admission-submit">Submit Application</button>
+      </form>
+      {% endif %}
+    </article>
+  </section>
+  <script>
+    (function () {
+      const options = {{ admission_options|tojson }};
+      const form = document.getElementById("admission-form");
+      const disciplineSelect = document.getElementById("admission-discipline");
+      const gradeSelect = document.getElementById("admission-grade");
+      const teacherSelect = document.getElementById("admission-teacher");
+      const passportInput = document.getElementById("passport-photo-input");
+      const passportError = document.getElementById("passport-photo-error");
+      const maxPassportBytes = 1 * 1024 * 1024;
+      const minPassportSide = 300;
+
+      const phoneInputs = [
+        { input: document.getElementById("contact-1-input"), error: document.getElementById("contact-1-error"), required: true },
+        { input: document.getElementById("contact-2-input"), error: document.getElementById("contact-2-error"), required: false },
+        { input: document.getElementById("contact-3-input"), error: document.getElementById("contact-3-error"), required: false },
+        { input: document.getElementById("contact-4-input"), error: document.getElementById("contact-4-error"), required: false },
+      ];
+
+      const PHONE_MSG = {
+        required: "Mobile number is required.",
+        short: "Enter all 10 digits of the mobile number.",
+        long: "Enter a 10-digit Indian mobile number (extra digits detected).",
+        start: "Indian mobile numbers start with 6, 7, 8, or 9.",
+      };
+
+      function digitsOnly(value) {
+        return String(value || "").replace(/\D/g, "");
+      }
+
+      function validateIndianMobileDigits(digits, required) {
+        if (!digits.length) {
+          return required ? PHONE_MSG.required : "";
+        }
+        if (digits.length < 10) {
+          return PHONE_MSG.short;
+        }
+        if (digits.length > 10) {
+          return PHONE_MSG.long;
+        }
+        if (!/^[6-9]/.test(digits)) {
+          return PHONE_MSG.start;
+        }
+        return "";
+      }
+
+      function setPhoneError(errorEl, message) {
+        if (!errorEl) return;
+        if (message) {
+          errorEl.textContent = message;
+          errorEl.hidden = false;
+        } else {
+          errorEl.textContent = "";
+          errorEl.hidden = true;
+        }
+      }
+
+      function normalizePhoneInputOnType(event) {
+        const el = event.target;
+        let d = digitsOnly(el.value);
+        if (d.length >= 12 && d.startsWith("91")) {
+          d = d.slice(2);
+        } else if (d.length >= 11 && d.startsWith("0")) {
+          d = d.slice(1);
+        }
+        d = d.slice(0, 10);
+        if (el.value !== d) {
+          el.value = d;
+        }
+      }
+
+      function validateOnePhone(row) {
+        const el = row.input;
+        const errEl = row.error;
+        if (!el) return true;
+        const digits = digitsOnly(el.value);
+        const msg = validateIndianMobileDigits(digits, row.required);
+        setPhoneError(errEl, msg);
+        return !msg;
+      }
+
+      function validateAllPhones() {
+        let ok = true;
+        phoneInputs.forEach((row) => {
+          const rowOk = validateOnePhone(row);
+          if (!rowOk) {
+            ok = false;
+          }
+        });
+        return ok;
+      }
+
+      phoneInputs.forEach((row) => {
+        if (!row.input) return;
+        row.input.addEventListener("input", normalizePhoneInputOnType);
+        row.input.addEventListener("blur", function () {
+          validateOnePhone(row);
+        });
+      });
+
+      function fillSelect(select, placeholder, items) {
+        select.innerHTML = "";
+        const placeholderOption = document.createElement("option");
+        placeholderOption.value = "";
+        placeholderOption.textContent = placeholder;
+        select.appendChild(placeholderOption);
+
+        items.forEach((item) => {
+          const option = document.createElement("option");
+          option.value = item.name;
+          option.textContent = item.name;
+          select.appendChild(option);
+        });
+      }
+
+      function updateDependentOptions() {
+        const selected = options.find((item) => item.name === disciplineSelect.value);
+        fillSelect(gradeSelect, "Select grade", selected ? selected.grades : []);
+        fillSelect(teacherSelect, "Select teacher", selected ? selected.teachers : []);
+      }
+
+      if (disciplineSelect && gradeSelect && teacherSelect) {
+        disciplineSelect.addEventListener("change", updateDependentOptions);
+        updateDependentOptions();
+      }
+
+      function showPassportError(message) {
+        if (!passportError) return;
+        passportError.textContent = message;
+        passportError.hidden = false;
+      }
+
+      function clearPassportError() {
+        if (!passportError) return;
+        passportError.textContent = "";
+        passportError.hidden = true;
+      }
+
+      function readImageDimensions(file) {
+        return new Promise((resolve, reject) => {
+          const image = new Image();
+          const objectUrl = URL.createObjectURL(file);
+
+          image.onload = function () {
+            URL.revokeObjectURL(objectUrl);
+            resolve({ width: image.naturalWidth, height: image.naturalHeight });
+          };
+
+          image.onerror = function () {
+            URL.revokeObjectURL(objectUrl);
+            reject(new Error("invalid image"));
+          };
+
+          image.src = objectUrl;
+        });
+      }
+
+      async function validatePassportPhoto({ clearInvalid = false } = {}) {
+        if (!passportInput || !passportInput.files || passportInput.files.length === 0) {
+          clearPassportError();
+          return true;
+        }
+
+        const file = passportInput.files[0];
+        if (!file.type || !file.type.startsWith("image/")) {
+          showPassportError("Please upload an image file.");
+          if (clearInvalid) passportInput.value = "";
+          return false;
+        }
+
+        if (file.size > maxPassportBytes) {
+          showPassportError("Please upload a passport photo less than 1 MB.");
+          if (clearInvalid) passportInput.value = "";
+          return false;
+        }
+
+        try {
+          const dimensions = await readImageDimensions(file);
+          if (Math.min(dimensions.width, dimensions.height) < minPassportSide) {
+            showPassportError("Passport photo is too small. Please upload a clearer image.");
+            if (clearInvalid) passportInput.value = "";
+            return false;
+          }
+        } catch (error) {
+          showPassportError("Please upload a valid image file.");
+          if (clearInvalid) passportInput.value = "";
+          return false;
+        }
+
+        clearPassportError();
+        return true;
+      }
+
+      if (passportInput) {
+        passportInput.addEventListener("change", function () {
+          validatePassportPhoto({ clearInvalid: true });
+        });
+      }
+
+      if (form) {
+        form.addEventListener("submit", async function (event) {
+          event.preventDefault();
+          if (!validateAllPhones()) {
+            const firstBad = phoneInputs.find((row) => {
+              if (!row.input) return false;
+              const digits = digitsOnly(row.input.value);
+              return !!validateIndianMobileDigits(digits, row.required);
+            });
+            if (firstBad && firstBad.input) {
+              firstBad.input.focus();
+            }
+            return;
+          }
+          const isPassportValid = await validatePassportPhoto({ clearInvalid: true });
+          if (!isPassportValid) return;
+          form.submit();
+        });
+      }
+    })();
+  </script>
+{% endblock %}

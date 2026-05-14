@@ -20,8 +20,10 @@
     <main class="course-content">
       <nav class="course-mode-tabs" aria-label="Course fee modes">
         <a class="course-tab {% if selected_mode == 'offline' %}active{% endif %}" href="/course?mode=offline" data-mode-tab="offline">Offline</a>
-        <a class="course-tab {% if selected_mode == 'online' %}active{% endif %}" href="/course?mode=online" data-mode-tab="online">Online</a>
-      </nav>
+         <a class="course-tab {% if selected_mode == 'online' %}active{% endif %}" href="/course?mode=online" data-mode-tab="online">Online</a>
+         <a class="course-tab" href="/admission">Admission</a>
+        
+        </nav>
 
       <div class="course-layout">
         <section class="course-left-pane" id="course-fee-content" data-current-mode="{{ selected_mode }}">

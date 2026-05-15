@@ -30,6 +30,9 @@ except ValueError:
     UPLOAD_WEBP_METHOD = 4
 UPLOAD_WEBP_METHOD = max(0, min(6, UPLOAD_WEBP_METHOD))
 
+# Single payment QR object in S3 (overwritten on each admin upload).
+SCANNER_OBJECT_KEY = "uploads/payment.webp"
+
 
 class UploadValidationError(Exception):
     pass
@@ -112,10 +115,18 @@ def _build_s3_client(s3_config):
     )
 
 
-def _upload_prepared_image_body(upload_body, upload_content_type: str, file_ext: str, s3_config):
+def _upload_prepared_image_body(
+    upload_body,
+    upload_content_type: str,
+    file_ext: str,
+    s3_config,
+    *,
+    object_key: str | None = None,
+):
     _require_s3_config(s3_config)
     s3_client = _build_s3_client(s3_config)
-    object_key = f"uploads/{uuid4().hex}{file_ext}"
+    if object_key is None:
+        object_key = f"uploads/{uuid4().hex}{file_ext}"
 
     try:
         upload_body.seek(0)
@@ -187,6 +198,54 @@ def upload_image_and_get_url(file, s3_config):
         upload_content_type = WEBP_CONTENT_TYPE
 
     return _upload_prepared_image_body(upload_body, upload_content_type, file_ext, s3_config)
+
+
+def upload_scanner_image_and_get_url(file, s3_config):
+    """Payment QR upload: always stored as uploads/payment.webp (stable public URL)."""
+    if not file.content_type or not file.content_type.startswith("image/"):
+        raise UploadValidationError("Scanner image must be an image file.")
+
+    _require_s3_config(s3_config)
+
+    raw = file.file.read()
+    try:
+        file.file.seek(0)
+    except OSError:
+        pass
+
+    if not raw:
+        raise UploadValidationError("Scanner image is empty.")
+
+    filename = file.filename or ""
+    content_type = file.content_type
+
+    if _is_svg_upload(content_type, filename, raw):
+        raise UploadValidationError("Scanner QR must be a regular photo (JPEG or PNG), not SVG.")
+
+    q = max(1, min(100, WEBP_QUALITY))
+    try:
+        webp_bytes = _raster_bytes_to_webp(
+            raw,
+            quality=q,
+            method=UPLOAD_WEBP_METHOD,
+            max_edge=UPLOAD_MAX_IMAGE_EDGE,
+        )
+    except UnidentifiedImageError as exc:
+        raise UploadValidationError(
+            "Could not read scanner image. Upload JPEG, PNG, GIF, or WebP."
+        ) from exc
+    except OSError as exc:
+        raise UploadValidationError(f"Could not process scanner image: {exc}") from exc
+    except Exception as exc:
+        raise UploadValidationError("Could not convert scanner image to WebP.") from exc
+
+    return _upload_prepared_image_body(
+        io.BytesIO(webp_bytes),
+        WEBP_CONTENT_TYPE,
+        ".webp",
+        s3_config,
+        object_key=SCANNER_OBJECT_KEY,
+    )
 
 
 def _passport_photo_bytes_to_webp(raw: bytes) -> bytes:

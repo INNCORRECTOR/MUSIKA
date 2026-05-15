@@ -49,6 +49,7 @@ from app.services.s3_upload import (
     delete_image_by_key,
     upload_image_and_get_url,
     upload_passport_photo_and_get_url,
+    upload_scanner_image_and_get_url,
 )
 from app.routers.pages import load_admission_options
 
@@ -1174,7 +1175,7 @@ def admin_save_admission_payment_settings(
 
     if scanner_image and scanner_image.filename:
         try:
-            new_key, _, public_url = upload_image_and_get_url(scanner_image, get_s3_config())
+            new_key, _, public_url = upload_scanner_image_and_get_url(scanner_image, get_s3_config())
         except UploadValidationError as exc:
             return redirect_err(str(exc))
         except UploadServiceError as exc:

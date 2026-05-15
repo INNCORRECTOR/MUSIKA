@@ -7,9 +7,9 @@ from passlib.context import CryptContext
 
 pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 
-JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "replace_with_long_random_secret")
+JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
 JWT_ALGORITHM = "HS256"
-JWT_EXP_MINUTES = int(os.getenv("JWT_EXP_MINUTES", "720"))
+JWT_EXP_MINUTES = int(os.getenv("JWT_EXP_MINUTES"))
 
 
 def hash_password(password: str) -> bytes:

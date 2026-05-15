@@ -2,6 +2,84 @@
 
 {% block page_styles %}
   <link rel="stylesheet" href="/static/pages/auth.css" />
+  <style>
+    .admin-password-field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    .admin-password-input-wrap {
+      display: flex;
+      align-items: stretch;
+      width: 100%;
+      border: 1px solid #cfd6e3;
+      border-radius: 8px;
+      background: #ffffff;
+      overflow: hidden;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .admin-password-input-wrap:focus-within {
+      border-color: #182233;
+      box-shadow: 0 0 0 3px rgba(24, 34, 51, 0.12);
+    }
+
+    .admin-password-input-wrap input {
+      flex: 1;
+      min-width: 0;
+      margin: 0;
+      border: 0 !important;
+      border-radius: 0 !important;
+      padding: 0.7rem 0.75rem 0.7rem 0.8rem !important;
+      font: inherit;
+      background: transparent;
+    }
+
+    .admin-password-input-wrap input::placeholder {
+      color: #94a3b8;
+    }
+
+    /* Override .auth-form button — keep this distinct from submit */
+    .auth-form .admin-password-toggle {
+      flex-shrink: 0;
+      align-self: stretch;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0;
+      padding: 0 1rem;
+      min-width: 4.25rem;
+      border: 0;
+      border-radius: 0 !important;
+      border-left: 1px solid #e4e8f0;
+      background: #f8fafc !important;
+      color: #334155 !important;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      opacity: 1 !important;
+      transition: background 0.12s ease, color 0.12s ease;
+    }
+
+    .auth-form .admin-password-toggle:hover {
+      background: #f1f5f9 !important;
+      color: #182233 !important;
+      opacity: 1 !important;
+    }
+
+    .auth-form .admin-password-toggle:focus-visible {
+      outline: 2px solid #182233;
+      outline-offset: -2px;
+      z-index: 1;
+    }
+
+    .auth-form .admin-password-toggle[aria-pressed="true"] {
+      background: #eef2f6 !important;
+      color: #182233 !important;
+    }
+  </style>
 {% endblock %}
 
 {% block content %}
@@ -18,11 +96,44 @@
         <label for="email">Admin Email</label>
         <input id="email" name="email" type="email" required />
 
-        <label for="password">Password</label>
-        <input id="password" name="password" type="password" required />
+        <div class="admin-password-field">
+          <label for="password">Password</label>
+          <div class="admin-password-input-wrap">
+            <input
+              id="password"
+              name="password"
+              type="password"
+              autocomplete="current-password"
+              required
+            />
+            <button
+              type="button"
+              class="admin-password-toggle"
+              aria-pressed="false"
+              aria-controls="password"
+              aria-label="Show password"
+            >
+              Show
+            </button>
+          </div>
+        </div>
 
         <button type="submit">Login as Admin</button>
       </form>
     </div>
   </section>
+  <script>
+    (function () {
+      var input = document.getElementById("password");
+      var toggle = document.querySelector(".admin-password-toggle");
+      if (!input || !toggle) return;
+      toggle.addEventListener("click", function () {
+        var visible = input.type === "text";
+        input.type = visible ? "password" : "text";
+        toggle.textContent = visible ? "Show" : "Hide";
+        toggle.setAttribute("aria-pressed", visible ? "false" : "true");
+        toggle.setAttribute("aria-label", visible ? "Show password" : "Hide password");
+      });
+    })();
+  </script>
 {% endblock %}

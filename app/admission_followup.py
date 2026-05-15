@@ -121,7 +121,7 @@ def build_admission_followup_email(
     if ps_top is not None and (ps_top.scanner_image_url or "").strip():
         plain_lines.extend(
             [
-                "Pay to scan — UPI / QR (image in HTML email, or open this link):",
+                "Scan to pay — UPI / QR (image in HTML email, or open this link):",
                 ps_top.scanner_image_url.strip(),
                 "",
             ]
@@ -180,103 +180,110 @@ def build_admission_followup_email(
     plain = "\n".join(plain_lines)
 
     html_parts: list[str] = [
-        f'<p style="margin:0 0 14px;font-size:17px;">Hi {safe_first},</p>',
+        f'<p style="margin:0 0 18px;font-size:18px;font-weight:700;color:#FFFFFF;">Hi {safe_first},</p>',
     ]
     if _payment_settings_has_public_details(payment_settings):
         ps = payment_settings
         if _payment_settings_has_bank_or_upi_text(ps):
             html_parts.append(
-                '<p style="margin:16px 0 10px;padding:12px 16px;background:linear-gradient(135deg,#fffbeb,#fef3c7);'
-                "border-radius:10px;border-left:5px solid #f59e0b;font-size:22px;font-weight:900;color:#92400e;"
-                'letter-spacing:-0.02em;">Fee payment</p>'
+                '<div style="margin:0 0 18px;padding:14px 18px;background:linear-gradient(135deg,#2a0a12,#3a0d18);'
+                'border-left:5px solid #E11D48;border-radius:12px;">'
+                '<span style="font-size:24px;font-weight:900;letter-spacing:-0.02em;color:#FFFFFF;">Fee payment</span></div>'
             )
             html_parts.append(
-                '<p style="margin:0 0 14px;padding:0 4px;font-size:17px;font-weight:700;color:#1e293b;">'
+                '<p style="margin:0 0 18px;font-size:16px;font-weight:600;color:#E5E7EB;">'
                 "Please use the following bank / UPI details:</p>"
             )
             inner_pay: list[str] = [
-                "<ul style=\"margin:0;padding:14px 18px 14px 26px;background:#fffbeb;border-radius:10px;"
-                "border:1px solid #fcd34d;list-style-position:outside;font-size:17px;line-height:1.55;"
-                'color:#1e293b;">'
+                "<ul style=\"margin:0;padding:18px 22px 18px 28px;background:#181818;border-radius:14px;"
+                "border:1px solid rgba(225,29,72,0.3);list-style-position:outside;font-size:16px;line-height:1.8;"
+                'color:#E5E7EB;">'
             ]
             if ps is not None:
                 if (ps.account_holder_name or "").strip():
                     inner_pay.append(
-                        "<li><strong style=\"font-size:15px;color:#b45309;\">Account name:</strong> "
-                        f'<span style="font-weight:800;font-size:17px;color:#0f172a;">'
+                        "<li style=\"margin-bottom:10px;\"><strong style=\"font-size:14px;color:#FB7185;text-transform:uppercase;"
+                        'letter-spacing:0.05em;">Account name:</strong> '
+                        f'<span style="font-weight:800;font-size:17px;color:#FFFFFF;">'
                         f"{html.escape(ps.account_holder_name.strip())}</span></li>"
                     )
                 if (ps.bank_account_number or "").strip():
                     inner_pay.append(
-                        "<li><strong style=\"font-size:15px;color:#b45309;\">Bank A/C:</strong> "
-                        f'<span style="font-weight:800;font-size:17px;color:#0f172a;letter-spacing:0.04em;">'
+                        "<li style=\"margin-bottom:10px;\"><strong style=\"font-size:14px;color:#FB7185;text-transform:uppercase;"
+                        'letter-spacing:0.05em;">Bank A/C:</strong> '
+                        f'<span style="font-weight:800;font-size:17px;color:#FFFFFF;letter-spacing:0.05em;">'
                         f"{html.escape(ps.bank_account_number.strip())}</span></li>"
                     )
                 if (ps.bank_ifsc or "").strip():
                     inner_pay.append(
-                        "<li><strong style=\"font-size:15px;color:#b45309;\">IFSC:</strong> "
-                        f'<span style="font-weight:800;font-size:17px;color:#0f172a;">'
+                        "<li style=\"margin-bottom:10px;\"><strong style=\"font-size:14px;color:#FB7185;text-transform:uppercase;"
+                        'letter-spacing:0.05em;">IFSC:</strong> '
+                        f'<span style="font-weight:800;font-size:17px;color:#FFFFFF;">'
                         f"{html.escape(ps.bank_ifsc.strip())}</span></li>"
                     )
                 if (ps.upi_id or "").strip():
                     inner_pay.append(
-                        "<li><strong style=\"font-size:15px;color:#b45309;\">UPI ID:</strong> "
-                        f'<span style="font-weight:800;font-size:17px;color:#0f172a;">'
+                        "<li><strong style=\"font-size:14px;color:#FB7185;text-transform:uppercase;"
+                        'letter-spacing:0.05em;">UPI ID:</strong> '
+                        f'<span style="font-weight:800;font-size:17px;color:#FFFFFF;">'
                         f"{html.escape(ps.upi_id.strip())}</span></li>"
                     )
             inner_pay.append("</ul>")
             html_parts.append("".join(inner_pay))
         elif ps is not None and (ps.scanner_image_url or "").strip():
             html_parts.append(
-                '<p style="margin:16px 0 0;padding:14px 18px;background:linear-gradient(135deg,#fffbeb,#fef3c7);'
-                'border-radius:12px;border:2px solid #fbbf24;font-size:18px;font-weight:800;color:#92400e;line-height:1.45;">'
+                '<div style="margin:16px 0 0;padding:14px 18px;background:linear-gradient(135deg,#2a0a12,#3a0d18);'
+                'border-radius:12px;border-left:5px solid #E11D48;">'
                 '<span style="display:block;font-size:13px;font-weight:900;letter-spacing:0.12em;text-transform:uppercase;'
-                'color:#b45309;margin-bottom:6px;">Fee payment</span>'
-                "Use <strong style=\"font-size:19px;color:#78350f;\">Pay to scan</strong> at the top of this email.</p>"
+                'color:#FB7185;margin-bottom:8px;">Fee payment</span>'
+                'Use <strong style="font-size:19px;color:#FFFFFF;">Pay to scan</strong> at the top of this email.</div>'
             )
     else:
         html_parts.append(
-            '<p style="margin:0 0 14px;padding:14px 18px;background:#eff6ff;border-radius:12px;border-left:5px solid #3b82f6;'
-            'font-size:17px;font-weight:700;color:#1e3a8a;line-height:1.5;">For <strong>fee payment</strong>, please reply '
-            "to this email or contact our office for bank/UPI details and next steps.</p>"
+            '<p style="margin:0 0 18px;padding:16px 18px;background:#181818;border-radius:12px;border-left:5px solid #E11D48;'
+            'font-size:17px;font-weight:700;color:#E5E7EB;line-height:1.5;">For <strong style="color:#FB7185;">fee payment</strong>, please '
+            "reply to this email or contact our office for bank/UPI details and next steps.</p>"
         )
 
     if disc or gr:
-        html_parts.append('<p style="margin:20px 0 8px;font-weight:700;">Your enrolment</p><ul style="margin:0;padding-left:20px;">')
+        html_parts.append(
+            '<div style="margin-top:28px;">'
+            '<p style="margin:0 0 10px;font-size:18px;font-weight:800;color:#FFFFFF;">Your enrolment</p>'
+            '<ul style="margin:0;padding-left:20px;color:#E5E7EB;line-height:1.8;">'
+        )
         if disc:
-            html_parts.append(f"<li><strong>Course:</strong> {html.escape(disc)}</li>")
+            html_parts.append(f"<li><strong style=\"color:#FB7185;\">Course:</strong> {html.escape(disc)}</li>")
         if gr:
-            html_parts.append(f"<li><strong>Grade:</strong> {html.escape(gr)}</li>")
-        html_parts.append("</ul>")
+            html_parts.append(f"<li><strong style=\"color:#FB7185;\">Grade:</strong> {html.escape(gr)}</li>")
+        html_parts.append("</ul></div>")
 
     if rev is not None:
         if rev.fees_amount_inr is not None:
             amt = html.escape(str(rev.fees_amount_inr))
             html_parts.append(
-                '<div style="margin:22px 0 0;padding:22px 20px;text-align:center;background:linear-gradient(145deg,#fff7ed,#ffedd5);'
-                'border:3px solid #fb923c;border-radius:14px;box-shadow:0 4px 14px rgba(251,146,60,0.25);">'
-                '<span style="display:block;font-size:14px;font-weight:900;letter-spacing:0.16em;text-transform:uppercase;'
-                'color:#c2410c;margin-bottom:10px;">Fees (INR)</span>'
-                f'<span style="display:block;font-size:38px;font-weight:900;color:#9a3412;line-height:1.15;'
-                f'text-shadow:0 1px 0 rgba(255,255,255,0.5);">&#8377;&nbsp;{amt}</span>'
+                '<div style="margin:30px 0 0;padding:28px 20px;text-align:center;background:linear-gradient(145deg,#2a0a12,#111111);'
+                'border:2px solid #E11D48;border-radius:16px;box-shadow:0 8px 30px rgba(225,29,72,0.2);">'
+                '<span style="display:block;font-size:13px;font-weight:900;letter-spacing:0.18em;text-transform:uppercase;'
+                'color:#FB7185;margin-bottom:12px;">Fees (INR)</span>'
+                f'<span style="display:block;font-size:44px;font-weight:900;color:#FFFFFF;line-height:1.1;">&#8377;&nbsp;{amt}</span>'
                 "</div>"
             )
     else:
         html_parts.append(
-            '<p style="margin:20px 0 0;padding:16px 18px;background:#fefce8;border-radius:12px;border:2px dashed #eab308;'
-            'font-size:17px;font-weight:800;color:#854d0e;text-align:center;line-height:1.45;">'
-            "<strong style=\"font-size:18px;\">Office fee</strong><br />"
-            '<span style="font-weight:700;font-size:15px;color:#a16207;">Amount will appear once entered in admin.</span></p>'
+            '<p style="margin:20px 0 0;padding:20px 22px;background:#181818;border-radius:14px;'
+            'border:2px dashed rgba(251,113,133,0.45);font-size:17px;font-weight:700;color:#E5E7EB;text-align:center;line-height:1.45;">'
+            '<strong style="font-size:18px;color:#FFFFFF;">Office fee</strong><br />'
+            '<span style="font-weight:700;font-size:15px;color:#9CA3AF;">Amount will appear once entered in admin.</span></p>'
         )
 
     html_parts.append(
-        '<div style="margin:24px 0 0;padding:18px 20px;background:linear-gradient(135deg,#ecfdf5,#d1fae5);'
-        'border-radius:12px;border:2px solid #34d399;box-shadow:0 2px 10px rgba(16,185,129,0.15);">'
-        '<p style="margin:0 0 8px;font-size:13px;font-weight:900;letter-spacing:0.12em;text-transform:uppercase;'
-        'color:#047857;">After you pay</p>'
-        '<p style="margin:0;font-size:17px;font-weight:800;color:#065f46;line-height:1.55;">'
-        "Please reply to <strong style=\"color:#047857;\">this email</strong> with a screenshot of your payment "
-        'and include <strong style="color:#047857;">your name</strong>.</p>'
+        '<div style="margin:28px 0 0;padding:20px 22px;background:linear-gradient(135deg,#111111,#1a1a1a);'
+        'border-radius:14px;border:2px solid #E11D48;">'
+        '<p style="margin:0 0 10px;font-size:13px;font-weight:900;letter-spacing:0.14em;text-transform:uppercase;'
+        'color:#FB7185;">After you pay</p>'
+        '<p style="margin:0;font-size:17px;font-weight:700;color:#E5E7EB;line-height:1.7;">'
+        'Please reply to <strong style="color:#FB7185;">this email</strong> with a screenshot of your payment '
+        'and include <strong style="color:#FB7185;">your name</strong>.</p>'
         "</div>"
     )
 
@@ -289,10 +296,10 @@ def build_admission_followup_email(
         scan_url = ps_banner.scanner_image_url.strip()
         safe_img_src = html.escape(scan_url, quote=True)
         scanner_banner_row = f"""          <tr>
-            <td style="padding:0;background:linear-gradient(165deg,#0b1220 0%,#1e293b 55%,#0f172a 100%);">
-              <p style="margin:0;padding:18px 16px 10px;font-family:Segoe UI,Helvetica,Arial,sans-serif;font-size:12px;font-weight:800;letter-spacing:0.18em;text-transform:uppercase;color:#cbd5e1;text-align:center;">Pay to scan</p>
-              <div style="padding:0 18px 22px;text-align:center;">
-                <img src="{safe_img_src}" alt="UPI QR — scan to pay" width="320" style="max-width:92%;height:auto;display:inline-block;border-radius:14px;background:#ffffff;padding:12px;box-sizing:border-box;border:1px solid rgba(148,163,184,0.35);" />
+            <td style="padding:0;background:linear-gradient(165deg,#000000 0%,#111111 55%,#1a1a1a 100%);">
+              <p style="margin:0;padding:18px 16px 10px;font-family:Segoe UI,Helvetica,Arial,sans-serif;font-size:12px;font-weight:800;letter-spacing:0.18em;text-transform:uppercase;color:#FB7185;text-align:center;">Pay to scan</p>
+              <div style="padding:0 18px 24px;text-align:center;">
+                <img src="{safe_img_src}" alt="UPI QR — scan to pay" width="320" style="max-width:92%;height:auto;display:inline-block;border-radius:16px;background:#ffffff;padding:12px;box-sizing:border-box;border:1px solid rgba(255,255,255,0.08);" />
               </div>
             </td>
           </tr>
@@ -301,17 +308,17 @@ def build_admission_followup_email(
     body_html = f"""<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#f3f4f6;">
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f3f4f6;">
+<body style="margin:0;padding:0;background:#050505;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#050505;">
     <tr>
       <td align="center" style="padding:32px 16px;">
-        <table role="presentation" cellspacing="0" cellpadding="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:14px;overflow:hidden;border:1px solid #e5e7eb;">
+        <table role="presentation" cellspacing="0" cellpadding="0" style="max-width:600px;width:100%;background:#111111;border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,0.08);box-shadow:0 10px 40px rgba(0,0,0,0.45);">
 {scanner_banner_row}          <tr>
-            <td style="padding:32px 28px 28px;font-family:Segoe UI,Helvetica,Arial,sans-serif;font-size:16px;line-height:1.65;color:#1d1d1d;">
+            <td style="padding:36px 30px 30px;font-family:Segoe UI,Helvetica,Arial,sans-serif;font-size:16px;line-height:1.7;color:#E5E7EB;">
 {inner}
-              <p style="margin:28px 0 0;padding-top:22px;border-top:1px solid #e5e7eb;color:#374151;">
-                The <strong style="color:#111827;">{safe_site}</strong> team<br />
-                <span style="font-size:14px;color:#6b7280;">School of Music &amp; Arts — Dimapur, Nagaland</span>
+              <p style="margin:34px 0 0;padding-top:24px;border-top:1px solid rgba(255,255,255,0.08);color:#9CA3AF;line-height:1.8;">
+                The <strong style="color:#FFFFFF;">{safe_site}</strong> team<br />
+                <span style="font-size:14px;color:#6B7280;">School of Music &amp; Arts — Dimapur, Nagaland</span>
               </p>
             </td>
           </tr>

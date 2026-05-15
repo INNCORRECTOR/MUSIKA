@@ -30,8 +30,8 @@ except ValueError:
     UPLOAD_WEBP_METHOD = 4
 UPLOAD_WEBP_METHOD = max(0, min(6, UPLOAD_WEBP_METHOD))
 
-# Single payment QR object in S3 (overwritten on each admin upload).
-SCANNER_OBJECT_KEY = "uploads/payment.webp"
+# Single payment QR at bucket root (public URL: …/payment.webp, not under uploads/).
+SCANNER_OBJECT_KEY = "payment.webp"
 
 
 class UploadValidationError(Exception):
@@ -201,7 +201,7 @@ def upload_image_and_get_url(file, s3_config):
 
 
 def upload_scanner_image_and_get_url(file, s3_config):
-    """Payment QR upload: always stored as uploads/payment.webp (stable public URL)."""
+    """Payment QR upload: always stored as payment.webp (stable public URL, no uploads/ prefix)."""
     if not file.content_type or not file.content_type.startswith("image/"):
         raise UploadValidationError("Scanner image must be an image file.")
 

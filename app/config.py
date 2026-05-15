@@ -63,8 +63,14 @@ def normalize_stored_asset_url(url: str | None) -> str | None:
     if dynamic and dynamic not in prefixes:
         prefixes.append(dynamic)
 
+    result = trimmed
     for prefix in prefixes:
         if trimmed.startswith(prefix):
-            return f"{cdn}/{trimmed[len(prefix) :].lstrip('/')}"
+            result = f"{cdn}/{trimmed[len(prefix) :].lstrip('/')}"
+            break
 
-    return trimmed
+    # Payment scanner only: legacy uploads/payment.webp → /payment.webp
+    if result.endswith("/uploads/payment.webp"):
+        return f"{cdn}/payment.webp"
+
+    return result

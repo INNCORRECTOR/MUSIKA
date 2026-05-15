@@ -4,7 +4,7 @@ import jwt
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Request, UploadFile, status
 from sqlalchemy.orm import Session
 
-from app.config import get_s3_config
+from app.config import get_s3_config, normalize_stored_asset_url
 from app.db import get_db
 from app.models import GalleryGenre, GalleryImage
 from app.routers.auth import AUTH_COOKIE_NAME
@@ -101,7 +101,7 @@ def upload_gallery_image(
     return {
         "id": image.id,
         "genre": genre.slug,
-        "image_url": image.image_url,
+        "image_url": normalize_stored_asset_url(image.image_url),
         "caption": image.caption,
         "created_at": image.created_at.isoformat(),
     }
@@ -128,7 +128,7 @@ def list_gallery_images(
         {
             "id": image.id,
             "genre": genre_slug,
-            "image_url": image.image_url,
+            "image_url": normalize_stored_asset_url(image.image_url),
             "caption": image.caption,
             "created_at": image.created_at.isoformat(),
         }

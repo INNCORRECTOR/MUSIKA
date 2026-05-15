@@ -1,7 +1,9 @@
+from app.config import build_public_asset_url
+
 SITE_NAME = "MUSIKA"
 
 # Same asset as site header/footer (email clients load via absolute URL).
-BRAND_LOGO_URL = "https://musikazctech.s3.ap-south-1.amazonaws.com/musikalogo.webp"
+BRAND_LOGO_URL = build_public_asset_url("musikalogo.webp")
 
 # Footer “Built by” — logo file in /static (replace with your PNG/WebP if you prefer).
 FOOTER_CREDIT_LOGO_URL = "/static/ZC-Insignia.webp"

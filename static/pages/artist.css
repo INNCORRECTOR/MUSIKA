@@ -137,7 +137,7 @@
   min-height: clamp(180px, 26vw, 250px);
   position: relative;
   overflow: hidden;
-  --artist-hero-image: url("https://musikazctech.s3.ap-south-1.amazonaws.com/artistart.png");
+  --artist-hero-image: url("https://assets.musika.co.in/artistart.png");
   background:
     linear-gradient(90deg, rgba(2, 6, 12, 0.96) 0%, rgba(2, 6, 12, 0.86) 34%, rgba(2, 6, 12, 0.45) 58%, rgba(2, 6, 12, 0.18) 100%),
     var(--artist-hero-image) center -20px / cover no-repeat;

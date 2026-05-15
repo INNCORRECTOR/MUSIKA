@@ -7,6 +7,8 @@ import boto3
 from botocore.exceptions import BotoCoreError, ClientError
 from PIL import Image, ImageOps, UnidentifiedImageError
 
+from app.config import build_public_asset_url
+
 WEBP_QUALITY = int(os.getenv("UPLOAD_WEBP_QUALITY", "80"))
 WEBP_CONTENT_TYPE = "image/webp"
 PASSPORT_PHOTO_SIZE = (413, 531)
@@ -35,10 +37,6 @@ class UploadValidationError(Exception):
 
 class UploadServiceError(Exception):
     pass
-
-
-def build_public_s3_url(bucket: str, region: str, object_key: str) -> str:
-    return f"https://{bucket}.s3.{region}.amazonaws.com/{object_key}"
 
 
 def _prepare_image_for_webp(im: Image.Image) -> Image.Image:
@@ -140,7 +138,7 @@ def _upload_prepared_image_body(upload_body, upload_content_type: str, file_ext:
         Params={"Bucket": s3_config["bucket"], "Key": object_key},
         ExpiresIn=3600,
     )
-    public_image_url = build_public_s3_url(s3_config["bucket"], s3_config["region"], object_key)
+    public_image_url = build_public_asset_url(object_key)
     return object_key, image_url, public_image_url
 
 

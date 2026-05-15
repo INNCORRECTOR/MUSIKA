@@ -194,10 +194,10 @@
                 <div class="artist-roster-links">
                   <a class="artist-roster-link artist-roster-link-view-media" href="/admin/artist/{{ artist.id }}/media">View media</a>
                   {% if artist.hero_image_url %}
-                    <a class="artist-roster-link" href="{{ artist.hero_image_url }}" target="_blank" rel="noopener noreferrer">View hero image</a>
+                    <a class="artist-roster-link" href="{{ artist.hero_image_url | asset_url }}" target="_blank" rel="noopener noreferrer">View hero image</a>
                   {% endif %}
                   {% if artist.featured_media_url %}
-                    <a class="artist-roster-link" href="{{ artist.featured_media_url }}" target="_blank" rel="noopener noreferrer">View featured image</a>
+                    <a class="artist-roster-link" href="{{ artist.featured_media_url | asset_url }}" target="_blank" rel="noopener noreferrer">View featured image</a>
                   {% endif %}
                 </div>
 

@@ -11,7 +11,8 @@ load_dotenv(Path(__file__).resolve().parent.parent.parent / ".env", override=Tru
 
 from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, Query, Request, UploadFile, status
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
-from fastapi.templating import Jinja2Templates
+from app.config import get_s3_config, normalize_stored_asset_url
+from app.jinja_templates import templates
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session, selectinload
 
@@ -27,7 +28,6 @@ from app.content import (
     SITE_NAME,
 )
 from app.admission_validators import normalize_admission_email
-from app.config import get_s3_config
 from app.db import get_db
 from app.mailer import send_alert_admission_received, send_newsletter_welcome_email
 import json
@@ -53,7 +53,6 @@ from app.services.s3_upload import (
 )
 
 router = APIRouter()
-templates = Jinja2Templates(directory="templates")
 
 _IN_MOBILE_SHORT = "Enter all 10 digits of the mobile number."
 _IN_MOBILE_LONG = "Enter a 10-digit Indian mobile number (extra digits detected)."
@@ -363,10 +362,12 @@ def faculty(
                 "name": artist_row.name,
                 "title": artist_row.title,
                 "bio": artist_row.bio,
-                "hero_image_url": artist_row.hero_image_url,
+                "hero_image_url": normalize_stored_asset_url(artist_row.hero_image_url),
                 "featured_media_type": artist_row.featured_media_type,
-                "featured_media_url": artist_row.featured_media_url,
-                "featured_media_thumbnail_url": artist_row.featured_media_thumbnail_url,
+                "featured_media_url": normalize_stored_asset_url(artist_row.featured_media_url),
+                "featured_media_thumbnail_url": normalize_stored_asset_url(
+                    artist_row.featured_media_thumbnail_url
+                ),
                 "facebook_url": artist_row.facebook_url,
                 "instagram_url": artist_row.instagram_url,
                 "twitter_url": artist_row.twitter_url,
@@ -700,7 +701,7 @@ def gallery(
             "has_more_initial": total_images > len(latest_images),
             "images": [
                 {
-                    "image_url": image.image_url,
+                    "image_url": normalize_stored_asset_url(image.image_url),
                     "caption": image.caption or "",
                     "genre": genre_slug,
                     "created_at": image.created_at,

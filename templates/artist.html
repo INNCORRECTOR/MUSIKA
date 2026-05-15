@@ -16,7 +16,7 @@
       <section
         class="artist-hero"
         aria-labelledby="artist-page-title"
-        style="--artist-hero-image: url('{{ featured_artist.hero_image_url or 'https://musikazctech.s3.ap-south-1.amazonaws.com/artistart.png' }}');"
+        style="--artist-hero-image: url('{{ featured_artist.hero_image_url | asset_url or default_artist_hero_url }}');"
       >
         <div class="artist-hero-inner">
           <h1 id="artist-page-title">{{ featured_artist.name }}</h1>
@@ -111,15 +111,15 @@
         <article class="artist-main-media">
           {% if featured_artist.featured_media_url %}
             {% if featured_artist.featured_media_type == "video" %}
-              <video class="artist-media" controls playsinline {% if featured_artist.featured_media_thumbnail_url %}poster="{{ featured_artist.featured_media_thumbnail_url }}"{% endif %}>
-                <source src="{{ featured_artist.featured_media_url }}" />
+              <video class="artist-media" controls playsinline {% if featured_artist.featured_media_thumbnail_url %}poster="{{ featured_artist.featured_media_thumbnail_url | asset_url }}"{% endif %}>
+                <source src="{{ featured_artist.featured_media_url | asset_url }}" />
                 Your browser does not support the video tag.
               </video>
               <span class="artist-play-indicator" aria-hidden="true">▶</span>
             {% else %}
               <img
                 class="artist-media"
-                src="{{ featured_artist.featured_media_url }}"
+                src="{{ featured_artist.featured_media_url | asset_url }}"
                 alt="{{ featured_artist.name }} featured media"
                 loading="lazy"
               />

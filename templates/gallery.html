@@ -37,7 +37,7 @@
         {% if images %}
           {% for item in images %}
             <article class="card">
-              <img class="gallery-image" src="{{ item.image_url }}" alt="{{ item.caption or item.genre }}" />
+              <img class="gallery-image" src="{{ item.image_url | asset_url }}" alt="{{ item.caption or item.genre }}" />
             </article>
           {% endfor %}
         {% else %}

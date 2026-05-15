@@ -19,7 +19,7 @@
             {% for img in event.images %}
               <div class="event-slider-slide" aria-hidden="{{ 'false' if loop.first else 'true' }}">
                 <img
-                  src="{{ img.image_url }}"
+                  src="{{ img.image_url | asset_url }}"
                   alt="{{ event.title }} — photo {{ loop.index }} of {{ event.images | length }}"
                   {% if not loop.first %}loading="lazy"{% endif %}
                 />
@@ -51,7 +51,7 @@
         </div>
       </div>
     {% elif event.images %}
-      <img src="{{ event.images[0].image_url }}" alt="{{ event.title }}" />
+      <img src="{{ event.images[0].image_url | asset_url }}" alt="{{ event.title }}" />
     {% else %}
       <div class="event-image-empty" aria-hidden="true">♪</div>
     {% endif %}

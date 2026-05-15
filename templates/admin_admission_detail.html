@@ -94,8 +94,8 @@
                 <div class="admission-edit-span-full admission-edit-passport-block">
                   {% if application.passport_photo_url %}
                     <div class="admission-edit-label-row"><span>Current photo</span></div>
-                    <a class="admission-photo-link" href="{{ application.passport_photo_url }}" target="_blank" rel="noopener noreferrer">
-                      <img class="admission-passport-photo" src="{{ application.passport_photo_url }}" alt="" />
+                    <a class="admission-photo-link" href="{{ application.passport_photo_url | asset_url }}" target="_blank" rel="noopener noreferrer">
+                      <img class="admission-passport-photo" src="{{ application.passport_photo_url | asset_url }}" alt="" />
                     </a>
                     <p class="admission-subtext">Upload a new file below to replace it.</p>
                   {% endif %}

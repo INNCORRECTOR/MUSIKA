@@ -19,7 +19,7 @@
   background:
     linear-gradient(90deg, rgba(3, 6, 12, 0.92) 0%, rgba(3, 6, 12, 0.56) 38%, rgba(3, 6, 12, 0.72) 100%),
     radial-gradient(circle at 22% 18%, rgba(229, 9, 20, 0.22), transparent 42%),
-    url("https://musikazctech.s3.ap-south-1.amazonaws.com/course.png?v=2") center center / cover no-repeat;
+    url("https://assets.musika.co.in/course.png?v=2") center center / cover no-repeat;
 }
 
 .course-hero-shell {
@@ -720,7 +720,7 @@
     background:
       linear-gradient(90deg, rgba(3, 6, 12, 0.88) 0%, rgba(3, 6, 12, 0.62) 44%, rgba(3, 6, 12, 0.72) 100%),
       radial-gradient(circle at 20% 20%, rgba(229, 9, 20, 0.18), transparent 46%),
-      url("https://musikazctech.s3.ap-south-1.amazonaws.com/course.png?v=2") center center / cover no-repeat;
+      url("https://assets.musika.co.in/course.png?v=2") center center / cover no-repeat;
   }
 
   .course-hero-shell {

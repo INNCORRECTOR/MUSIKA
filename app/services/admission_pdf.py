@@ -10,10 +10,11 @@ from urllib.request import urlopen
 from fpdf import FPDF
 from PIL import Image, ImageDraw, ImageOps, UnidentifiedImageError
 
+from app.config import build_public_asset_url, normalize_stored_asset_url
 from app.models import AdmissionApplication, AdmissionPaymentSettings
 
 # PDF header logo only (site header still uses BRAND_LOGO_URL in app.content).
-PDF_BRAND_LOGO_URL = "https://musikazctech.s3.ap-south-1.amazonaws.com/MUSIKA+logo.png"
+PDF_BRAND_LOGO_URL = build_public_asset_url("MUSIKA+logo.png")
 
 _EMPTY_FIELD = "--"
 
@@ -513,7 +514,8 @@ def build_admission_application_pdf(
     box_inner_w = photo_w - 2 * inset
     box_inner_h = row_h - 2 * inset
     ph_l = f"Photo\n{PASSPORT_PHOTO_W_MM:.0f}x{PASSPORT_PHOTO_H_MM:.0f}mm"
-    photo_raw = _fetch_url_bytes(application.passport_photo_url) if application.passport_photo_url else None
+    passport_url = normalize_stored_asset_url(application.passport_photo_url)
+    photo_raw = _fetch_url_bytes(passport_url) if passport_url else None
     if photo_raw:
         png_p = _image_to_png_bytes(photo_raw)
         if png_p:

@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, Form, Request, status
 from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
+from app.jinja_templates import templates
 from sqlalchemy.orm import Session
 
 from app.content import (
@@ -19,7 +19,6 @@ from app.models import User
 from app.security import create_access_token, verify_password
 
 router = APIRouter()
-templates = Jinja2Templates(directory="templates")
 
 AUTH_COOKIE_NAME = "musika_auth"
 

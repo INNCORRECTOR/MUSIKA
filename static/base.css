@@ -286,7 +286,7 @@ body {
 .site-footer {
   background:
     linear-gradient(180deg, rgba(5, 8, 15, 0.96), rgba(4, 6, 12, 0.98)),
-    url("https://musikazctech.s3.ap-south-1.amazonaws.com/home/blue+texture.avif");
+    url("https://assets.musika.co.in/home/blue+texture.avif");
   background-size: cover;
   background-position: center;
   color: #d1d5db;

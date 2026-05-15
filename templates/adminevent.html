@@ -135,7 +135,7 @@
                     <div class="event-image-grid">
                       {% for image in event.images %}
                         <div class="event-image-card">
-                          <img src="{{ image.image_url }}" alt="{{ event.title }}" />
+                          <img src="{{ image.image_url | asset_url }}" alt="{{ event.title }}" />
                           <form method="post" action="/admin/dashboard/events/{{ event.id }}/images/{{ image.id }}/delete?confirm_mode=typed" class="event-image-delete-form">
                             <button
                               type="button"

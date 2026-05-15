@@ -132,7 +132,7 @@
             <div class="upload-grid">
               {% for image, genre_slug in latest_images %}
                 <article class="upload-card">
-                  <img src="{{ image.image_url }}" alt="{{ image.caption or genre_slug }}" />
+                  <img src="{{ image.image_url | asset_url }}" alt="{{ image.caption or genre_slug }}" />
                   <p><strong>{{ genre_slug|upper }}</strong></p>
                   {% if image.caption %}
                     <p>{{ image.caption }}</p>

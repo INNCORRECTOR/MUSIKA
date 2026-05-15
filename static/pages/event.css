@@ -19,7 +19,7 @@
   background:
     linear-gradient(90deg, rgba(3, 6, 12, 0.86) 0%, rgba(3, 6, 12, 0.62) 44%, rgba(3, 6, 12, 0.7) 100%),
     radial-gradient(circle at 20% 20%, rgba(229, 9, 20, 0.2), transparent 46%),
-    url("https://musikazctech.s3.ap-south-1.amazonaws.com/eventpage.png?v=2") center 32% / cover no-repeat;
+    url("https://assets.musika.co.in/eventpage.png?v=2") center 32% / cover no-repeat;
 }
 
 .event-hero-inner {

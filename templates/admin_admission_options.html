@@ -62,7 +62,7 @@
                     <span class="admission-payment-preview-label">Current image</span>
                     <img
                       class="admission-payment-scanner-img"
-                      src="{{ payment_settings.scanner_image_url }}"
+                      src="{{ payment_settings.scanner_image_url | asset_url }}"
                       alt="Payment QR code"
                     />
                   </div>

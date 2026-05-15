@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, File, Form, Request, UploadFile, status
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from sqlalchemy import func
 from sqlalchemy.exc import SQLAlchemyError
-from fastapi.templating import Jinja2Templates
+from app.jinja_templates import templates
 from sqlalchemy.orm import Session, selectinload
 import json
 
@@ -53,7 +53,6 @@ from app.services.s3_upload import (
 from app.routers.pages import load_admission_options
 
 router = APIRouter()
-templates = Jinja2Templates(directory="templates")
 
 
 def _ensure_inbox_seen_columns(db: Session) -> None:

@@ -4,8 +4,18 @@ from __future__ import annotations
 
 import html
 
+from app.config import normalize_stored_asset_url
 from app.content import SITE_NAME
 from app.models import AdmissionApplication, AdmissionPaymentSettings
+
+
+def _scanner_public_url(ps: AdmissionPaymentSettings | None) -> str | None:
+    if ps is None:
+        return None
+    raw = (ps.scanner_image_url or "").strip()
+    if not raw:
+        return None
+    return normalize_stored_asset_url(raw)
 
 # After-payment instructions — same meaning on both channels (email = reply here; WhatsApp = this chat).
 SCREENSHOT_AFTER_PAYMENT_EMAIL_PLAIN = (
@@ -76,8 +86,9 @@ def build_whatsapp_message_body(
                 pay_lines.append(f"*IFSC:* {ps.bank_ifsc.strip()}")
             if (ps.upi_id or "").strip():
                 pay_lines.append(f"*UPI ID:* {ps.upi_id.strip()}")
-            if (ps.scanner_image_url or "").strip():
-                pay_lines.append(f"*UPI / QR image:*\n{ps.scanner_image_url.strip()}")
+            scan_url = _scanner_public_url(ps)
+            if scan_url:
+                pay_lines.append(f"*UPI / QR image:*\n{scan_url}")
         blocks.append("\n".join(pay_lines))
     else:
         blocks.append(
@@ -118,11 +129,12 @@ def build_admission_followup_email(
     plain_lines: list[str] = [f"Hi {first},", ""]
 
     ps_top = payment_settings
-    if ps_top is not None and (ps_top.scanner_image_url or "").strip():
+    scan_top = _scanner_public_url(ps_top)
+    if scan_top:
         plain_lines.extend(
             [
                 "Scan to pay — UPI / QR (image in HTML email, or open this link):",
-                ps_top.scanner_image_url.strip(),
+                scan_top,
                 "",
             ]
         )
@@ -292,8 +304,8 @@ def build_admission_followup_email(
 
     scanner_banner_row = ""
     ps_banner = payment_settings
-    if ps_banner is not None and (ps_banner.scanner_image_url or "").strip():
-        scan_url = ps_banner.scanner_image_url.strip()
+    scan_url = _scanner_public_url(ps_banner)
+    if scan_url:
         safe_img_src = html.escape(scan_url, quote=True)
         scanner_banner_row = f"""          <tr>
             <td style="padding:0;background:linear-gradient(165deg,#000000 0%,#111111 55%,#1a1a1a 100%);">

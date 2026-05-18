@@ -15,12 +15,12 @@
       {% include "partials/admin_second_nav.html" %}
       <div class="admin-main-card admin-main-content">
     <div class="admin-gallery-header">
-      <h1>Faculty roster</h1>
+      <h1>Faculty</h1>
       <p class="admin-artist-lead">
         Create faculty profiles, add social &amp; streaming links, then attach gallery images or videos.
       </p>
       <div class="admin-gallery-actions">
-        <a class="btn admin-back-link" href="/admin">← Admin home</a>
+        <a class="btn admin-back-link" href="/admin">BACK TO ADMIN HOME</a>
       </div>
     </div>
 
@@ -31,7 +31,7 @@
       <p class="auth-error admin-flash admin-flash--err">{{ error }}</p>
     {% endif %}
 
-    <div class="admin-artist-switch" role="tablist" aria-label="Admin artist sections">
+    <div class="admin-artist-switch" role="tablist" aria-label="Admin faculty sections">
       <button
         type="button"
         class="admin-artist-switch-btn active"
@@ -131,20 +131,20 @@
           </fieldset>
 
           <div class="admin-form-actions">
-            <button type="submit" class="btn-admin-primary">Create artist</button>
+            <button type="submit" class="btn-admin-primary">Create Faculty</button>
           </div>
         </form>
       </section>
 
       <section id="add-media-section" class="admin-panel admin-toggle-panel section-hidden">
-        <h2 class="admin-panel-title">Add media to an artist</h2>
-        <p class="admin-panel-desc">Extra images or video links in the artist’s gallery strip (separate from featured).</p>
+        <h2 class="admin-panel-title">Add media for faculty</h2>
+        <p class="admin-panel-desc">Extra images or videos in their gallery strip (separate from featured).</p>
         <form method="post" action="/admin/dashboard/artists/media" enctype="multipart/form-data" class="auth-form admin-artist-form">
           <fieldset class="admin-fieldset admin-fieldset--compact">
             <legend class="admin-fieldset-legend">Media</legend>
-            <label for="artist-id">Artist <span class="req">*</span></label>
+            <label for="artist-id">Faculty <span class="req">*</span></label>
             <select id="artist-id" name="artist_id" required>
-              <option value="">Choose artist…</option>
+              <option value="">Choose faculty…</option>
               {% for artist, media_count in artists %}
                 <option value="{{ artist.id }}">{{ artist.name }} ({{ media_count }} in gallery)</option>
               {% endfor %}
@@ -162,8 +162,8 @@
 
     <section class="admin-panel admin-panel--roster">
       <div class="admin-roster-head">
-        <h2 class="admin-panel-title">Manage artists</h2>
-        <p class="admin-panel-desc">Expand an artist to edit. Delete is permanent.</p>
+        <h2 class="admin-panel-title">Manage faculty</h2>
+        <p class="admin-panel-desc">Expand a row to edit. Delete is permanent.</p>
       </div>
 
       {% if artists %}
@@ -353,7 +353,7 @@
                       data-trigger="artist-delete-trigger-{{ artist.id }}"
                       id="artist-delete-trigger-{{ artist.id }}"
                     >
-                      Delete artist
+                      Delete faculty
                     </button>
                     <div id="artist-delete-wrap-{{ artist.id }}" class="media-delete-wrap section-hidden">
                       <label class="delete-confirm-label" for="artist-delete-input-{{ artist.id }}">
@@ -387,7 +387,7 @@
           {% endfor %}
         </div>
       {% else %}
-        <p class="admin-empty">No artists yet — use the form above to create one.</p>
+        <p class="admin-empty">No faculty yet — use the form above to create one.</p>
       {% endif %}
     </section>
       </div>

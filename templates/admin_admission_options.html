@@ -147,9 +147,27 @@
                 <article class="admission-option-item">
                   <div class="admission-option-head">
                     <h3>{{ discipline.name }}</h3>
-                    <form action="/admin/admission-options/disciplines/{{ discipline.id }}/delete" method="post">
-                      <button type="submit" class="admin-delete-text-btn">Delete Discipline</button>
-                    </form>
+                    <span class="admin-delete-reveal" data-admission-delete>
+                      <button type="button" class="admin-delete-open-btn admin-delete-text-btn">Delete Discipline</button>
+                      <div class="admin-delete-confirm-panel" hidden>
+                        <form
+                          action="/admin/admission-options/disciplines/{{ discipline.id }}/delete"
+                          method="post"
+                          class="admin-admission-delete-form admin-admissions-delete-form-row"
+                        >
+                          <input
+                            type="text"
+                            name="delete_confirmation"
+                            autocomplete="off"
+                            placeholder="Type delete"
+                            aria-label="Type delete to confirm deletion"
+                            class="admin-delete-confirm-input"
+                          />
+                          <button type="submit" class="admin-delete-text-btn">Confirm</button>
+                        </form>
+                        <button type="button" class="admin-delete-cancel-x" aria-label="Cancel deletion">×</button>
+                      </div>
+                    </span>
                   </div>
 
                   <div class="admission-option-columns">
@@ -161,9 +179,27 @@
                           {% for grade in active_grades %}
                             <li>
                               <span>{{ grade.name }}</span>
-                              <form action="/admin/admission-options/grades/{{ grade.id }}/delete" method="post">
-                                <button type="submit" class="admin-delete-text-btn">Delete</button>
-                              </form>
+                              <span class="admin-delete-reveal" data-admission-delete>
+                                <button type="button" class="admin-delete-open-btn admin-delete-text-btn">Delete</button>
+                                <div class="admin-delete-confirm-panel" hidden>
+                                  <form
+                                    action="/admin/admission-options/grades/{{ grade.id }}/delete"
+                                    method="post"
+                                    class="admin-admission-delete-form admin-admissions-delete-form-row"
+                                  >
+                                    <input
+                                      type="text"
+                                      name="delete_confirmation"
+                                      autocomplete="off"
+                                      placeholder="Type delete"
+                                      aria-label="Type delete to confirm deletion"
+                                      class="admin-delete-confirm-input"
+                                    />
+                                    <button type="submit" class="admin-delete-text-btn">Confirm</button>
+                                  </form>
+                                  <button type="button" class="admin-delete-cancel-x" aria-label="Cancel deletion">×</button>
+                                </div>
+                              </span>
                             </li>
                           {% endfor %}
                         </ul>
@@ -180,9 +216,27 @@
                           {% for teacher in active_teachers %}
                             <li>
                               <span>{{ teacher.name }}</span>
-                              <form action="/admin/admission-options/teachers/{{ teacher.id }}/delete" method="post">
-                                <button type="submit" class="admin-delete-text-btn">Delete</button>
-                              </form>
+                              <span class="admin-delete-reveal" data-admission-delete>
+                                <button type="button" class="admin-delete-open-btn admin-delete-text-btn">Delete</button>
+                                <div class="admin-delete-confirm-panel" hidden>
+                                  <form
+                                    action="/admin/admission-options/teachers/{{ teacher.id }}/delete"
+                                    method="post"
+                                    class="admin-admission-delete-form admin-admissions-delete-form-row"
+                                  >
+                                    <input
+                                      type="text"
+                                      name="delete_confirmation"
+                                      autocomplete="off"
+                                      placeholder="Type delete"
+                                      aria-label="Type delete to confirm deletion"
+                                      class="admin-delete-confirm-input"
+                                    />
+                                    <button type="submit" class="admin-delete-text-btn">Confirm</button>
+                                  </form>
+                                  <button type="button" class="admin-delete-cancel-x" aria-label="Cancel deletion">×</button>
+                                </div>
+                              </span>
                             </li>
                           {% endfor %}
                         </ul>
@@ -201,4 +255,5 @@
       </div>
     </div>
   </section>
+  {% include "partials/admin_delete_reveal_script.html" %}
 {% endblock %}

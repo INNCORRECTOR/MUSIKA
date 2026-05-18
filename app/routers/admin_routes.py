@@ -491,7 +491,7 @@ def admin_delete_category(
 @router.get("/admin/artist", response_class=HTMLResponse)
 @router.get("/admin/artists", response_class=HTMLResponse)
 def admin_artist_page(request: Request, db: Session = Depends(get_db)):
-    context = shared_auth_context(request, "Admin Artist")
+    context = shared_auth_context(request, "Admin Faculty")
     admin_redirect = require_admin(request)
     if admin_redirect:
         return admin_redirect
@@ -523,7 +523,6 @@ def admin_artist_media_page(
     page_size: int = 12,
     db: Session = Depends(get_db),
 ):
-    context = shared_auth_context(request, "Artist Media")
     admin_redirect = require_admin(request)
     if admin_redirect:
         return admin_redirect
@@ -531,9 +530,11 @@ def admin_artist_media_page(
     artist = db.query(Artist).filter(Artist.id == artist_id).first()
     if not artist:
         return RedirectResponse(
-            url="/admin/artist?error=Artist+not+found",
+            url="/admin/artist?error=Faculty+not+found",
             status_code=status.HTTP_303_SEE_OTHER,
         )
+
+    context = shared_auth_context(request, f"Faculty — {artist.name}")
 
     safe_page_size = max(1, min(page_size, 50))
     total_media = db.query(func.count(Media.id)).filter(Media.artist_id == artist.id).scalar() or 0
@@ -1423,11 +1424,18 @@ def admin_create_admission_teacher(
 def admin_delete_admission_discipline(
     discipline_id: int,
     request: Request,
+    delete_confirmation: str = Form(default=""),
     db: Session = Depends(get_db),
 ):
     admin_redirect = require_admin(request)
     if admin_redirect:
         return admin_redirect
+
+    if (delete_confirmation or "").strip().lower() != "delete":
+        return RedirectResponse(
+            url=f"/admin/admission-options?error={quote_plus('Type delete to confirm.')}",
+            status_code=status.HTTP_303_SEE_OTHER,
+        )
 
     discipline = db.query(AdmissionDiscipline).filter(AdmissionDiscipline.id == discipline_id).first()
     if not discipline:
@@ -1447,11 +1455,18 @@ def admin_delete_admission_discipline(
 def admin_delete_admission_grade(
     grade_id: int,
     request: Request,
+    delete_confirmation: str = Form(default=""),
     db: Session = Depends(get_db),
 ):
     admin_redirect = require_admin(request)
     if admin_redirect:
         return admin_redirect
+
+    if (delete_confirmation or "").strip().lower() != "delete":
+        return RedirectResponse(
+            url=f"/admin/admission-options?error={quote_plus('Type delete to confirm.')}",
+            status_code=status.HTTP_303_SEE_OTHER,
+        )
 
     grade = db.query(AdmissionGrade).filter(AdmissionGrade.id == grade_id).first()
     if not grade:
@@ -1471,11 +1486,18 @@ def admin_delete_admission_grade(
 def admin_delete_admission_teacher(
     teacher_id: int,
     request: Request,
+    delete_confirmation: str = Form(default=""),
     db: Session = Depends(get_db),
 ):
     admin_redirect = require_admin(request)
     if admin_redirect:
         return admin_redirect
+
+    if (delete_confirmation or "").strip().lower() != "delete":
+        return RedirectResponse(
+            url=f"/admin/admission-options?error={quote_plus('Type delete to confirm.')}",
+            status_code=status.HTTP_303_SEE_OTHER,
+        )
 
     teacher = db.query(AdmissionTeacher).filter(AdmissionTeacher.id == teacher_id).first()
     if not teacher:
@@ -1853,7 +1875,7 @@ def admin_create_artist(
     normalized_name = (name or "").strip()
     if not normalized_name:
         return RedirectResponse(
-            url="/admin/artist?error=Artist+name+is+required", status_code=status.HTTP_303_SEE_OTHER
+            url="/admin/artist?error=Faculty+name+is+required", status_code=status.HTTP_303_SEE_OTHER
         )
 
     hero_image_url: str | None = None
@@ -1911,7 +1933,7 @@ def admin_create_artist(
     db.add(artist)
     db.commit()
     return RedirectResponse(
-        url="/admin/artist?message=Artist+created+successfully", status_code=status.HTTP_303_SEE_OTHER
+        url="/admin/artist?message=Faculty+created+successfully", status_code=status.HTTP_303_SEE_OTHER
     )
 
 
@@ -1929,7 +1951,7 @@ def admin_add_artist_media(
     artist = db.query(Artist).filter(Artist.id == artist_id).first()
     if not artist:
         return RedirectResponse(
-            url="/admin/artist?error=Artist+not+found", status_code=status.HTTP_303_SEE_OTHER
+            url="/admin/artist?error=Faculty+not+found", status_code=status.HTTP_303_SEE_OTHER
         )
 
     normalized_type = "image"
@@ -1980,7 +2002,7 @@ def admin_delete_artist(
     artist = db.query(Artist).filter(Artist.id == artist_id).first()
     if not artist:
         return RedirectResponse(
-            url="/admin/artist?error=Artist+not+found", status_code=status.HTTP_303_SEE_OTHER
+            url="/admin/artist?error=Faculty+not+found", status_code=status.HTTP_303_SEE_OTHER
         )
 
     confirm_mode = (request.query_params.get("confirm_mode") or "").strip().lower()
@@ -1996,7 +2018,7 @@ def admin_delete_artist(
     db.delete(artist)
     db.commit()
     return RedirectResponse(
-        url="/admin/artist?message=Artist+deleted+successfully", status_code=status.HTTP_303_SEE_OTHER
+        url="/admin/artist?message=Faculty+deleted+successfully", status_code=status.HTTP_303_SEE_OTHER
     )
 
 
@@ -2028,13 +2050,13 @@ def admin_update_artist(
     artist = db.query(Artist).filter(Artist.id == artist_id).first()
     if not artist:
         return RedirectResponse(
-            url="/admin/artist?error=Artist+not+found", status_code=status.HTTP_303_SEE_OTHER
+            url="/admin/artist?error=Faculty+not+found", status_code=status.HTTP_303_SEE_OTHER
         )
 
     normalized_name = (name or "").strip()
     if not normalized_name:
         return RedirectResponse(
-            url="/admin/artist?error=Artist+name+is+required", status_code=status.HTTP_303_SEE_OTHER
+            url="/admin/artist?error=Faculty+name+is+required", status_code=status.HTTP_303_SEE_OTHER
         )
 
     artist.name = normalized_name
@@ -2120,7 +2142,7 @@ def admin_update_artist(
         artist.featured_media_thumbnail_url = None
     db.commit()
     return RedirectResponse(
-        url="/admin/artist?message=Artist+updated+successfully", status_code=status.HTTP_303_SEE_OTHER
+        url="/admin/artist?message=Faculty+updated+successfully", status_code=status.HTTP_303_SEE_OTHER
     )
 
 

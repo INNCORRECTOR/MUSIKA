@@ -3,7 +3,7 @@
 {% block page_styles %}
   <link rel="stylesheet" href="/static/pages/auth.css" />
   <link rel="stylesheet" href="/static/pages/admin_sidebar.css" />
-  <link rel="stylesheet" href="/static/pages/admin_inbox.css" />
+  <link rel="stylesheet" href="/static/pages/admin_inbox.css?v=14" />
   <link rel="stylesheet" href="/static/pages/admin_pages_mobile.css" />
 {% endblock %}
 
@@ -25,7 +25,7 @@
           </div>
           {% if messages %}
             <div class="table-wrap">
-              <table class="inbox-table">
+              <table class="inbox-table inbox-contact-table">
               <thead>
                 <tr>
                   <th>Date</th>
@@ -37,27 +37,39 @@
                 </tr>
               </thead>
               <tbody>
-                {% set inbox_preview_chars = 220 %}
                 {% for item in messages %}
-                  {% set msg_body = item.message or "" %}
+                  {% set msg_body = (item.message or "") | trim %}
+                  {% set msg_lines = msg_body.splitlines() %}
+                  {% set ns = namespace(preview='', line_count=0) %}
+                  {% for line in msg_lines %}
+                    {% if line.strip() %}
+                      {% set ns.line_count = ns.line_count + 1 %}
+                      {% if not ns.preview %}
+                        {% set ns.preview = line.strip() %}
+                      {% endif %}
+                    {% endif %}
+                  {% endfor %}
+                  {% set msg_multiline = ns.line_count > 1 %}
                   <tr>
                     <td class="col-date" data-label="Date">{{ item.created_at }}</td>
                     <td data-label="Name">{{ item.name }}</td>
                     <td class="col-email" data-label="Email">{{ item.email }}</td>
                     <td data-label="Phone">{{ item.phone or "-" }}</td>
                     <td data-label="Subject">{{ item.subject or "-" }}</td>
-                    <td class="col-message{% if msg_body|length > inbox_preview_chars %} col-message-expandable{% endif %}" data-label="Message">
-                      {% if msg_body|length > inbox_preview_chars %}
+                    <td class="col-message{% if msg_multiline %} col-message-expandable{% endif %}" data-label="Message">
+                      {% if not msg_body %}
+                        —
+                      {% elif msg_multiline %}
                         <details class="inbox-message-details">
                           <summary class="inbox-message-summary">
-                            <span class="inbox-message-preview">{{ msg_body[:inbox_preview_chars] }}…</span>
-                            <span class="inbox-message-expand-hint">Show full</span>
+                            <span class="inbox-message-preview">{{ ns.preview }}</span>
+                            <span class="inbox-message-expand-hint">Show all</span>
                             <span class="inbox-message-collapse-label">Show less</span>
                           </summary>
                           <div class="inbox-message-full">{{ msg_body }}</div>
                         </details>
                       {% else %}
-                        {{ msg_body }}
+                        <span class="inbox-message-text">{{ msg_body }}</span>
                       {% endif %}
                     </td>
                   </tr>

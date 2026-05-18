@@ -234,8 +234,9 @@ There is no “delete message” or “reply inside app” button in the default
 ### 9.2 Subscribers (`/admin/subscribers`)
 
 - List of **newsletter** sign-ups: date and email.
-
-Same idea: read-only list in the UI; use your email tool for campaigns if needed.
+- **Send newsletter** (top of page): subject, optional header image, message body, optional extra images (up to 5). Uses the same SMTP settings as other site emails.
+- Tick row checkboxes and click **Send to selected subscribers**, or tick **Select all active subscribers** to email everyone active in the database (not only the rows shown on screen).
+- Confirm in the browser dialog before send completes.
 
 ---
 

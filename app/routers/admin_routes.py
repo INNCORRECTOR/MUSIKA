@@ -42,6 +42,7 @@ from app.routers.gallery_routes import slugify
 from app.routers.auth import AUTH_COOKIE_NAME, shared_auth_context
 from app.security import create_access_token, decode_access_token, verify_password
 from app.mailer import send_multipart_email
+from app.newsletter_broadcast import MAX_INLINE_IMAGES, build_newsletter_broadcast_email
 from app.services.admission_pdf import build_admission_application_pdf
 from app.services.s3_upload import (
     UploadServiceError,
@@ -751,10 +752,127 @@ def admin_subscribers_page(request: Request, db: Session = Depends(get_db)):
         {
             "subscriptions": subscriptions,
             "error": subscribers_error,
+            "message": request.query_params.get("message"),
         }
     )
     _inject_admin_inbox_counts(context, db)
     return templates.TemplateResponse(request, "admin_subscribers.html", context)
+
+
+MAX_NEWSLETTER_RECIPIENTS = 500
+
+
+def _upload_newsletter_image(file: UploadFile, s3_config) -> str:
+    _, _, public_url = upload_image_and_get_url(file, s3_config)
+    return public_url
+
+
+@router.post("/admin/subscribers/send-newsletter")
+def admin_send_newsletter(
+    request: Request,
+    subject: str = Form(...),
+    body_text: str = Form(...),
+    select_all: str | None = Form(default=None),
+    subscriber_ids: list[int] | None = Form(default=None),
+    header_image: UploadFile | None = File(default=None),
+    inline_images: list[UploadFile] | None = File(default=None),
+    db: Session = Depends(get_db),
+):
+    admin_redirect = require_admin(request)
+    if admin_redirect:
+        return admin_redirect
+
+    def redirect_err(msg: str) -> RedirectResponse:
+        return RedirectResponse(
+            url=f"/admin/subscribers?error={quote_plus(msg)}",
+            status_code=status.HTTP_303_SEE_OTHER,
+        )
+
+    subj = (subject or "").strip()
+    body = (body_text or "").strip()
+    if not subj:
+        return redirect_err("Subject is required.")
+    if not body:
+        return redirect_err("Message body is required.")
+
+    s3_config = get_s3_config()
+    header_url: str | None = None
+    if header_image and header_image.filename:
+        try:
+            header_url = _upload_newsletter_image(header_image, s3_config)
+        except (UploadValidationError, UploadServiceError) as exc:
+            return redirect_err(str(exc))
+
+    inline_urls: list[str] = []
+    files = [f for f in (inline_images or []) if f and (f.filename or "").strip()][:MAX_INLINE_IMAGES]
+    for img_file in files:
+        try:
+            inline_urls.append(_upload_newsletter_image(img_file, s3_config))
+        except (UploadValidationError, UploadServiceError) as exc:
+            return redirect_err(str(exc))
+
+    use_select_all = (select_all or "").strip().lower() in ("on", "1", "true", "yes")
+    try:
+        if use_select_all:
+            rows = (
+                db.query(NewsletterSubscription)
+                .filter(NewsletterSubscription.is_active.is_(True))
+                .order_by(NewsletterSubscription.id.asc())
+                .limit(MAX_NEWSLETTER_RECIPIENTS)
+                .all()
+            )
+        else:
+            ids = [i for i in (subscriber_ids or []) if i > 0]
+            if not ids:
+                return redirect_err("Select at least one subscriber.")
+            rows = (
+                db.query(NewsletterSubscription)
+                .filter(
+                    NewsletterSubscription.id.in_(ids),
+                    NewsletterSubscription.is_active.is_(True),
+                )
+                .all()
+            )
+    except SQLAlchemyError:
+        return redirect_err("Could not load subscribers.")
+
+    emails = list(dict.fromkeys(r.email.strip().lower() for r in rows if (r.email or "").strip()))
+    if not emails:
+        return redirect_err("No active subscribers selected.")
+
+    email_subject, plain, html_body = build_newsletter_broadcast_email(
+        subj,
+        body,
+        header_image_url=header_url,
+        inline_image_urls=inline_urls,
+    )
+
+    sent = 0
+    failed = 0
+    first_error: str | None = None
+    for addr in emails:
+        ok, err = send_multipart_email(addr, email_subject, plain, html_body)
+        if ok:
+            sent += 1
+        else:
+            failed += 1
+            if first_error is None:
+                first_error = err
+
+    if sent == 0:
+        return redirect_err(first_error or "Email could not be sent.")
+    if failed:
+        msg = f"Sent to {sent} subscriber(s). {failed} failed."
+        if first_error:
+            msg += f" {first_error}"
+        return RedirectResponse(
+            url=f"/admin/subscribers?message={quote_plus(msg)}",
+            status_code=status.HTTP_303_SEE_OTHER,
+        )
+    return RedirectResponse(
+        url=f"/admin/subscribers?message={quote_plus(f'Newsletter sent to {sent} subscriber(s).')}",
+        status_code=status.HTTP_303_SEE_OTHER,
+    )
 
 
 @router.get("/admin/admissions", response_class=HTMLResponse)

@@ -4,6 +4,7 @@
   <link rel="stylesheet" href="/static/pages/auth.css" />
   <link rel="stylesheet" href="/static/pages/admin_sidebar.css" />
   <link rel="stylesheet" href="/static/pages/admin_inbox.css" />
+  <link rel="stylesheet" href="/static/pages/admin_subscribers.css?v=8" />
   <link rel="stylesheet" href="/static/pages/admin_pages_mobile.css" />
 {% endblock %}
 
@@ -15,32 +16,112 @@
 
       <div class="auth-card inbox-card admin-main-content">
         <h1>Admin Subscribers</h1>
+        <p class="subscribers-page-lead">
+          Send a newsletter to people who subscribed on the site. Compose your message below, choose recipients, then send.
+        </p>
+
         {% if error %}
           <p class="auth-error">{{ error }}</p>
         {% endif %}
+        {% if message %}
+          <p class="auth-success">{{ message }}</p>
+        {% endif %}
 
-        <section class="inbox-section">
+        <section class="newsletter-compose" aria-labelledby="newsletter-compose-heading">
+          <h3 id="newsletter-compose-heading">Send newsletter</h3>
+          <form
+            id="newsletter-send-form"
+            method="post"
+            action="/admin/subscribers/send-newsletter"
+            enctype="multipart/form-data"
+            class="newsletter-compose-grid"
+          >
+            <label>
+              <span>Subject</span>
+              <input type="text" name="subject" required maxlength="200" placeholder="e.g. Upcoming events at MUSIKA" />
+            </label>
+
+            <label>
+              <span>Message</span>
+              <textarea name="body_text" required placeholder="Write your newsletter message here. Use a blank line between paragraphs."></textarea>
+            </label>
+
+            <div class="newsletter-compose-files">
+              <label>
+                <span>Header image (optional)</span>
+                <input type="file" name="header_image" accept="image/*" />
+                <p class="newsletter-compose-hint">Wide banner at the top of the email.</p>
+              </label>
+              <label>
+                <span>Extra images (optional)</span>
+                <input type="file" name="inline_images" accept="image/*" multiple />
+                <p class="newsletter-compose-hint">Up to 5 images, shown below your message.</p>
+              </label>
+            </div>
+
+            <div class="newsletter-compose-actions">
+              <button type="submit" class="btn" id="newsletter-send-btn">Send to selected subscribers</button>
+              <span class="newsletter-selected-count" id="newsletter-selected-count" aria-live="polite">0 selected</span>
+            </div>
+          </form>
+        </section>
+
+        <section class="inbox-section subscribers-list-section">
           <div class="inbox-section-head">
-            <h2>Newsletter Subscriptions</h2>
+            <h2>Newsletter subscriptions</h2>
           </div>
+          <p class="subscribers-select-note">
+            Tick the emails below, or use <strong>Select all active</strong> at the bottom to include everyone subscribed (including addresses not shown in this list).
+          </p>
+
           {% if subscriptions %}
-            <div class="table-wrap">
-              <table class="inbox-table inbox-table-newsletter">
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Email</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {% for item in subscriptions %}
-                    <tr>
-                      <td class="col-date" data-label="Date">{{ item.created_at }}</td>
-                      <td class="col-email" data-label="Email">{{ item.email }}</td>
-                    </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
+            <div class="subscribers-list-toolbar">
+              <label class="subscribers-list-select-page">
+                <input type="checkbox" id="subscriber-select-all" aria-label="Select all on this page" />
+                <span>Select all on this page</span>
+              </label>
+              <span class="subscribers-list-count">{{ subscriptions|length }} subscriber{{ 's' if subscriptions|length != 1 else '' }} shown</span>
+            </div>
+
+            <ul class="subscriber-email-list" id="subscribers-list">
+              {% for item in subscriptions %}
+                <li class="subscriber-email-row{% if not item.is_active %} is-inactive{% endif %}">
+                  {% if item.is_active %}
+                    <label class="subscriber-email-row-check">
+                      <input
+                        type="checkbox"
+                        class="subscriber-row-check"
+                        form="newsletter-send-form"
+                        name="subscriber_ids"
+                        value="{{ item.id }}"
+                        aria-label="Select {{ item.email }}"
+                      />
+                    </label>
+                  {% else %}
+                    <span class="subscriber-email-row-check subscriber-email-row-check--empty" aria-hidden="true"></span>
+                  {% endif %}
+                  <div class="subscriber-email-row-body">
+                    <span class="subscriber-email-row-address">{{ item.email }}</span>
+                    <time class="subscriber-email-row-date" datetime="{{ item.created_at }}">
+                      {% if item.created_at %}
+                        {{ item.created_at.strftime('%d %b %Y, %I:%M %p') }}
+                      {% else %}
+                        —
+                      {% endif %}
+                    </time>
+                    {% if not item.is_active %}
+                      <span class="subscriber-email-row-badge">Inactive</span>
+                    {% endif %}
+                  </div>
+                </li>
+              {% endfor %}
+            </ul>
+
+            <div class="subscribers-select-all-bar">
+              <label>
+                <input type="checkbox" name="select_all" value="1" form="newsletter-send-form" id="subscriber-select-all-db" />
+                <span>Select all active subscribers</span>
+              </label>
             </div>
           {% else %}
             <p class="inbox-empty">No newsletter subscriptions yet.</p>
@@ -49,4 +130,178 @@
       </div>
     </div>
   </section>
+
+  <div id="newsletter-confirm-modal" class="newsletter-modal" hidden aria-hidden="true">
+    <div class="newsletter-modal-backdrop" data-newsletter-modal-close></div>
+    <div
+      class="newsletter-modal-panel"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="newsletter-modal-title"
+      aria-describedby="newsletter-modal-message"
+    >
+      <h4 id="newsletter-modal-title" class="newsletter-modal-title">Send newsletter?</h4>
+      <p id="newsletter-modal-message" class="newsletter-modal-message"></p>
+      <div class="newsletter-modal-actions">
+        <button type="button" class="newsletter-modal-btn newsletter-modal-btn-cancel" data-newsletter-modal-close>
+          Cancel
+        </button>
+        <button type="button" class="newsletter-modal-btn newsletter-modal-btn-ok" id="newsletter-modal-ok" hidden>
+          OK
+        </button>
+        <button type="button" class="newsletter-modal-btn btn" id="newsletter-modal-send">
+          Send newsletter
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var form = document.getElementById("newsletter-send-form");
+      var selectAllHead = document.getElementById("subscriber-select-all");
+      var selectAllDb = document.getElementById("subscriber-select-all-db");
+      var rowChecks = document.querySelectorAll(".subscriber-row-check");
+      var countEl = document.getElementById("newsletter-selected-count");
+      var modal = document.getElementById("newsletter-confirm-modal");
+      var modalTitle = document.getElementById("newsletter-modal-title");
+      var modalMessage = document.getElementById("newsletter-modal-message");
+      var modalSend = document.getElementById("newsletter-modal-send");
+      var modalOk = document.getElementById("newsletter-modal-ok");
+      var modalCancel = modal && modal.querySelector(".newsletter-modal-btn-cancel");
+      var allowSubmit = false;
+      var pendingSubmit = false;
+
+      function updateCount() {
+        if (!countEl) return;
+        if (selectAllDb && selectAllDb.checked) {
+          countEl.textContent = "All active subscribers";
+          return;
+        }
+        var n = 0;
+        rowChecks.forEach(function (cb) {
+          if (cb.checked) n += 1;
+        });
+        countEl.textContent = n === 1 ? "1 selected" : n + " selected";
+      }
+
+      if (selectAllHead) {
+        selectAllHead.addEventListener("change", function () {
+          var on = selectAllHead.checked;
+          rowChecks.forEach(function (cb) {
+            cb.checked = on;
+          });
+          if (on && selectAllDb) selectAllDb.checked = false;
+          updateCount();
+        });
+      }
+
+      if (selectAllDb) {
+        selectAllDb.addEventListener("change", function () {
+          if (selectAllDb.checked) {
+            rowChecks.forEach(function (cb) {
+              cb.checked = false;
+            });
+            if (selectAllHead) selectAllHead.checked = false;
+          }
+          updateCount();
+        });
+      }
+
+      rowChecks.forEach(function (cb) {
+        cb.addEventListener("change", function () {
+          if (cb.checked && selectAllDb) selectAllDb.checked = false;
+          updateCount();
+        });
+      });
+
+      updateCount();
+
+      function closeModal() {
+        if (!modal) return;
+        modal.hidden = true;
+        modal.setAttribute("aria-hidden", "true");
+        document.body.classList.remove("newsletter-modal-open");
+        pendingSubmit = false;
+      }
+
+      function openModal(options) {
+        if (!modal || !modalTitle || !modalMessage) return;
+        modalTitle.textContent = options.title || "Send newsletter?";
+        modalMessage.textContent = options.message || "";
+        var isAlert = !!options.alertOnly;
+        if (modalCancel) modalCancel.hidden = isAlert;
+        if (modalSend) modalSend.hidden = isAlert;
+        if (modalOk) modalOk.hidden = !isAlert;
+        modal.hidden = false;
+        modal.setAttribute("aria-hidden", "false");
+        document.body.classList.add("newsletter-modal-open");
+        (isAlert && modalOk ? modalOk : modalSend || modalOk).focus();
+      }
+
+      if (modal) {
+        modal.querySelectorAll("[data-newsletter-modal-close]").forEach(function (el) {
+          el.addEventListener("click", closeModal);
+        });
+        document.addEventListener("keydown", function (e) {
+          if (e.key === "Escape" && modal && !modal.hidden) closeModal();
+        });
+      }
+
+      if (modalOk) {
+        modalOk.addEventListener("click", closeModal);
+      }
+
+      if (modalSend) {
+        modalSend.addEventListener("click", function () {
+          if (!pendingSubmit || !form) return;
+          allowSubmit = true;
+          closeModal();
+          form.submit();
+        });
+      }
+
+      if (form) {
+        form.addEventListener("submit", function (e) {
+          if (allowSubmit) {
+            allowSubmit = false;
+            return;
+          }
+          e.preventDefault();
+
+          var useAll = selectAllDb && selectAllDb.checked;
+          var picked = 0;
+          rowChecks.forEach(function (cb) {
+            if (cb.checked) picked += 1;
+          });
+
+          if (!useAll && picked === 0) {
+            openModal({
+              title: "No recipients selected",
+              message:
+                "Select at least one subscriber in the list, or tick “Select all active subscribers” at the bottom.",
+              alertOnly: true,
+            });
+            return;
+          }
+
+          var recipientLine;
+          if (useAll) {
+            recipientLine = "all active subscribers";
+          } else if (picked === 1) {
+            recipientLine = "1 subscriber";
+          } else {
+            recipientLine = picked + " subscribers";
+          }
+
+          pendingSubmit = true;
+          openModal({
+            title: "Send newsletter?",
+            message: "You are about to send this newsletter to " + recipientLine + ". This cannot be undone.",
+            alertOnly: false,
+          });
+        });
+      }
+    })();
+  </script>
 {% endblock %}
